@@ -1,0 +1,10 @@
+name: kspdg
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - ipython
+  - pytest
+  - pip
+  - pip:
+    - -r requirements.txt

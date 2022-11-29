@@ -1,0 +1,15 @@
+saveMD5 = 
+lastWriteTime = 637939495370000000
+id = 0dfdccb9-e25d-4ae6-b649-be7e67beca57
+title = pe1_i1
+briefing = Pursuer - Capture the Evader!\nEvader - Avoid the Pursuer!
+author = 
+hardIcon = False
+difficulty = Intermediate
+vesselCount = 2
+nodeCount = 4
+startUT = 0
+missionExpansionVersion = 1.12.1
+steamPublishedFileId = 0
+testModules = TestGrapple
+actionModules = ActionCreateVessel
