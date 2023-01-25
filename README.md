@@ -47,6 +47,7 @@ The installation process includes several components:
 + [Making History Expansion](https://store.privatedivision.com/game/kerbal-space-program-making-history-expansion-official-pc)
 + [Mission Save Files](https://github.com/mit-ll/spacegym-kspdg/tree/master/ksp_saves/missions)
 + [kRPC Server](https://krpc.github.io/krpc/getting-started.html#the-server-plugin)
++ [PhysicsRangeExtender](https://github.com/jrodrigv/PhysicsRangeExtender)
 + [`kspdg` python package](https://github.com/mit-ll/spacegym-kspdg/tree/master/src/kspdg)
 + [Luna Multiplayer](http://lunamultiplayer.com/) (optional/future work)
 
@@ -97,12 +98,28 @@ cp -r ksp_files/Missions/. ~/Desktop/KSP_osx/Missions
 
 ### Install kRPC Server
 
+kRPC is what allows external scripts and processes (such as python programs) to send commands to and control the KSP game engine
 1. Download `krpc-0.4.8.zip` from [GitHub link on the kRPC Getting Started Page](https://krpc.github.io/krpc/getting-started.html#installation)
 2. Unzip `krpc-0.4.8/` folder to `~/Desktop/krpc-0.4.8/`
 3. Create a new directory in KSP's `GameData` directory and move all of the krpc contents there
 ```bash
 mkdir ~/Desktop/KSP_osx/GameData/kRPC
 mv ~/Desktop/krpc-0.4.8/* ~/Desktop/KSP_osx/GameData/kRPC/
+```
+
+### Install PhysicsRangeExtender
+
+By default in KSP, high-fidelity physical simulation of spacecraft is only performed for spacecraft very near to the active spacecraft (e.g. only around [2km](https://steamcommunity.com/app/220200/discussions/0/3044985412465032716/)). [PhysicsRangeExtender](https://github.com/jrodrigv/PhysicsRangeExtender) allows for better simulation (e.g. thusting maneuvers) of more distant spacecraft.
+1. Clone PhysicsRangeExtender (assumed to be cloned to Desktop in these instructions, but you can put it wherever you like since you will be copying things from the clone to `GameData`)
+2. Copy necessary subfolder from PhysicsRangeExtender to your KSP install's `GameData` folder
+```bash
+# clone PhysicsRange Extender locally
+cd ~/Desktop
+git clone git@github.com:jrodrigv/PhysicsRangeExtender.git
+
+# copy the necessary game data for the mod into your KSP install
+mkdir ~/Desktop/KSP_osx/GameData/PhysicsRangeExtender
+cp -r ~/Desktop/PhysicsRangeExtender/PhysicsRangeExtender/Distribution/GameData/PhysicsRangeExtender/ ~/Desktop/KSP_osx/GameData/PhysicsRangeExtender/
 ```
 
 ### Install `kspdg`
@@ -130,6 +147,26 @@ conda activate kspdg
 pip install krpc    # must be installed after conda env creation for setuptools compatability
 ``` 
 
+> :warning: **Troubleshooting**
+> + Note that the `kspdg` library depends upon [poliastor](https://docs.poliastro.space/en/stable/), which in turn depends upon [astropy](https://www.astropy.org/), which in turn depends upon [pyerfa](https://github.com/liberfa/pyerfa)
+> + __FOR MAC USERS with M1 chipsets:__ as of this writing, [pyerfa has not fully supported M1's arm64 architecture](https://github.com/liberfa/pyerfa/issues/83)
+> + This can lead to errors running `kspdg` such as
+> ```
+> (mach-o file, but is an incompatible architecture (have 'x86_64', need 'arm64e'))
+> ```
+> + The workaround for Mac users with M1 chipsets is described [here](https://github.com/liberfa/pyerfa/issues/83#issuecomment-1255333177). For Python 3.9, the workaround entails cloning pyerfa locally, checking out a specific version, and installing in the conda environment
+> ```bash
+> # get pyerfa source code and switch to specific release of pyerfa
+> git clone --recursive https://github.com/liberfa/pyerfa/
+> cd pyerfa
+> git fetch origin
+> git checkout v2.0.0.1
+> 
+> # install specific version of pyerfa in conda environment
+> conda activate kspdg
+> pip install .
+> ```
+
 ### Install Luna Multiplayer (LMP)
 
 _Future Work_
@@ -146,6 +183,9 @@ conda activate kspdg
 pytest tests/ksp_ingame_tests/test_pursuit_v20220516.py
 ```
 5. You should see the KSP game reset and focus on a vehicle that then performs several oreintation and propulsive maneuvers. The pytest command should then indicate the number of passed tests.
+
+> :warning: **Troubleshooting**
+> If you are using a Mac with an arm64 architecture (e.g. M1 chipset) and recieve an error like `(mach-o file, but is an incompatible architecture (have 'x86_64', need 'arm64e'))`, please refer to instructions in the [kspdg library installation section](#install-kspdg) about installing `pyerfa` from source.
 
 ------------
 
