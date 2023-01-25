@@ -5,49 +5,38 @@
 import time
 from kspdg.pe1.base import PursuitEnv
 
-_EVADE_DIST_THRESHOLD = 200.0   # [m]
-_PROGRADE_EVASION_THROTTLE = 0.75
+_PROGRADE_EVASION_THROTTLE = 0.2
 
 class PursuitEnv_e4(PursuitEnv):
     def __init__(self, loadfile: str, **kwargs):
         super().__init__(loadfile=loadfile, **kwargs)
 
     def evasive_maneuvers(self):
-        '''use relative position of pursuer to execute simple evasive maneuver
+        '''Constant low-thrust burn in prograde direction, regardless of pursuer
         '''
-        was_evading = False
+
+        # Set and engage evader auto-pilot reference frame so 
+        # that it points in it's own prograde direction
+        self.vesEvade.auto_pilot.reference_frame = self.vesEvade.orbital_reference_frame
+        self.vesEvade.auto_pilot.target_pitch = 0.0
+        self.vesEvade.auto_pilot.target_heading = 0.0
+        self.vesEvade.auto_pilot.target_roll = 0.0
+        self.vesEvade.auto_pilot.engage()
+
+        # delay to give time for evader to re-orient
+        time.sleep(0.5)
+
+        # turn on low-thrust maneuver
+        self.vesEvade.control.rcs = True
+        self.vesEvade.control.forward = _PROGRADE_EVASION_THROTTLE
+        
         while not self.stop_evade_thread:
 
-
-            # get distance to pursuer
-            d_vesE_vesP = self.get_pe_relative_distance()
-
-            # check for control range
-            if d_vesE_vesP < self.PARAMS.EVADER.CONTROL_RANGE:
-
-                # if pursuer is too close, evade in orbit-normal direction
-                if d_vesE_vesP < _EVADE_DIST_THRESHOLD:
-                    if not was_evading:
-                        print("Pursuer detected! Executing evasive maneuvers")
-                        cur_speed_mode = self.vesPursue.control.speed_mode
-                        self.vesEvade.control.sas = True
-                        time.sleep(0.25) # give time to commands to go through
-                        self.vesPursue.control.speed_mode = self.vesPursue.control.speed_mode.orbit
-                        time.sleep(0.25) # give time to commands to go through
-                        self.vesEvade.control.sas_mode = self.vesEvade.control.sas_mode.prograde
-                        time.sleep(2.0) # give time to commands to go through
-                        self.vesEvade.control.rcs = True
-                        self.vesPursue.control.speed_mode = cur_speed_mode # reset speed mode
-                    was_evading = True
-                    self.vesEvade.control.forward = _PROGRADE_EVASION_THROTTLE
-                else:
-                    self.vesEvade.control.forward = 0.0
-                    if was_evading:
-                        print("No pursuer in range. Zeroing thrust")
-                    was_evading = False
+            # throttle is set at startup, just wait for stop thread flag
+            time.sleep(0.1)
         
         # terminate throttle
-        if self.get_pe_relative_distance() < self.PARAMS.EVADER.CONTROL_RANGE:
-            self.vesEvade.control.forward = 0.0
-            self.vesEvade.control.right = 0.0
-            self.vesEvade.control.up = 0.0
+        self.vesEvade.control.forward = 0.0
+        self.vesEvade.control.right = 0.0
+        self.vesEvade.control.up = 0.0
+        self.vesEvade.auto_pilot.disengage()

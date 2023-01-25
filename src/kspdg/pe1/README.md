@@ -12,7 +12,6 @@ A collection of 1-v-1 pursuit-evasion environments with shared parameters/charac
     + ID e2: Randomized evasion maneuvers
     + ID e3: Heuristic/mission-centric evasion maneuvers
     + ID e4: Low-thrust orbit raise. Evader applies a constant, low-thrust, velocity-tangent burn regardless of pursuer
-        + _BROKEN_: sas_mode of evader not executing properly
     + ID e5: Nash/optimal evasion maneuvers
         + _NotImplemented_
 + Variable Initial Conditions:
