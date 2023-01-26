@@ -25,7 +25,7 @@ A collection of 1-v-1 pursuit-evasion environments with shared parameters/charac
     + Minimum relative position-velocity product
     + Pursuer fuel usage
     + Evader fuel usage
-    + Final delta-V needed for evader to return to original orbit based on a single Lambert Targeting solution
+    + Approximate delta-V needed for Pursuer to rendezvous with Evader based on a single Lambert Targeting solution at final time step assuming no further maneuvering by Evader.
 + Scenario Termination Conditions: Each scenario may have it's own unique termination conditions which will be some combination of:
     + Pursuer zero fuel
     + Approach distance threshold
