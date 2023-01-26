@@ -1,4 +1,4 @@
-# Copyright (c) 2022, MASSACHUSETTS INSTITUTE OF TECHNOLOGY
+# Copyright (c) 2023, MASSACHUSETTS INSTITUTE OF TECHNOLOGY
 # Subject to FAR 52.227-11 – Patent Rights – Ownership by the Contractor (May 2014).
 # SPDX-License-Identifier: MIT
 
@@ -29,7 +29,7 @@ class PursuitEnv_e4(PursuitEnv):
         # turn on low-thrust maneuver
         self.vesEvade.control.rcs = True
         self.vesEvade.control.forward = _PROGRADE_EVASION_THROTTLE
-        
+
         while not self.stop_evade_thread:
 
             # throttle is set at startup, just wait for stop thread flag
