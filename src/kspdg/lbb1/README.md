@@ -46,8 +46,7 @@ This README documents/decodes the somewhat cryptic naming scheme used to uniquel
 
 ## Initial Orbit Environment Identifiers
 
-+ ID `i1`: Lady and Bodyguard are in the same cicrular orbit with Bodyguard ~100m retrograde of the Lady. The Bandit is in an elliptical orbit with an upcoming tangential conjunction with the Lady spacecraft
-
++ ID `i1`: Lady and Bodyguard are in the same cicrular orbit with Bodyguard ~500m prograde of the Lady. The Bandit is in an elliptical orbit with an upcoming tangential conjunction at apoapsis with the Lady spacecraft
 
 ## Evaluation Criteria: 
 
@@ -63,13 +62,13 @@ The performance of each solution technique in each environment/scenario can meas
 + Bodyguard fuel usage
 + Approximate delta-V needed for Bandit to rendezvous with Lady based on a single Lambert Targeting solution at final time step assuming no further maneuvering by Lady.
 
-
 ## Environment Termination Conditions: 
 
 Each scenario/environment may have it's own unique termination conditions which will be some combination of:
 
 + Bandit zero fuel
 + Approach distance threshold between Bandit and Lady
++ Approach distance threshold between Bandit and Bodyguard
 + Elapsed time (max 10 minutes for each scenario)
 
 
