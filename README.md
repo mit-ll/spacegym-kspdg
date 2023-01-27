@@ -173,19 +173,37 @@ _Future Work_
 
 ### Verify Installation
 
+__NOTE:__ Because the KSPDG environments are inexorably linked to the KSP game engine, many of the library's unit/integration test can only be run when a particular game mission file has been loaded and running. This means that verifying installation and testing during code development is a bit more involved than just a single `pytest` call
+
+__Serverless Tests:__ Quick test to run without KSP game engine running nor kRPC server connection
+
+```bash
+cd kspdg
+conda activate kspdg
+pytest tests/serverless_tests/
+```
+
+__KSP In-Game Tests:__ These tests require the KSP game engine to be running, the test-specific mission to be loaded, and a connection to the kRPC server
+
 1. Start KSP game application. 
-2. Select `Start Game` > `Play Missions` > `Community Created` > `20220516_PursuitEvade` > `Continue`
+2. Select `Start Game` > `Play Missions` > `Community Created` > `pe1_i3` > `Continue`
 3. In kRPC dialog box click `Add server`. Select `Show advanced settings` and select `Auto-accept new clients`. Then select `Start Server`
 4. In a bash terminal:
 ```bash
 cd kspdg
 conda activate kspdg
+pytest tests/ksp_ingame_tests/test_pe1_e1_i3.py
+
+# for additional tests, load a different mission in KSP: 
+# ESC > Quit to Main Menu > Exit to Main Menu > Play Missions > 20220516_PursuitEvade > Continue
 pytest tests/ksp_ingame_tests/test_pursuit_v20220516.py
 ```
 5. You should see the KSP game reset and focus on a vehicle that then performs several oreintation and propulsive maneuvers. The pytest command should then indicate the number of passed tests.
 
+
 > :warning: **Troubleshooting**
 > If you are using a Mac with an arm64 architecture (e.g. M1 chipset) and recieve an error like `(mach-o file, but is an incompatible architecture (have 'x86_64', need 'arm64e'))`, please refer to instructions in the [kspdg library installation section](#install-kspdg) about installing `pyerfa` from source.
+
 
 ------------
 

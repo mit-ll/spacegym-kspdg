@@ -19,7 +19,7 @@ setup(name="kspdg",
         "setuptools<=57.5.0", # pin setuptools to avoid error with use_2to3 in krpc
         "protobuf<=3.20", # pin to avoid major version change at 4.21 that breaks krpc
         "numpy",
-        "gym",
+        "gymnasium",
         "poliastro",
       ]
       )
