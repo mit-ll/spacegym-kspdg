@@ -12,7 +12,7 @@ import pytest
 import time
 import numpy as np
 
-import kspdg.utils.utils as U
+import kspdg.utils.constants as C
 from kspdg.pe1.pe1_e1_i3 import PursuitEnv_ePassive_i3_v0
 
 @pytest.fixture
@@ -125,7 +125,7 @@ def test_get_combined_rcs_properties_0(pe1_e1_i3_env):
 
     # check speed change aligns with expected delta_v
     delta_v = s1_pur_cbci - s0_pur_cbci
-    delta_v_exp = env.PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE * U._G0 * np.log(m0_pur/m1_pur)
+    delta_v_exp = env.PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE * C.G0 * np.log(m0_pur/m1_pur)
     assert np.isclose(delta_v, delta_v_exp, rtol=1e-2)
 
 def test_convert_rhntw_to_rhpbody_0(pe1_e1_i3_env):

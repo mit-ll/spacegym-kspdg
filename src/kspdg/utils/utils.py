@@ -1,4 +1,4 @@
-# Copyright (c) 2022, MASSACHUSETTS INSTITUTE OF TECHNOLOGY
+# Copyright (c) 2023, MASSACHUSETTS INSTITUTE OF TECHNOLOGY
 # Subject to FAR 52.227-11 – Patent Rights – Ownership by the Contractor (May 2014).
 # SPDX-License-Identifier: MIT
 
@@ -7,7 +7,7 @@ import numpy as np
 from copy import deepcopy
 from typing import List
 
-_G0 = 9.80665 # standard gravity [m/s/s]
+from kspdg.utils import constants as CONST
 
 def BROKEN_get_rcs_net_directional_properties(vessel, burn_vec__rhbody):
     '''compute the max thrust, specific impulse, and fuel consumption of rcs along a burn vector
@@ -45,7 +45,7 @@ def BROKEN_get_rcs_net_directional_properties(vessel, burn_vec__rhbody):
     net_max_effective_fuel_consumption = sum(dtp[1] for dtp in dir_thrust_props)
 
     # compute total effective specific impulse
-    net_specific_impulse = net_max_effective_thrust / (net_max_effective_fuel_consumption * _G0)
+    net_specific_impulse = net_max_effective_thrust / (net_max_effective_fuel_consumption * CONST.G0)
     return net_max_effective_thrust, net_max_effective_fuel_consumption, net_specific_impulse
 
 def BROKEN_get_thruster_directional_properties(thruster, burn_vec__rhbody):
@@ -83,7 +83,7 @@ def BROKEN_get_thruster_directional_properties(thruster, burn_vec__rhbody):
     max_effective_thrust = thruster.part.rcs.max_thrust * max(0.0, np.dot(bv__lhbody, tv__lhbody))
 
     # determine maximum effective fuel consumption
-    max_effective_fuel_consumption = max_effective_thrust / (_G0 * thruster.part.rcs.specific_impulse)
+    max_effective_fuel_consumption = max_effective_thrust / (CONST.G0 * thruster.part.rcs.specific_impulse)
 
     return max_effective_thrust, max_effective_fuel_consumption
 
