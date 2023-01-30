@@ -2,7 +2,6 @@
 # Subject to FAR 52.227-11 – Patent Rights – Ownership by the Contractor (May 2014).
 # SPDX-License-Identifier: MIT
 
-import krpc
 import time
 import gymnasium as gym
 import numpy as np
@@ -170,16 +169,8 @@ class PursuitEnv(KSPDGBaseEnv):
         
     def reset(self):
 
-        # remove prior connection and join prior evasion thread
-        if hasattr(self, 'conn'):
-            self.close()
-
-        # establish krpc connect to send remote commands
-        self.conn = krpc.connect(name='kspdg_env')
-        print("Connected to kRPC server")
-
-        # Load save file from start of mission scenario
-        self.conn.space_center.load(self.loadfile)
+        # connect to KRPC server and load mission save file 
+        self.connect_and_load_on_reset()
 
         # get vessel objects
         self.vesEvade, self.vesPursue = self.conn.space_center.vessels[:3]

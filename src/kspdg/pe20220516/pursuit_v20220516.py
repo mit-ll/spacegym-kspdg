@@ -2,23 +2,24 @@
 # Subject to FAR 52.227-11 – Patent Rights – Ownership by the Contractor (May 2014).
 # SPDX-License-Identifier: MIT
 
-import krpc
 import time
 import gymnasium as gym
 import numpy as np
 
 from types import SimpleNamespace
 from typing import List
-from datetime import datetime
 from threading import Thread
 
+import kspdg.utils.constants as C
 import kspdg.utils.utils as U
+
+from kspdg.base_envs import KSPDGBaseEnv
 
 _INIT_LOADFILE = "20220516_PursuitEvade_init"
 _EVADE_DIST_THRESHOLD = 100.0
 _MISSION_DONE_DIST_THRESHOLD = 20.0
 
-class PursuitEnvV20220516(gym.Env):
+class PursuitEnvV20220516(KSPDGBaseEnv):
     '''
      A simple pursuit-evasion orbital scenario
     
@@ -69,20 +70,23 @@ class PursuitEnvV20220516(gym.Env):
 
     # computed maximum fuel consumption rate in each direction [kg/s]
     PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_FORWARD = \
-        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_FORWARD / (U._G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
+        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_FORWARD / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
     PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_REVERSE = \
-        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_REVERSE / (U._G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
+        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_REVERSE / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
     PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_RIGHT = \
-        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_RIGHT / (U._G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
+        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_RIGHT / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
     PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_LEFT = \
-        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_LEFT / (U._G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
+        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_LEFT / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
     PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_UP = \
-        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_UP / (U._G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
+        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_UP / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
     PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_DOWN = \
-        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_DOWN / (U._G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
+        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_DOWN / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
 
 
     def __init__(self):
+
+        # establish load file for environment resets
+        self.loadfile = _INIT_LOADFILE
 
         # establish observation space (see get_observation for mapping)
         self.observation_space = gym.spaces.Box(
@@ -102,16 +106,8 @@ class PursuitEnvV20220516(gym.Env):
     
     def reset(self):
 
-        # remove prior connection and join prior evasion thread
-        if hasattr(self, 'conn'):
-            self.close()
-
-        # establish krpc connect to send remote commands
-        self.conn = krpc.connect(name='pursuit_v20220516')
-        print("Connected to kRPC server")
-
-        # Load save file from start of mission scenario
-        self.conn.space_center.load(_INIT_LOADFILE)
+        # connect to KRPC server and load mission save file 
+        self.connect_and_load_on_reset()
 
         # get vessel objects
         self.vesReferee, self.vesEvade, self.vesPursue = self.conn.space_center.vessels[:3]

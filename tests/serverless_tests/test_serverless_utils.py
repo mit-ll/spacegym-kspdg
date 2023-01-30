@@ -8,6 +8,10 @@ import numpy as np
 import kspdg.utils.constants as C
 import kspdg.utils.utils as U
 
+def test_poliastro_import():
+    """check that poliastro can be imported which checks pyerfa install issues"""
+    from poliastro.iod import izzo
+
 def test_convert_lhntw_and_rhntw_0():
     '''converting from left and right NTW frames result in same vector'''
 

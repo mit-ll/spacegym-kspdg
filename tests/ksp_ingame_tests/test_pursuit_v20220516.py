@@ -12,6 +12,7 @@ import pytest
 import time
 import numpy as np
 
+import kspdg.utils.constants as C
 import kspdg.utils.utils as U
 from kspdg.pe20220516.pursuit_v20220516 import PursuitEnvV20220516
 
@@ -127,5 +128,5 @@ def test_get_combined_rcs_properties_0(pursuit_v20220516_env):
 
     # check speed change aligns with expected delta_v
     delta_v = s1_pur_cbci - s0_pur_cbci
-    delta_v_exp = env.PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE * U._G0 * np.log(m0_pur/m1_pur)
+    delta_v_exp = env.PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE * C.G0 * np.log(m0_pur/m1_pur)
     assert np.isclose(delta_v, delta_v_exp, rtol=1e-2)
