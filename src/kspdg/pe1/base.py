@@ -6,23 +6,19 @@ import krpc
 import time
 import gymnasium as gym
 import numpy as np
-import astropy.units as units
 
 from types import SimpleNamespace
 from typing import List, Dict
 from threading import Thread
 
-from poliastro.core.propagation.vallado import vallado as propagate_vallado
-from poliastro.iod import izzo
-from astropy.units import Quantity
-
 import kspdg.utils.constants as C
 import kspdg.utils.utils as U
+from kspdg.base_envs import KSPDGBaseEnv
 
 DEFAULT_EPISODE_TIMEOUT = 240.0 # [sec]
 DEFAULT_CAPTURE_DIST = 5.0      # [m]
 
-class PursuitEnv(gym.Env):
+class PursuitEnv(KSPDGBaseEnv):
     '''
     Base environment for 1v1 pursuit-evasion orbital scenarios
     
@@ -376,7 +372,7 @@ class PursuitEnv(gym.Env):
         # https://poliastro-py.readthedocs.io/en/latest/api/safe/twobody/propagation.html#poliastro.twobody.propagation.kepler
         p0_e_cb__rhcbci = p0_evd
         v0_e_cb__rhcbci = v0_evd
-        pf_e_cb__rhcbci, vf_e_cb__rhcbci = cls.propagate_orbit(
+        pf_e_cb__rhcbci, vf_e_cb__rhcbci = U.propagate_orbit_tof(
             p0__rhcbci=p0_e_cb__rhcbci, 
             v0__rhcbci=v0_e_cb__rhcbci, 
             time_of_flight=tof
@@ -386,7 +382,7 @@ class PursuitEnv(gym.Env):
         # propagated position (short way around)
         p0_p_cb__rhcbci = p0_prs
         v0_p_cb__rhcbci = v0_prs
-        v0trans_p_cb__rhcbci, vftrans_p_cb__rhcbci = cls.solve_lambert(
+        v0trans_p_cb__rhcbci, vftrans_p_cb__rhcbci = U.solve_lambert(
             p0__rhcbci=p0_p_cb__rhcbci,
             pf__rhcbci=pf_e_cb__rhcbci,
             time_of_flight=tof
@@ -398,87 +394,6 @@ class PursuitEnv(gym.Env):
         dvf = np.linalg.norm(vf_e_cb__rhcbci - vftrans_p_cb__rhcbci)
 
         return dv0, dvf
-
-    @classmethod
-    def solve_lambert(cls, p0__rhcbci, pf__rhcbci, time_of_flight):
-        """ Solve lambert targeting problem to determin velocities at two points
-
-        Args:
-            p0__rhcbci : ArrayLike (len=3)
-                position vector of initial orbital state in right-handed 
-                celestial-body-centered-inertial coords [m]
-            pf__rhcbci : ArrayLike
-                position vector of final orbital state in right-handed 
-                celestial-body-centered-inertial coords [m]
-            time_of_flight : float
-                time of flight to propagate [sec]
-        
-        Returns:
-            v0__rhcbci : ArrayLike (len=3)
-                velocity vector of initial orbital state in right-handed 
-                celestial-body-centered-inertial coords [m/s]
-            vf__rhcbci : ArrayLike
-                velocity vector of final orbital state in right-handed 
-                celestial-body-centered-inertial coords [m/s]
-
-        Ref: 
-            https://docs.poliastro.space/en/stable/examples/Revisiting%20Lamberts%20problem%20in%20Python.html
-            https://docs.poliastro.space/en/stable/autoapi/poliastro/iod/izzo/index.html
-        """
-
-        # "Quantify" mu, init position, final position and time of flight
-        q_mu = Quantity(C.KERBIN.MU, units.m**3 / units.s**2)
-        q_p0 = Quantity(p0__rhcbci, units.m)
-        q_pf = Quantity(pf__rhcbci, units.m)
-        q_tf = Quantity(time_of_flight, units.s)
-
-        # call lambert solver (assumes defaults, i.e. "short way" around)
-        q_v0, q_vf = izzo.lambert(k=q_mu, r0=q_p0, r=q_pf, tof=q_tf)
-
-        # de-"Quantify" velocity vectors
-        v0__rhcbci = q_v0.to_value(units.m/units.s)
-        vf__rhcbci = q_vf.to_value(units.m/units.s)
-
-        return v0__rhcbci, vf__rhcbci
-
-    @classmethod
-    def propagate_orbit(cls, p0__rhcbci, v0__rhcbci, time_of_flight):
-        """propagate an orbit based on a time of flight
-
-        Args:
-            p0__rhcbci : ArrayLike (len=3)
-                position vector of initial orbital state in right-handed 
-                celestial-body-centered-inertial coords [m]
-            v0__rhcbci : ArrayLike (len=3)
-                velocity vector of initial orbital state in right-handed 
-                celestial-body-centered-inertial coords [m/s]
-            time_of_flight : float
-                time of flight to propagate [sec]
-        
-        Returns:
-            pf__rhcbci : ArrayLike
-                position vector of final orbital state in right-handed 
-                celestial-body-centered-inertial coords [m]
-            vf__rhcbci : ArrayLike
-                velocity vector of final orbital state in right-handed 
-                celestial-body-centered-inertial coords [m/s]
-
-        Refs:
-            https://docs.poliastro.space/en/latest/autoapi/poliastro/core/propagation/vallado/index.html
-        """
-
-        f, g, fdot, gdot = propagate_vallado(
-            k = C.KERBIN.MU,
-            r0 = p0__rhcbci,
-            v0 = v0__rhcbci,
-            tof = time_of_flight,
-            numiter=32,
-        )
-
-        pf__rhcbci = f * p0__rhcbci + g * v0__rhcbci
-        vf__rhcbci = fdot * p0__rhcbci + gdot * v0__rhcbci
-
-        return pf__rhcbci, vf__rhcbci
 
     def convert_rhntw_to_rhpbody(self, v__rhntw: List[float]) -> List[float]:
         '''Converts vector in right-handed NTW frame to pursuer vessel right-oriented body frame

@@ -4,3 +4,12 @@
 
 # Abstract base classes for KSPDG environment classes
 
+import gymnasium as gym
+
+from abc import ABC
+
+class KSPDGBaseEnv(ABC, gym.Env):
+    """ Abstract base class for all KSPDG gym environments
+    """
+
+    
