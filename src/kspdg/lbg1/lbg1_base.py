@@ -2,7 +2,7 @@
 # Subject to FAR 52.227-11 – Patent Rights – Ownership by the Contractor (May 2014).
 # SPDX-License-Identifier: MIT
 
-# Base class for Lady-Bandit-Bodyguard Group 1 environments
+# Base class for Lady-Bandit-Guard Group 1 environments
 
 import time
 import gymnasium as gym
@@ -21,7 +21,7 @@ DEFAULT_CAPTURE_DIST = 5.0      # [m]
 
 class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
     '''
-    Base environment for Lady-Bandit-Bodyguard (LBB) Group 1 environments
+    Base environment for Lady-Bandit-Guard (LBG) Group 1 environments
 
     Nomenclature comes from paper: 
 
@@ -29,12 +29,12 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
     > IFAC Proceedings Volumes 38, no. 1 (2005): 441-446.
     
     All inherited classes share the following
-        + There is 1 "Bandit", 1 "Bodyguard", and 1 "Lady" spacecraft
+        + There is 1 "Bandit", 1 "Guard", and 1 "Lady" spacecraft
         + Agent controls the Bandit spacecraft, a scripted bot(s) controls the 
-        Lady and the Bodyguard (but the bot's policy varies between environments within the group)
-        + Bandit and Bodyguard have identical vehicle capabilities in each 
+        Lady and the Guard (but the bot's policy varies between environments within the group)
+        + Bandit and Guard have identical vehicle capabilities in each 
         scenario, Lady vehicle may have the same or different vehicle capabilities
-        + Lady initial orbit constant across all sencarios/envs; Bandit and Bodyguard 
+        + Lady initial orbit constant across all sencarios/envs; Bandit and Guard 
         initial orbits are varied across environments in the group
         + Observation and Action spaces are constant across all scenarios/envs
     '''
@@ -47,7 +47,7 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
     PARAMS = SimpleNamespace()
     PARAMS.LADY= SimpleNamespace()
     PARAMS.BANDIT = SimpleNamespace()
-    PARAMS.BODYGUARD = SimpleNamespace()
+    PARAMS.GUARD = SimpleNamespace()
     PARAMS.OBSERVATION = SimpleNamespace()
     PARAMS.INFO = SimpleNamespace()
 
