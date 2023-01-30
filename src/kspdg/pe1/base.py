@@ -44,7 +44,6 @@ class PursuitEnv(gym.Env):
     PARAMS.PURSUER.RCS = SimpleNamespace()
     PARAMS.OBSERVATION = SimpleNamespace()
     PARAMS.INFO = SimpleNamespace()
-    PARAMS.KERBIN = SimpleNamespace()
 
     # observation space paramterization
     # [0] : mission elapsed time [s]
@@ -93,10 +92,6 @@ class PursuitEnv(gym.Env):
     PARAMS.INFO.K_PURSUER_FUEL_USAGE = "pursuer_fuel_usage"
     PARAMS.INFO.K_EVADER_FUEL_USAGE = "evader_fuel_usage"
     PARAMS.INFO.K_DV_AT_TF = "expected_deltav_at_final_time"
-
-    # parameters of celestial body kerbin
-    PARAMS.KERBIN.RADIUS = 6.0e5 # [m] https://wiki.kerbalspaceprogram.com/wiki/Kerbin
-    PARAMS.KERBIN.MU = 3.5316e12 # [m^3/s^2] https://wiki.kerbalspaceprogram.com/wiki/Kerbin
 
     # Relative range at which evader should be controllable
     PARAMS.EVADER.CONTROL_RANGE = 2200  # [m]
@@ -432,7 +427,7 @@ class PursuitEnv(gym.Env):
         """
 
         # "Quantify" mu, init position, final position and time of flight
-        q_mu = Quantity(cls.PARAMS.KERBIN.MU, units.m**3 / units.s**2)
+        q_mu = Quantity(C.KERBIN.MU, units.m**3 / units.s**2)
         q_p0 = Quantity(p0__rhcbci, units.m)
         q_pf = Quantity(pf__rhcbci, units.m)
         q_tf = Quantity(time_of_flight, units.s)
@@ -473,7 +468,7 @@ class PursuitEnv(gym.Env):
         """
 
         f, g, fdot, gdot = propagate_vallado(
-            k = cls.PARAMS.KERBIN.MU,
+            k = C.KERBIN.MU,
             r0 = p0__rhcbci,
             v0 = v0__rhcbci,
             tof = time_of_flight,
