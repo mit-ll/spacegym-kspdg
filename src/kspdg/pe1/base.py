@@ -325,7 +325,7 @@ class PursuitEnv(KSPDGBaseEnv):
         if done:
 
             # call capture dv estimator
-            dv0, dvf = self.estimate_capture_dv(
+            dv0, dvf = U.estimate_capture_dv(
                 p0_prs=p0_p_cb__rhcbci,
                 v0_prs=v0_p_cb__rhcbci,
                 p0_evd=p0_e_cb__rhcbci,
@@ -340,131 +340,6 @@ class PursuitEnv(KSPDGBaseEnv):
 
 
         return info
-
-    @classmethod
-    def estimate_capture_dv(cls, p0_prs, v0_prs, p0_evd, v0_evd, tof):
-        """ Propagate orbits and use one-off lambert targeting to estimate delta-v to capture
-            evader by pursuer
-
-        Args:
-            p0_prs : ArrayLike (len=3)
-                position vector of initial orbital state of pursuer in right-handed 
-                celestial-body-centered-inertial coords [m]
-            v0_prs : ArrayLike (len=3)
-                velocity vector of initial orbital state of pursuer in right-handed 
-                celestial-body-centered-inertial coords [m/s]
-            p0_evd : ArrayLike
-                position vector of initial orbital state of evader in right-handed 
-                celestial-body-centered-inertial coords [m]
-            v0_evd : ArrayLike
-                velocity vector of initial orbital state of evader in right-handed 
-                celestial-body-centered-inertial coords [m/s]
-            tof : float
-                time of flight to propagate [sec]
-        
-        Returns:
-            dv0 : float
-                delta-v at initial state to put pursuer on capturing transfer orbit
-            dvf : float
-                delta-v at final state to put pursuer on capturing transfer orbit
-        """
-        # propagate evader's current orbit (using episode timeout length)
-        # https://poliastro-py.readthedocs.io/en/latest/api/safe/twobody/propagation.html#poliastro.twobody.propagation.kepler
-        p0_e_cb__rhcbci = p0_evd
-        v0_e_cb__rhcbci = v0_evd
-        pf_e_cb__rhcbci, vf_e_cb__rhcbci = U.propagate_orbit_tof(
-            p0__rhcbci=p0_e_cb__rhcbci, 
-            v0__rhcbci=v0_e_cb__rhcbci, 
-            time_of_flight=tof
-        )
-
-        # solve lambert's problem for pursuer from current state to evader's
-        # propagated position (short way around)
-        p0_p_cb__rhcbci = p0_prs
-        v0_p_cb__rhcbci = v0_prs
-        v0trans_p_cb__rhcbci, vftrans_p_cb__rhcbci = U.solve_lambert(
-            p0__rhcbci=p0_p_cb__rhcbci,
-            pf__rhcbci=pf_e_cb__rhcbci,
-            time_of_flight=tof
-        )
-
-        # compute delta-v for pursuer from current velocity to lambert's 
-        # transfer orbit velocity
-        dv0 = np.linalg.norm(v0trans_p_cb__rhcbci - v0_p_cb__rhcbci)
-        dvf = np.linalg.norm(vf_e_cb__rhcbci - vftrans_p_cb__rhcbci)
-
-        return dv0, dvf
-
-    def convert_rhntw_to_rhpbody(self, v__rhntw: List[float]) -> List[float]:
-        '''Converts vector in right-handed NTW frame to pursuer vessel right-oriented body frame
-        Args:
-            v__ntw : List[float]
-                3-vector represented in orbital NTW coords
-        
-        Returns
-            v__rhpbody : List[float]
-                3-vector vector represented in pursuer's right-hadded body coords (forward, right, down)
-        
-        Ref:
-            Left-handed vessel body system: 
-                https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
-            Right-handed NTW system: Vallado, 3rd Edition Sec 3.3.3
-        '''
-
-        # convert right-handed NTW coords to left-handed NTW
-        v__lhntw = U.convert_rhntw_to_lhntw(v__rhntw=v__rhntw)
-
-        # convert left-handed NTW to left-handed vessel body coords
-        # ref: https://krpc.github.io/krpc/python/api/space-center/space-center.html#SpaceCenter.transform_direction
-        # ref: https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
-        v__lhpbody = list(self.conn.space_center.transform_direction(
-            direction = tuple(v__lhntw),
-            from_ = self.vesPursue.orbital_reference_frame,
-            to = self.vesPursue.reference_frame
-        ))
-
-        # convert left-handed body coords (right, forward, down) to right-handed body coords (forward, right, down)
-        v__rhpbody = U.convert_lhbody_to_rhbody(v__lhbody=v__lhpbody)
-
-        return v__rhpbody
-
-    def convert_rhcbci_to_rhpbody(self, v__rhcbci: List[float]) -> List[float]:
-        '''Converts vector in right-handed celestial-body-centered-inertial frame to 
-        pursuer vessel right-oriented body frame
-
-        Args:
-            v__rhcbci : List[float]
-                3-vector represented in celestial-body-centered-inertial fram 
-                (similar to ECI coords, but we aren't necessarily orbitiing Earth)
-        
-        Returns
-            v__rhpbody : List[float]
-                3-vector vector represented in pursuer's right-hadded body coords (forward, right, down)
-        
-        Ref:
-            Left-handed vessel body system: 
-                https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
-            KSP's body-centered inertial reference frame is left-handed
-            (see https://krpc.github.io/krpc/python/api/space-center/celestial-body.html#SpaceCenter.CelestialBody.non_rotating_reference_frame)
-            Right-handed ECI system: Vallado, 3rd Edition Sec 3.3
-        '''
-
-        # convert right-handed CBCI coords to left-handed CBCI
-        v__lhcbci = U.convert_rhcbci_to_lhcbci(v__rhcbci=v__rhcbci)
-
-        # convert left-handed CBCI to left-handed vessel body coords
-        # ref: https://krpc.github.io/krpc/python/api/space-center/space-center.html#SpaceCenter.transform_direction
-        # ref: https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
-        v__lhpbody = list(self.conn.space_center.transform_direction(
-            direction = tuple(v__lhcbci),
-            from_ = self.vesPursue.orbit.body.non_rotating_reference_frame,
-            to = self.vesPursue.reference_frame
-        ))
-
-        # convert left-handed body coords (right, forward, down) to right-handed body coords (forward, right, down)
-        v__rhpbody = U.convert_lhbody_to_rhbody(v__lhbody=v__lhpbody)
-
-        return v__rhpbody
 
     def get_observation(self):
         ''' return observation of pursuit and evader vessels from referee ref frame
@@ -625,3 +500,74 @@ class PursuitEnv(KSPDGBaseEnv):
 
         # close connection to krpc server
         self.conn.close()
+
+    def convert_rhntw_to_rhpbody(self, v__rhntw: List[float]) -> List[float]:
+        '''Converts vector in right-handed NTW frame to pursuer vessel right-oriented body frame
+        Args:
+            v__ntw : List[float]
+                3-vector represented in orbital NTW coords
+        
+        Returns
+            v__rhpbody : List[float]
+                3-vector vector represented in pursuer's right-hadded body coords (forward, right, down)
+        
+        Ref:
+            Left-handed vessel body system: 
+                https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
+            Right-handed NTW system: Vallado, 3rd Edition Sec 3.3.3
+        '''
+
+        # convert right-handed NTW coords to left-handed NTW
+        v__lhntw = U.convert_rhntw_to_lhntw(v__rhntw=v__rhntw)
+
+        # convert left-handed NTW to left-handed vessel body coords
+        # ref: https://krpc.github.io/krpc/python/api/space-center/space-center.html#SpaceCenter.transform_direction
+        # ref: https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
+        v__lhpbody = list(self.conn.space_center.transform_direction(
+            direction = tuple(v__lhntw),
+            from_ = self.vesPursue.orbital_reference_frame,
+            to = self.vesPursue.reference_frame
+        ))
+
+        # convert left-handed body coords (right, forward, down) to right-handed body coords (forward, right, down)
+        v__rhpbody = U.convert_lhbody_to_rhbody(v__lhbody=v__lhpbody)
+
+        return v__rhpbody
+
+    def convert_rhcbci_to_rhpbody(self, v__rhcbci: List[float]) -> List[float]:
+        '''Converts vector in right-handed celestial-body-centered-inertial frame to 
+        pursuer vessel right-oriented body frame
+
+        Args:
+            v__rhcbci : List[float]
+                3-vector represented in celestial-body-centered-inertial fram 
+                (similar to ECI coords, but we aren't necessarily orbitiing Earth)
+        
+        Returns
+            v__rhpbody : List[float]
+                3-vector vector represented in pursuer's right-hadded body coords (forward, right, down)
+        
+        Ref:
+            Left-handed vessel body system: 
+                https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
+            KSP's body-centered inertial reference frame is left-handed
+            (see https://krpc.github.io/krpc/python/api/space-center/celestial-body.html#SpaceCenter.CelestialBody.non_rotating_reference_frame)
+            Right-handed ECI system: Vallado, 3rd Edition Sec 3.3
+        '''
+
+        # convert right-handed CBCI coords to left-handed CBCI
+        v__lhcbci = U.convert_rhcbci_to_lhcbci(v__rhcbci=v__rhcbci)
+
+        # convert left-handed CBCI to left-handed vessel body coords
+        # ref: https://krpc.github.io/krpc/python/api/space-center/space-center.html#SpaceCenter.transform_direction
+        # ref: https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
+        v__lhpbody = list(self.conn.space_center.transform_direction(
+            direction = tuple(v__lhcbci),
+            from_ = self.vesPursue.orbit.body.non_rotating_reference_frame,
+            to = self.vesPursue.reference_frame
+        ))
+
+        # convert left-handed body coords (right, forward, down) to right-handed body coords (forward, right, down)
+        v__rhpbody = U.convert_lhbody_to_rhbody(v__lhbody=v__lhpbody)
+
+        return v__rhpbody

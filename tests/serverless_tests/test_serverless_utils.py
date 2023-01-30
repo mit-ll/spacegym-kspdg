@@ -87,5 +87,51 @@ def test_solve_lambert_0():
     assert np.allclose(v0exp__rhcbci, v0__rhcbci, rtol=1e-3)
     assert np.allclose(vfexp__rhcbci, vf__rhcbci, rtol=1e-3)
 
+def test_estimate_capture_dv_0():
+    """check capture dv of the same circular orbit is zero """
+
+    # ~~ ARRANGE ~~
+    # two points on circular orbit with quarter-period separation
+    p0_prs = np.array([1.5e5+C.KERBIN.RADIUS, 0, 0])
+    p0_evd = np.array([1.5e5+C.KERBIN.RADIUS, 0, 0])
+    pf__rhcbci = np.array([0, 1.5e5+C.KERBIN.RADIUS, 0])
+    r0 = np.linalg.norm(p0_prs)
+    T = 2 * np.pi * np.sqrt(r0**3/C.KERBIN.MU) / 4
+    v0_prs = np.array([0, 2170.0, 0])
+    v0_evd = np.array([0, 2170.0, 0])
+
+    # ~~ ACT ~~
+    # solve lambert's problem
+    dv0, dvf = U.estimate_capture_dv(p0_prs, v0_prs, p0_evd, v0_evd, T)
+
+    # ~~ ASSERT ~~
+    assert np.isclose(dv0, 0.0)
+    assert np.isclose(dvf, 0.0)
+
+def test_estimate_capture_dv_1():
+    """check capture dv of the same circular orbit, relatively inclined by 90 deg, is zero """
+
+    # ~~ ARRANGE ~~
+    # two points on circular orbit with quarter-period separation
+    p0_prs = np.array([1.5e5+C.KERBIN.RADIUS, 0, 0])
+    p0_evd = np.array([0, 0, 1.5e5+C.KERBIN.RADIUS])
+    pf__rhcbci = np.array([0, 1.5e5+C.KERBIN.RADIUS, 0])
+    r0 = np.linalg.norm(p0_prs)
+    T = 2 * np.pi * np.sqrt(r0**3/C.KERBIN.MU) / 4
+    v0_prs = np.array([0, 2170.0, 0])
+    v0_evd = np.array([0, 2170.0, 0])
+
+    # ~~ ACT ~~
+    # solve lambert's problem
+    dv0, dvf = U.estimate_capture_dv(p0_prs, v0_prs, p0_evd, v0_evd, T)
+
+    # ~~ ASSERT ~~
+    assert np.isclose(dv0, 0.0, atol=1.0)
+
+    vfexp_prs = np.array([-2170.0, 0, 0])
+    vfexp_evd = np.array([0, 0, -2170.0])
+    dvfexp = np.linalg.norm(vfexp_prs-vfexp_evd)
+    assert np.isclose(dvf, dvfexp, atol=1.0)
+
 if __name__ == "__main__":
     test_convert_lhcbci_and_rhcbci_0()

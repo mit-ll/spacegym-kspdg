@@ -218,6 +218,59 @@ def propagate_orbit_tof(p0__rhcbci, v0__rhcbci, time_of_flight):
 
     return pf__rhcbci, vf__rhcbci
 
+def estimate_capture_dv(p0_prs, v0_prs, p0_evd, v0_evd, tof):
+    """ Propagate orbits and use one-off lambert targeting to estimate delta-v to capture
+        evader by pursuer
+
+    Args:
+        p0_prs : ArrayLike (len=3)
+            position vector of initial orbital state of pursuer in right-handed 
+            celestial-body-centered-inertial coords [m]
+        v0_prs : ArrayLike (len=3)
+            velocity vector of initial orbital state of pursuer in right-handed 
+            celestial-body-centered-inertial coords [m/s]
+        p0_evd : ArrayLike
+            position vector of initial orbital state of evader in right-handed 
+            celestial-body-centered-inertial coords [m]
+        v0_evd : ArrayLike
+            velocity vector of initial orbital state of evader in right-handed 
+            celestial-body-centered-inertial coords [m/s]
+        tof : float
+            time of flight to propagate [sec]
+    
+    Returns:
+        dv0 : float
+            delta-v at initial state to put pursuer on capturing transfer orbit
+        dvf : float
+            delta-v at final state to put pursuer on capturing transfer orbit
+    """
+    # propagate evader's current orbit (using episode timeout length)
+    # https://poliastro-py.readthedocs.io/en/latest/api/safe/twobody/propagation.html#poliastro.twobody.propagation.kepler
+    p0_e_cb__rhcbci = p0_evd
+    v0_e_cb__rhcbci = v0_evd
+    pf_e_cb__rhcbci, vf_e_cb__rhcbci = propagate_orbit_tof(
+        p0__rhcbci=p0_e_cb__rhcbci, 
+        v0__rhcbci=v0_e_cb__rhcbci, 
+        time_of_flight=tof
+    )
+
+    # solve lambert's problem for pursuer from current state to evader's
+    # propagated position (short way around)
+    p0_p_cb__rhcbci = p0_prs
+    v0_p_cb__rhcbci = v0_prs
+    v0trans_p_cb__rhcbci, vftrans_p_cb__rhcbci = solve_lambert(
+        p0__rhcbci=p0_p_cb__rhcbci,
+        pf__rhcbci=pf_e_cb__rhcbci,
+        time_of_flight=tof
+    )
+
+    # compute delta-v for pursuer from current velocity to lambert's 
+    # transfer orbit velocity
+    dv0 = np.linalg.norm(v0trans_p_cb__rhcbci - v0_p_cb__rhcbci)
+    dvf = np.linalg.norm(vf_e_cb__rhcbci - vftrans_p_cb__rhcbci)
+
+    return dv0, dvf
+
 ###########################################################################
 
 ## Broken/Non-functional code. Implementation details kept for posterity
