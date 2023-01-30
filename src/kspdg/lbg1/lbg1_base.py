@@ -48,6 +48,7 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
     PARAMS.LADY= SimpleNamespace()
     PARAMS.BANDIT = SimpleNamespace()
     PARAMS.GUARD = SimpleNamespace()
+    PARAMS.BANDIT.RCS = SimpleNamespace()
     PARAMS.OBSERVATION = SimpleNamespace()
     PARAMS.INFO = SimpleNamespace()
 
@@ -113,50 +114,46 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
     PARAMS.INFO.K_EVADER_FUEL_USAGE = "evader_fuel_usage"
     PARAMS.INFO.K_DV_AT_TF = "expected_deltav_at_final_time"
 
-    # Relative range at which evader should be controllable
-    PARAMS.EVADER.CONTROL_RANGE = 2200  # [m]
-
     # Specific impulse assumes all RCS thrusters are identical RV-105
     # parts operating in vacuum
-    PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE = 240 # [s]
-    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE = 1000 # [N]
+    PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE = 240 # [s]
+    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE = 1000 # [N]
 
     # Assumed number of thrusters creating thrust in each direction
-    PARAMS.PURSUER.RCS.N_THRUSTERS_FORWARD = 8
-    PARAMS.PURSUER.RCS.N_THRUSTERS_REVERSE = 8
-    PARAMS.PURSUER.RCS.N_THRUSTERS_RIGHT = 4
-    PARAMS.PURSUER.RCS.N_THRUSTERS_LEFT = 4
-    PARAMS.PURSUER.RCS.N_THRUSTERS_UP = 4
-    PARAMS.PURSUER.RCS.N_THRUSTERS_DOWN = 4
+    PARAMS.BANDIT.RCS.N_THRUSTERS_FORWARD = 8
+    PARAMS.BANDIT.RCS.N_THRUSTERS_REVERSE = 8
+    PARAMS.BANDIT.RCS.N_THRUSTERS_RIGHT = 4
+    PARAMS.BANDIT.RCS.N_THRUSTERS_LEFT = 4
+    PARAMS.BANDIT.RCS.N_THRUSTERS_UP = 4
+    PARAMS.BANDIT.RCS.N_THRUSTERS_DOWN = 4
 
     # computed max thrust in each direction [N]
-    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_FORWARD = \
-        PARAMS.PURSUER.RCS.N_THRUSTERS_FORWARD * PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
-    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_REVERSE = \
-        PARAMS.PURSUER.RCS.N_THRUSTERS_REVERSE * PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
-    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_RIGHT = \
-        PARAMS.PURSUER.RCS.N_THRUSTERS_RIGHT * PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
-    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_LEFT = \
-        PARAMS.PURSUER.RCS.N_THRUSTERS_LEFT * PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
-    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_UP = \
-        PARAMS.PURSUER.RCS.N_THRUSTERS_UP * PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
-    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_DOWN = \
-        PARAMS.PURSUER.RCS.N_THRUSTERS_DOWN * PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
+    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_FORWARD = \
+        PARAMS.BANDIT.RCS.N_THRUSTERS_FORWARD * PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
+    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_REVERSE = \
+        PARAMS.BANDIT.RCS.N_THRUSTERS_REVERSE * PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
+    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_RIGHT = \
+        PARAMS.BANDIT.RCS.N_THRUSTERS_RIGHT * PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
+    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_LEFT = \
+        PARAMS.BANDIT.RCS.N_THRUSTERS_LEFT * PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
+    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_UP = \
+        PARAMS.BANDIT.RCS.N_THRUSTERS_UP * PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
+    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_DOWN = \
+        PARAMS.BANDIT.RCS.N_THRUSTERS_DOWN * PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
 
     # computed maximum fuel consumption rate in each direction [kg/s]
-    PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_FORWARD = \
-        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_FORWARD / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
-    PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_REVERSE = \
-        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_REVERSE / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
-    PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_RIGHT = \
-        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_RIGHT / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
-    PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_LEFT = \
-        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_LEFT / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
-    PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_UP = \
-        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_UP / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
-    PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_DOWN = \
-        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_DOWN / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
-
+    PARAMS.BANDIT.RCS.VACUUM_MAX_FUEL_CONSUMPTION_FORWARD = \
+        PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_FORWARD / (C.G0 * PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE)
+    PARAMS.BANDIT.RCS.VACUUM_MAX_FUEL_CONSUMPTION_REVERSE = \
+        PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_REVERSE / (C.G0 * PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE)
+    PARAMS.BANDIT.RCS.VACUUM_MAX_FUEL_CONSUMPTION_RIGHT = \
+        PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_RIGHT / (C.G0 * PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE)
+    PARAMS.BANDIT.RCS.VACUUM_MAX_FUEL_CONSUMPTION_LEFT = \
+        PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_LEFT / (C.G0 * PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE)
+    PARAMS.BANDIT.RCS.VACUUM_MAX_FUEL_CONSUMPTION_UP = \
+        PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_UP / (C.G0 * PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE)
+    PARAMS.BANDIT.RCS.VACUUM_MAX_FUEL_CONSUMPTION_DOWN = \
+        PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_DOWN / (C.G0 * PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE)
 
     def __init__(self, loadfile:str, 
         episode_timeout:float = DEFAULT_EPISODE_TIMEOUT, 
@@ -179,11 +176,12 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
 
         # establish observation space (see get_observation for mapping)
         self.observation_space = gym.spaces.Box(
-            low = np.concatenate((np.zeros(3), -np.inf*np.ones(12))),
-            high = np.inf * np.ones(15)
+            low = np.concatenate((np.zeros(3), -np.inf*np.ones(18))),
+            high = np.inf * np.ones(21)
         )
+        assert self.observation_space.shape == (self.PARAMS.OBSERVATION.LEN,)
 
-        # establish action space (forward, right, down, time)
+        # establish action space (forward, right, down, time) thrust of bandit
         self.action_space = gym.spaces.Box(
             low=np.array([-1.0, -1.0, -1.0, 0.0]), 
             high=np.array([1.0, 1.0, 1.0, 10.0])
@@ -198,38 +196,39 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         self.connect_and_load_on_reset()
 
         # get vessel objects
-        self.vesEvade, self.vesPursue = self.conn.space_center.vessels[:3]
+        self.vesLady, self.vesBandit, self.vesGuard = self.conn.space_center.vessels[:4]
 
         # Set the pursuer as the the active (i.e. human-controlled) vessel
         # and target evader
-        self.conn.space_center.active_vessel = self.vesPursue
-        self.conn.space_center.target_vessel = self.vesEvade
-        print("Changing active vehicle...")
-        time.sleep(1)   # give time to re-orient
+        print("Changing active vehicle to Bandit and setting target to Lady...")
+        self.conn.space_center.active_vessel = self.vesBandit
+        self.conn.space_center.target_vessel = self.vesLady
+        time.sleep(0.5)   # give time to re-orient
 
         # set the evader to stability assist and orient in orbit-normal direction
         # orient pursuer in target-pointing direction
 
-        print("Activating Pursuer SAS, RCS and orienting to Evader...")
-        self.vesPursue.control.sas = True
+        print("Activating Bandit SAS, RCS and orienting to Lady...")
+        self.vesBandit.control.sas = True
         time.sleep(0.1)   # give time to re-orient
-        self.vesPursue.control.sas_mode = self.vesPursue.control.sas_mode.target
-        time.sleep(2)   # give time to re-orient
+        self.vesBandit.control.sas_mode = self.vesBandit.control.sas_mode.target
+        time.sleep(0.5)   # give time to re-orient
 
         # activate RCS thrusters
-        self.vesPursue.control.rcs = True
+        self.vesBandit.control.rcs = True
 
         # reset performance metrics
         self.min_dist = np.inf
         self.min_dist_time = 0.0
         self.min_posvel_prod = np.inf
-        self.pursuer_init_mass = self.vesPursue.mass
-        self.evader_init_mass = self.vesEvade.mass
+        self.bandit_init_mass = self.vesBandit.mass
+        self.lady_init_mass = self.vesLady.mass
 
+        # TODO
         # start process for evader maneuvers
-        self.stop_evade_thread = False
-        self.evade_thread = Thread(target=self.evasive_maneuvers)
-        self.evade_thread.start()
+        # self.stop_evade_thread = False
+        # self.evade_thread = Thread(target=self.evasive_maneuvers)
+        # self.evade_thread.start()
 
         # start process for checking episode termination
         self.is_episode_done = False
@@ -237,11 +236,12 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         self.episode_termination_thread = Thread(target=self.enforce_episode_termination)
         self.episode_termination_thread.start()
 
+        # TODO
         # package observation and performance metric info for return
-        obs = self.get_observation()
-        info = self.get_info(obs, False)
+        # obs = self.get_observation()
+        # info = self.get_info(obs, False)
 
-        return obs, info
+        # return obs, info
 
     def step(self, action):
         ''' Apply thrust and torque actuation for specified time duration
@@ -468,10 +468,10 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
 
         return obs_list
         
-    def get_pe_relative_distance(self):
-        '''compute relative distance between pursuer and evader'''
-        p_vesE_vesP__lhpbody = self.vesEvade.position(self.vesPursue.reference_frame)
-        return np.linalg.norm(p_vesE_vesP__lhpbody)
+    def get_lb_relative_distance(self):
+        '''compute relative distance between lady and bandit'''
+        p_vesL_vesB__lhpbody = self.vesLady.position(self.vesBandit.reference_frame)
+        return np.linalg.norm(p_vesL_vesB__lhpbody)
 
     def get_pe_relative_speed(self):
         '''compute relative speed between pursuer and evader'''
@@ -488,14 +488,14 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         '''
         
         while not self.stop_episode_termination_thread:
-            # get distance to pursuer
-            d_vesE_vesP = self.get_pe_relative_distance()
-            is_captured = d_vesE_vesP < self.capture_dist
+            # get distance between lady and bandit
+            d_vesL_vesB = self.get_lb_relative_distance()
+            is_captured = d_vesL_vesB < self.capture_dist
             if is_captured:
                 print("\n~~~SUCCESSFUL CAPTURE!~~~\n")
 
             # check for episode timeout
-            is_timeout = self.vesPursue.met > self.episode_timeout
+            is_timeout = self.vesBandit.met > self.episode_timeout
             if is_timeout:
                 print("\n~~~EPISODE TIMEOUT~~~\n")
 
@@ -506,9 +506,10 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
 
     def close(self):
 
+        # TODO
         # handle evasive maneuvering thread
-        self.stop_evade_thread = True
-        self.evade_thread.join()
+        # self.stop_evade_thread = True
+        # self.evade_thread.join()
 
         # handle episode termination thread
         self.stop_episode_termination_thread = True
