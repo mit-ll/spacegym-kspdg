@@ -39,7 +39,7 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         + Observation and Action spaces are constant across all scenarios/envs
     '''
 
-    # hard-coded, static parameters for pursuer vehicle
+    # hard-coded, static parameters for lady, bandit, and guard vessels
     # that are accessible yet constant (so shouldn't be
     # in observation which should really only be variable values)
     # Need for hard-coding rsc properties comes from the errors in 
@@ -60,8 +60,8 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
     # [6:9] : bandit velocity in reference orbit right-hand CBCI coords [m/s]
     # [9:12] : lady position in reference orbit right-hand CBCI coords [m]
     # [12:15] : lady velocity in reference orbit right-hand CBCI coords [m/s]
-    # [15:18] : lady position in reference orbit right-hand CBCI coords [m]
-    # [18:21] : lady velocity in reference orbit right-hand CBCI coords [m/s]
+    # [15:18] : guard position in reference orbit right-hand CBCI coords [m]
+    # [18:21] : guard velocity in reference orbit right-hand CBCI coords [m/s]
     PARAMS.OBSERVATION.LEN = 21
     PARAMS.OBSERVATION.K_MET = "mission_elapsed_time"
     PARAMS.OBSERVATION.I_MET = 0
@@ -107,12 +107,14 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
     PARAMS.OBSERVATION.I_GUARD_VZ = 20
 
     # info metric parameters
-    PARAMS.INFO.K_CLOSEST_APPROACH = "closest_approach"
-    PARAMS.INFO.K_CLOSEST_APPROACH_TIME = "closest_approach_time"
-    PARAMS.INFO.K_MIN_POSVEL_PRODUCT = "minimum_position_velocity_product"
-    PARAMS.INFO.K_PURSUER_FUEL_USAGE = "pursuer_fuel_usage"
-    PARAMS.INFO.K_EVADER_FUEL_USAGE = "evader_fuel_usage"
-    PARAMS.INFO.K_DV_AT_TF = "expected_deltav_at_final_time"
+    PARAMS.INFO.K_CLOSEST_LB_APPROACH = "closest_lady_bandit_approach"
+    PARAMS.INFO.K_CLOSEST_LB_APPROACH_TIME = "closest_lady_bandit_approach_time"
+    PARAMS.INFO.K_CLOSEST_BG_APPROACH = "closest_bandit_guard_approach"
+    PARAMS.INFO.K_MIN_LB_DISTSPEED_PRODUCT = "minimum_lady_bandit_distance_speed_product"
+    PARAMS.INFO.K_BANDIT_FUEL_USAGE = "bandit_fuel_usage"
+    PARAMS.INFO.K_LADY_FUEL_USAGE = "lady_fuel_usage"
+    PARAMS.INFO.K_GUARD_FUEL_USAGE = "guard_fuel_usage"
+    PARAMS.INFO.K_LB_DV_AT_TF = "expected_lady_bandit_deltav_at_final_time"
 
     # Specific impulse assumes all RCS thrusters are identical RV-105
     # parts operating in vacuum
@@ -157,19 +159,24 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
 
     def __init__(self, loadfile:str, 
         episode_timeout:float = DEFAULT_EPISODE_TIMEOUT, 
-        capture_dist:float = DEFAULT_CAPTURE_DIST):
+        lady_capture_dist:float = DEFAULT_CAPTURE_DIST,
+        bandit_capture_dist:float = DEFAULT_CAPTURE_DIST):
         """
         Args:
             episode_timeout : float
                 max length of episode [sec]
-            capture_dist : float
-                distance at which evader is considered captured [m]
+            lady_capture_dist : float
+                distance at which lady is considered captured by bandit [m]
+            bandit_capture_dist : float
+                distance at which bandit is considered captured by guard [m]
         """
 
         assert episode_timeout > 0
-        assert capture_dist > 0
+        assert lady_capture_dist > 0
+        assert bandit_capture_dist > 0
         self.episode_timeout = episode_timeout
-        self.capture_dist = capture_dist
+        self.lady_capture_dist = lady_capture_dist
+        self.bandit_capture_dist = bandit_capture_dist
 
         # establish load file for environment resets
         self.loadfile = loadfile
@@ -196,16 +203,14 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         # get vessel objects
         self.vesLady, self.vesBandit, self.vesGuard = self.conn.space_center.vessels[:4]
 
-        # Set the pursuer as the the active (i.e. human-controlled) vessel
-        # and target evader
+        # Set the bandit as the the active (i.e. human-controlled) vessel
+        # and target lady
         print("Changing active vehicle to Bandit and setting target to Lady...")
         self.conn.space_center.active_vessel = self.vesBandit
         self.conn.space_center.target_vessel = self.vesLady
         time.sleep(0.5)   # give time to re-orient
 
-        # set the evader to stability assist and orient in orbit-normal direction
-        # orient pursuer in target-pointing direction
-
+        # orient bandit in target-pointing direction
         print("Activating Bandit SAS, RCS and orienting to Lady...")
         self.vesBandit.control.sas = True
         time.sleep(0.1)   # give time to re-orient
@@ -214,6 +219,39 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
 
         # activate RCS thrusters
         self.vesBandit.control.rcs = True
+
+    def _reset_episode_metrics(self) -> None:
+        """ Reset attributes that track proximity, timing, and propellant use metrics
+        """
+
+        self.min_lb_dist = np.inf   # minimum distance between lady and bandit
+        self.min_lb_dist_time = 0.0 # time of min dist between lady and bandit
+        self.min_bg_dist = np.inf   # minimum distance between bandit and guard
+        self.min_lb_distspeed_prod = np.inf    # minimum of distance-speed product between lady and bandit
+        self.lady_init_mass = self.vesLady.mass
+        self.bandit_init_mass = self.vesBandit.mass
+        self.guard_init_mass = self.vesGuard.mass
+
+    def _start_bot_threads(self) -> None:
+        """ Start parallel thread to continuously execute lady-guard policy
+        """
+
+        self.stop_bot_thread = False
+
+        # check that thread does not exist or is not running
+        if hasattr(self, "bot_thread"):
+            if self.bot_thread.is_alive():
+                raise ConnectionError("bot_thread is already running."+ 
+                    " Close and join bot_thread before restarting")
+
+        self.bot_thread = Thread(target=self.lady_guard_policy)
+        self.bot_thread.start()
+
+    def lady_guard_policy(self):
+        """ Behvaior policy to be continuously run by lady and guard vessels
+        """
+        pass
+        # raise NotImplementedError("Must be implemented by child class")
 
     def step(self, action):
         ''' Apply thrust and torque actuation for specified time duration
@@ -248,7 +286,7 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         obs = self.get_observation()
 
         # compute reward
-        rew = -self.get_pe_relative_distance()
+        rew = -self.get_lb_relative_distance()
 
         # compute performance metrics
         info = self.get_info(obs, self.is_episode_done)
@@ -267,80 +305,99 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         obs = observation
         info = dict()
 
-        # parse pursuer and evader current states
-        p0_p_cb__rhcbci = np.array([
-            obs[self.PARAMS.OBSERVATION.I_PURSUER_PX],
-            obs[self.PARAMS.OBSERVATION.I_PURSUER_PY],
-            obs[self.PARAMS.OBSERVATION.I_PURSUER_PZ],
+        # parse banding and lady current states
+        p0_b_cb__rhcbci = np.array([
+            obs[self.PARAMS.OBSERVATION.I_BANDIT_PX],
+            obs[self.PARAMS.OBSERVATION.I_BANDIT_PY],
+            obs[self.PARAMS.OBSERVATION.I_BANDIT_PZ],
         ])
-        v0_p_cb__rhcbci = np.array([
-            obs[self.PARAMS.OBSERVATION.I_PURSUER_VX],
-            obs[self.PARAMS.OBSERVATION.I_PURSUER_VY],
-            obs[self.PARAMS.OBSERVATION.I_PURSUER_VZ],
+        v0_b_cb__rhcbci = np.array([
+            obs[self.PARAMS.OBSERVATION.I_BANDIT_VX],
+            obs[self.PARAMS.OBSERVATION.I_BANDIT_VY],
+            obs[self.PARAMS.OBSERVATION.I_BANDIT_VZ],
         ])
-        p0_e_cb__rhcbci = np.array([
-            obs[self.PARAMS.OBSERVATION.I_EVADER_PX],
-            obs[self.PARAMS.OBSERVATION.I_EVADER_PY],
-            obs[self.PARAMS.OBSERVATION.I_EVADER_PZ],
+        p0_l_cb__rhcbci = np.array([
+            obs[self.PARAMS.OBSERVATION.I_LADY_PX],
+            obs[self.PARAMS.OBSERVATION.I_LADY_PY],
+            obs[self.PARAMS.OBSERVATION.I_LADY_PZ],
         ])
-        v0_e_cb__rhcbci = np.array([
-            obs[self.PARAMS.OBSERVATION.I_EVADER_VX],
-            obs[self.PARAMS.OBSERVATION.I_EVADER_VY],
-            obs[self.PARAMS.OBSERVATION.I_EVADER_VZ],
+        v0_l_cb__rhcbci = np.array([
+            obs[self.PARAMS.OBSERVATION.I_LADY_VX],
+            obs[self.PARAMS.OBSERVATION.I_LADY_VY],
+            obs[self.PARAMS.OBSERVATION.I_LADY_VZ],
         ])
+        # p0_g_cb__rhcbci = np.array([
+        #     obs[self.PARAMS.OBSERVATION.I_GUARD_PX],
+        #     obs[self.PARAMS.OBSERVATION.I_GUARD_PY],
+        #     obs[self.PARAMS.OBSERVATION.I_GUARD_PZ],
+        # ])
+        # v0_g_cb__rhcbci = np.array([
+        #     obs[self.PARAMS.OBSERVATION.I_GUARD_VX],
+        #     obs[self.PARAMS.OBSERVATION.I_GUARD_VY],
+        #     obs[self.PARAMS.OBSERVATION.I_GUARD_VZ],
+        # ])
         
-        # nearest approach metrics
-        d_vesE_vesP = np.linalg.norm(p0_p_cb__rhcbci-p0_e_cb__rhcbci)
-        if d_vesE_vesP < self.min_dist:
-            self.min_dist = d_vesE_vesP
-            self.min_dist_time = obs[self.PARAMS.OBSERVATION.I_MET]
-        info[self.PARAMS.INFO.K_CLOSEST_APPROACH] = self.min_dist
-        info[self.PARAMS.INFO.K_CLOSEST_APPROACH_TIME] = self.min_dist_time
+        # nearest approach between lady and bandit
+        # d_vesL_vesB = np.linalg.norm(p0_b_cb__rhcbci-p0_l_cb__rhcbci)
+        d_vesL_vesB = self.get_lb_relative_distance()
+        if d_vesL_vesB < self.min_lb_dist:
+            self.min_lb_dist = d_vesL_vesB
+            self.min_lb_dist_time = obs[self.PARAMS.OBSERVATION.I_MET]
+        info[self.PARAMS.INFO.K_CLOSEST_LB_APPROACH] = self.min_lb_dist
+        info[self.PARAMS.INFO.K_CLOSEST_LB_APPROACH_TIME] = self.min_lb_dist_time
 
-        # position-velocity product metric
-        s_vesE_vesP = np.linalg.norm(v0_p_cb__rhcbci-v0_e_cb__rhcbci)
-        pv_prod = d_vesE_vesP * s_vesE_vesP
-        if pv_prod < self.min_posvel_prod:
-            self.min_posvel_prod = pv_prod
-        info[self.PARAMS.INFO.K_MIN_POSVEL_PRODUCT] = self.min_posvel_prod
+        # nearest approach between bandit and guard
+        # d_vesB_vesG = np.linalg.norm(p0_g_cb__rhcbci-p0_b_cb__rhcbci)
+        d_vesB_vesG = self.get_bg_relative_distance()
+        if d_vesB_vesG < self.min_bg_dist:
+            self.min_bg_dist = d_vesB_vesG
+        info[self.PARAMS.INFO.K_CLOSEST_BG_APPROACH] = self.min_bg_dist
+
+        # distance-speed product metric
+        s_vesL_vesB = np.linalg.norm(v0_b_cb__rhcbci-v0_l_cb__rhcbci)
+        lb_ds_prod = d_vesL_vesB * s_vesL_vesB
+        if lb_ds_prod < self.min_lb_distspeed_prod:
+            self.min_lb_distspeed_prod = lb_ds_prod
+        info[self.PARAMS.INFO.K_MIN_LB_DISTSPEED_PRODUCT] = self.min_lb_distspeed_prod
 
         # fuel usage 
-        info[self.PARAMS.INFO.K_PURSUER_FUEL_USAGE] = self.pursuer_init_mass - self.vesPursue.mass
-        info[self.PARAMS.INFO.K_EVADER_FUEL_USAGE] = self.evader_init_mass - self.vesEvade.mass
+        info[self.PARAMS.INFO.K_BANDIT_FUEL_USAGE] = self.bandit_init_mass - self.vesBandit.mass
+        info[self.PARAMS.INFO.K_LADY_FUEL_USAGE] = self.lady_init_mass - self.vesLady.mass
+        info[self.PARAMS.INFO.K_GUARD_FUEL_USAGE] = self.guard_init_mass - self.vesGuard.mass
 
-        # compute approximate delta-v need to intercept non-maneuvering
-        # evader
+        # compute approximate delta-v need to intercept non-maneuvering lady
         if done:
 
             # call capture dv estimator
             dv0, dvf = U.estimate_capture_dv(
-                p0_prs=p0_p_cb__rhcbci,
-                v0_prs=v0_p_cb__rhcbci,
-                p0_evd=p0_e_cb__rhcbci,
-                v0_evd=v0_e_cb__rhcbci,
+                p0_prs=p0_b_cb__rhcbci,
+                v0_prs=v0_b_cb__rhcbci,
+                p0_evd=p0_l_cb__rhcbci,
+                v0_evd=v0_l_cb__rhcbci,
                 tof=self.episode_timeout
             )
 
-            info[self.PARAMS.INFO.K_DV_AT_TF] = dv0 + dvf
+            info[self.PARAMS.INFO.K_LB_DV_AT_TF] = dv0 + dvf
 
         else:
-            info[self.PARAMS.INFO.K_DV_AT_TF] = None
-
+            info[self.PARAMS.INFO.K_LB_DV_AT_TF] = None
 
         return info
 
     def get_observation(self):
-        ''' return observation of pursuit and evader vessels from referee ref frame
+        ''' return observation of bandit, lady, and guard pos-vel state
 
         Returns:
             obs : list
                 [0] : mission elapsed time [s]
-                [1] : current vehicle (pursuer) mass [kg]
-                [2] : current vehicle (pursuer) propellant  (mono prop) [kg]
-                [3:6] : pursuer position in reference orbit right-hand CBCI coords [m]
-                [6:9] : pursuer velocity in reference orbit right-hand CBCI coords [m/s]
-                [9:12] : evader position in reference orbit right-hand CBCI coords [m]
-                [12:15] : evader velocity in reference orbit right-hand CBCI coords [m/s]
+                [1] : current vehicle (bandit) mass [kg]
+                [2] : current vehicle (bandit) propellant  (mono prop) [kg]
+                [3:6] : bandit position in reference orbit right-hand CBCI coords [m]
+                [6:9] : bandit velocity in reference orbit right-hand CBCI coords [m/s]
+                [9:12] : lady position in reference orbit right-hand CBCI coords [m]
+                [12:15] : lady velocity in reference orbit right-hand CBCI coords [m/s]
+                [15:18] : guard position in reference orbit right-hand CBCI coords [m]
+                [18:21] : guard velocity in reference orbit right-hand CBCI coords [m/s]
 
         Ref: 
             - CBCI stands for celestial-body-centered inertial which is a coralary to ECI coords
@@ -350,48 +407,62 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
 
         '''
 
-        rf = self.vesPursue.orbit.body.non_rotating_reference_frame
+        rf = self.vesBandit.orbit.body.non_rotating_reference_frame
 
         obs = [None] * self.PARAMS.OBSERVATION.LEN
 
-        # get pursuer mass properties
-        obs[self.PARAMS.OBSERVATION.I_MET] = self.vesPursue.met
-        obs[self.PARAMS.OBSERVATION.I_PURSUER_MASS] = self.vesPursue.mass
-        obs[self.PARAMS.OBSERVATION.I_PURSUER_PROP_MASS] = self.vesPursue.resources.amount('MonoPropellant')
+        # get bandit (i.e. vehicle under control) mass properties
+        obs[self.PARAMS.OBSERVATION.I_MET] = self.vesBandit.met
+        obs[self.PARAMS.OBSERVATION.I_BANDIT_MASS] = self.vesBandit.mass
+        obs[self.PARAMS.OBSERVATION.I_BANDIT_PROP_MASS] = self.vesBandit.resources.amount('MonoPropellant')
 
-        # got pursuer and evader position and velocity in 
+        # get bandit, lady, and guard position and velocity in 
         # left-handed celestial-body-centered-inertial frame
-        p_p_cb__lhcbci = list(self.vesPursue.position(rf))
-        v_p_cb__lhcbci = list(self.vesPursue.velocity(rf))
-        p_e_cb__lhcbci = list(self.vesEvade.position(rf))
-        v_e_cb__lhcbci = list(self.vesEvade.velocity(rf))
+        p_b_cb__lhcbci = list(self.vesBandit.position(rf))
+        v_b_cb__lhcbci = list(self.vesBandit.velocity(rf))
+        p_l_cb__lhcbci = list(self.vesLady.position(rf))
+        v_l_cb__lhcbci = list(self.vesLady.velocity(rf))
+        p_g_cb__lhcbci = list(self.vesGuard.position(rf))
+        v_g_cb__lhcbci = list(self.vesGuard.velocity(rf))
 
         # convert to right-hand system and add to observation
-        p_p_cb__rhcbci = U.convert_lhcbci_to_rhcbci(p_p_cb__lhcbci)
-        v_p_cb__rhcbci = U.convert_lhcbci_to_rhcbci(v_p_cb__lhcbci)
-        p_e_cb__rhcbci = U.convert_lhcbci_to_rhcbci(p_e_cb__lhcbci)
-        v_e_cb__rhcbci = U.convert_lhcbci_to_rhcbci(v_e_cb__lhcbci)
+        p_b_cb__rhcbci = U.convert_lhcbci_to_rhcbci(p_b_cb__lhcbci)
+        v_b_cb__rhcbci = U.convert_lhcbci_to_rhcbci(v_b_cb__lhcbci)
+        p_l_cb__rhcbci = U.convert_lhcbci_to_rhcbci(p_l_cb__lhcbci)
+        v_l_cb__rhcbci = U.convert_lhcbci_to_rhcbci(v_l_cb__lhcbci)
+        p_g_cb__rhcbci = U.convert_lhcbci_to_rhcbci(p_g_cb__lhcbci)
+        v_g_cb__rhcbci = U.convert_lhcbci_to_rhcbci(v_g_cb__lhcbci)
 
-        # store observation of pursuer and evader position and velocity
-        obs[self.PARAMS.OBSERVATION.I_PURSUER_PX], \
-            obs[self.PARAMS.OBSERVATION.I_PURSUER_PY], \
-            obs[self.PARAMS.OBSERVATION.I_PURSUER_PZ]  = \
-            p_p_cb__rhcbci 
+        # store observation of bandit, lady, and guard position and velocity
+        obs[self.PARAMS.OBSERVATION.I_BANDIT_PX], \
+            obs[self.PARAMS.OBSERVATION.I_BANDIT_PY], \
+            obs[self.PARAMS.OBSERVATION.I_BANDIT_PZ]  = \
+            p_b_cb__rhcbci 
         
-        obs[self.PARAMS.OBSERVATION.I_PURSUER_VX], \
-            obs[self.PARAMS.OBSERVATION.I_PURSUER_VY], \
-            obs[self.PARAMS.OBSERVATION.I_PURSUER_VZ]  = \
-            v_p_cb__rhcbci
+        obs[self.PARAMS.OBSERVATION.I_BANDIT_VX], \
+            obs[self.PARAMS.OBSERVATION.I_BANDIT_VY], \
+            obs[self.PARAMS.OBSERVATION.I_BANDIT_VZ]  = \
+            v_b_cb__rhcbci
 
-        obs[self.PARAMS.OBSERVATION.I_EVADER_PX], \
-            obs[self.PARAMS.OBSERVATION.I_EVADER_PY], \
-            obs[self.PARAMS.OBSERVATION.I_EVADER_PZ]  = \
-            p_e_cb__rhcbci
+        obs[self.PARAMS.OBSERVATION.I_LADY_PX], \
+            obs[self.PARAMS.OBSERVATION.I_LADY_PY], \
+            obs[self.PARAMS.OBSERVATION.I_LADY_PZ]  = \
+            p_l_cb__rhcbci
 
-        obs[self.PARAMS.OBSERVATION.I_EVADER_VX], \
-            obs[self.PARAMS.OBSERVATION.I_EVADER_VY], \
-            obs[self.PARAMS.OBSERVATION.I_EVADER_VZ]  = \
-            v_e_cb__rhcbci
+        obs[self.PARAMS.OBSERVATION.I_LADY_VX], \
+            obs[self.PARAMS.OBSERVATION.I_LADY_VY], \
+            obs[self.PARAMS.OBSERVATION.I_LADY_VZ]  = \
+            v_l_cb__rhcbci
+
+        obs[self.PARAMS.OBSERVATION.I_GUARD_PX], \
+            obs[self.PARAMS.OBSERVATION.I_GUARD_PY], \
+            obs[self.PARAMS.OBSERVATION.I_GUARD_PZ]  = \
+            p_g_cb__rhcbci
+
+        obs[self.PARAMS.OBSERVATION.I_GUARD_VX], \
+            obs[self.PARAMS.OBSERVATION.I_GUARD_VY], \
+            obs[self.PARAMS.OBSERVATION.I_GUARD_VZ]  = \
+            v_g_cb__rhcbci
 
         return obs
 
@@ -401,20 +472,26 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         assert len(obs_list) == cls.PARAMS.OBSERVATION.LEN
         obs_dict = dict()
         obs_dict[cls.PARAMS.OBSERVATION.K_MET] = obs_list[cls.PARAMS.OBSERVATION.I_MET]
-        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_MASS] = obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_MASS]
-        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_PROP_MASS] = obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_PROP_MASS]
-        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_PX] = obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_PX]
-        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_PY] = obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_PY]
-        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_PZ] = obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_PZ]
-        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_VX] = obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_VX]
-        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_VY] = obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_VY]
-        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_VZ] = obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_VZ]
-        obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_PX] = obs_list[cls.PARAMS.OBSERVATION.I_EVADER_PX]
-        obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_PY] = obs_list[cls.PARAMS.OBSERVATION.I_EVADER_PY]
-        obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_PZ] = obs_list[cls.PARAMS.OBSERVATION.I_EVADER_PZ]
-        obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_VX] = obs_list[cls.PARAMS.OBSERVATION.I_EVADER_VX]
-        obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_VY] = obs_list[cls.PARAMS.OBSERVATION.I_EVADER_VY]
-        obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_VZ] = obs_list[cls.PARAMS.OBSERVATION.I_EVADER_VZ]
+        obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_MASS] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_MASS]
+        obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PROP_MASS] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PROP_MASS]
+        obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PX] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PX]
+        obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PY] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PY]
+        obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PZ] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PZ]
+        obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VX] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VX]
+        obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VY] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VY]
+        obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VZ] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VZ]
+        obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PX] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_PX]
+        obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PY] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_PY]
+        obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PZ] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_PZ]
+        obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VX] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_VX]
+        obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VY] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_VY]
+        obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VZ] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_VZ]
+        obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PX] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PX]
+        obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PY] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PY]
+        obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PZ] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PZ]
+        obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VX] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VX]
+        obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VY] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VY]
+        obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VZ] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VZ]
 
         return obs_dict
 
@@ -423,20 +500,26 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         """convert observation from list to dict"""
         obs_list = cls.PARAMS.OBSERVATION.LEN * [None]
         obs_list[cls.PARAMS.OBSERVATION.I_MET] = obs_dict[cls.PARAMS.OBSERVATION.K_MET]
-        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_MASS] = obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_MASS]
-        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_PROP_MASS] = obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_PROP_MASS]
-        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_PX] = obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_PX]
-        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_PY] = obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_PY]
-        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_PZ] = obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_PZ]
-        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_VX] = obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_VX]
-        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_VY] = obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_VY]
-        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_VZ] = obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_VZ]
-        obs_list[cls.PARAMS.OBSERVATION.I_EVADER_PX] = obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_PX]
-        obs_list[cls.PARAMS.OBSERVATION.I_EVADER_PY] = obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_PY]
-        obs_list[cls.PARAMS.OBSERVATION.I_EVADER_PZ] = obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_PZ]
-        obs_list[cls.PARAMS.OBSERVATION.I_EVADER_VX] = obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_VX]
-        obs_list[cls.PARAMS.OBSERVATION.I_EVADER_VY] = obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_VY]
-        obs_list[cls.PARAMS.OBSERVATION.I_EVADER_VZ] = obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_VZ]
+        obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_MASS] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_MASS]
+        obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PROP_MASS] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PROP_MASS]
+        obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PX] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PX]
+        obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PY] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PY]
+        obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PZ] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PZ]
+        obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VX] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VX]
+        obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VY] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VY]
+        obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VZ] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VZ]
+        obs_list[cls.PARAMS.OBSERVATION.I_LADY_PX] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PX]
+        obs_list[cls.PARAMS.OBSERVATION.I_LADY_PY] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PY]
+        obs_list[cls.PARAMS.OBSERVATION.I_LADY_PZ] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PZ]
+        obs_list[cls.PARAMS.OBSERVATION.I_LADY_VX] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VX]
+        obs_list[cls.PARAMS.OBSERVATION.I_LADY_VY] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VY]
+        obs_list[cls.PARAMS.OBSERVATION.I_LADY_VZ] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VZ]
+        obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PX] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PX]
+        obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PY] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PY]
+        obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PZ] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PZ]
+        obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VX] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VX]
+        obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VY] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VY]
+        obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VZ] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VZ]
 
         return obs_list
         
@@ -445,43 +528,43 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         p_vesL_vesB__lhpbody = self.vesLady.position(self.vesBandit.reference_frame)
         return np.linalg.norm(p_vesL_vesB__lhpbody)
 
-    def get_pe_relative_speed(self):
-        '''compute relative speed between pursuer and evader'''
-        v_vesE_vesP__lhpbody = self.vesEvade.velocity(self.vesPursue.reference_frame)
-        return np.linalg.norm(v_vesE_vesP__lhpbody)
-
-    def evasive_maneuvers(self):
-        ''' evasive maneuvers algorithm
-        '''
-        raise NotImplementedError("Must be implemented by child class")
+    def get_bg_relative_distance(self):
+        '''compute relative distance between bandit and guard'''
+        p_vesB_vesG__lhpbody = self.vesBandit.position(self.vesGuard.reference_frame)
+        return np.linalg.norm(p_vesB_vesG__lhpbody)
 
     def enforce_episode_termination(self):
         '''determine if distance or timeout episode termination conditions are met
         '''
         
         while not self.stop_episode_termination_thread:
-            # get distance between lady and bandit
+            # check termination condition: lady-bandit proximity
             d_vesL_vesB = self.get_lb_relative_distance()
-            is_captured = d_vesL_vesB < self.capture_dist
-            if is_captured:
-                print("\n~~~SUCCESSFUL CAPTURE!~~~\n")
+            is_lady_captured = d_vesL_vesB < self.lady_capture_dist
+            if is_lady_captured:
+                print("\n~~~SUCCESS! LADY CAPTURED BY BANDIT~~~\n")
+
+            # check termination condition: bandit-guard proximity
+            d_vesB_vesG = self.get_bg_relative_distance()
+            is_bandit_captured = d_vesB_vesG < self.bandit_capture_dist
+            if is_bandit_captured:
+                print("\n~~~FAILURE! BANDIT CAPTURED BY GUARD~~~\n")
 
             # check for episode timeout
             is_timeout = self.vesBandit.met > self.episode_timeout
             if is_timeout:
                 print("\n~~~EPISODE TIMEOUT~~~\n")
 
-            if is_captured or is_timeout:
+            if is_lady_captured or is_bandit_captured or is_timeout:
                 print("Terminating episode...\n")
                 self.is_episode_done = True
                 self.stop_episode_termination_thread = True
 
     def close(self):
 
-        # TODO
         # handle evasive maneuvering thread
-        # self.stop_evade_thread = True
-        # self.evade_thread.join()
+        self.stop_bot_thread = True
+        self.bot_thread.join()
 
         # handle episode termination thread
         self.stop_episode_termination_thread = True

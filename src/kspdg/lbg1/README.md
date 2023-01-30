@@ -25,7 +25,6 @@ This README documents/decodes the somewhat cryptic naming scheme used to uniquel
     + Any change to the group's shared parameters, evasion behiavor, and/or initial conditions that occur between version updates of the `kspdg` library should be reflected in an increment of the environment's VersionNum. 
     + This increment is necessary because any agent trained under different group params, evasion behavior, and/or initial conditions was technically trained under a different environment
 
-
 ## Constants Across Environments in Group
 
 + There is 1 "Bandit", 1 "Guard", and 1 "Lady" spacecraft
