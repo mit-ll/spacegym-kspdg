@@ -189,11 +189,9 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         
         # don't call reset. This allows instantiation and partial testing
         # without connecting to krpc server
-        
-    def reset(self):
 
-        # connect to KRPC server and load mission save file 
-        self.connect_and_load_on_reset()
+    def _reset_vessels(self):
+        """Define vessel attirbutes and walkthrough initial configuration process"""
 
         # get vessel objects
         self.vesLady, self.vesBandit, self.vesGuard = self.conn.space_center.vessels[:4]
@@ -216,32 +214,6 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
 
         # activate RCS thrusters
         self.vesBandit.control.rcs = True
-
-        # reset performance metrics
-        self.min_dist = np.inf
-        self.min_dist_time = 0.0
-        self.min_posvel_prod = np.inf
-        self.bandit_init_mass = self.vesBandit.mass
-        self.lady_init_mass = self.vesLady.mass
-
-        # TODO
-        # start process for evader maneuvers
-        # self.stop_evade_thread = False
-        # self.evade_thread = Thread(target=self.evasive_maneuvers)
-        # self.evade_thread.start()
-
-        # start process for checking episode termination
-        self.is_episode_done = False
-        self.stop_episode_termination_thread = False
-        self.episode_termination_thread = Thread(target=self.enforce_episode_termination)
-        self.episode_termination_thread.start()
-
-        # TODO
-        # package observation and performance metric info for return
-        # obs = self.get_observation()
-        # info = self.get_info(obs, False)
-
-        # return obs, info
 
     def step(self, action):
         ''' Apply thrust and torque actuation for specified time duration

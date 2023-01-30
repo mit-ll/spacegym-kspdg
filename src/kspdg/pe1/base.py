@@ -166,12 +166,9 @@ class PursuitEnv(KSPDGBaseEnv):
         
         # don't call reset. This allows instantiation and partial testing
         # without connecting to krpc server
-        
-    def reset(self):
 
-        # connect to KRPC server and load mission save file 
-        self.connect_and_load_on_reset()
-
+    def _reset_vessels(self):
+        """"""
         # get vessel objects
         self.vesEvade, self.vesPursue = self.conn.space_center.vessels[:3]
 
@@ -194,29 +191,30 @@ class PursuitEnv(KSPDGBaseEnv):
         # activate RCS thrusters
         self.vesPursue.control.rcs = True
 
-        # reset performance metrics
+    def _reset_episode_metrics(self) -> None:
+        """ Reset attributes that track proximity, timing, and propellant use metrics
+        """
+
         self.min_dist = np.inf
         self.min_dist_time = 0.0
         self.min_posvel_prod = np.inf
         self.pursuer_init_mass = self.vesPursue.mass
         self.evader_init_mass = self.vesEvade.mass
 
-        # start process for evader maneuvers
+    def _start_bot_threads(self) -> None:
+        """ Start parallel thread to execute Evader's evasive maneuvers
+        """
+
         self.stop_evade_thread = False
+
+        # check that thread does not exist or is not running
+        if hasattr(self, "evade_thread"):
+            if self.evade_thread.is_alive():
+                raise ConnectionError("evade_thread is already running."+ 
+                    " Close and join evade_thread before restarting")
+
         self.evade_thread = Thread(target=self.evasive_maneuvers)
         self.evade_thread.start()
-
-        # start process for checking episode termination
-        self.is_episode_done = False
-        self.stop_episode_termination_thread = False
-        self.episode_termination_thread = Thread(target=self.enforce_episode_termination)
-        self.episode_termination_thread.start()
-
-        # package observation and performance metric info for return
-        obs = self.get_observation()
-        info = self.get_info(obs, False)
-
-        return obs, info
 
     def step(self, action):
         ''' Apply thrust and torque actuation for specified time duration
