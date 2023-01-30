@@ -9,84 +9,6 @@ from typing import List
 
 from kspdg.utils import constants as CONST
 
-def BROKEN_get_rcs_net_directional_properties(vessel, burn_vec__rhbody):
-    '''compute the max thrust, specific impulse, and fuel consumption of rcs along a burn vector
-
-    BROKEN: DO NOT USE
-        This function is left in place because, in principle, it should work; however
-        There seems to be fundamental errors with krpc's handling of thruster objects
-        for RCS and engines
-    
-    Args:
-        vessel : krpc.SpaceCenter.Vessel
-            vessel object defined by krpc
-            https://krpc.github.io/krpc/python/api/space-center/vessel.html#SpaceCenter.Vessel
-        burn_vec__rhbody : List[float]
-            burn vector for rcs in right-hand vessel body coords (rhvbody)
-        
-    Returns:
-        net_max_thrust : float
-            [N] total thrust possible (max) from all rcs thrusters
-        net_specific_impulse : float
-            [s] combined specific impulse from all rcs thrusters
-            https://krpc.github.io/krpc/tutorials/parts.html#combined-specific-impulse
-        net_max_fuel_consumption : float
-            [kg/s] total mass flow possible from all rcs thrusters 
-    '''
-
-    # collect all thrusters on craft
-    thrusters = [t for r in vessel.parts.rcs for t in r.thrusters]
-
-    # collect directional properties of all thrusters
-    dir_thrust_props = [BROKEN_get_thruster_directional_properties(t, burn_vec__rhbody) for t in thrusters]
-
-    # compute total max thrust and fuel consumption from all thrusters
-    net_max_effective_thrust = sum(dtp[0] for dtp in dir_thrust_props)
-    net_max_effective_fuel_consumption = sum(dtp[1] for dtp in dir_thrust_props)
-
-    # compute total effective specific impulse
-    net_specific_impulse = net_max_effective_thrust / (net_max_effective_fuel_consumption * CONST.G0)
-    return net_max_effective_thrust, net_max_effective_fuel_consumption, net_specific_impulse
-
-def BROKEN_get_thruster_directional_properties(thruster, burn_vec__rhbody):
-    '''compute max thrust and fuel consumption of a thruster along a specific burn vector
-
-    BROKEN: DO NOT USE
-        This function is left in place because, in principle, it should work; however
-        There seems to be fundamental errors with krpc's handling of thruster objects
-        for RCS and engines
-
-    Args:
-        thruster : krpc.SpaceCenter.Thruster
-            thruster object to be analyzed
-        burn_vec__rhbody : List[float]
-            desired burn vector for thruster in right-hand vessel body coords (rhvbody)
-
-    Returns: 
-        max_effective_thrust : float
-            [N] total thrust that is effectively possible along body-fixed burn vector
-        max_effective_fuel_consumption : float
-            [kg/s] maximum fuel consumption effectively possible when burning along body-fixed vector
-    
-    Refs:
-        https://krpc.github.io/krpc/python/api/space-center/parts.html#thruster
-    '''
-    # convert desired burn vector into krpc's left handed body coords
-    bv__lhbody = convert_rhbody_to_lhbody(burn_vec__rhbody)
-
-    # get thrusters thrust orientation in lh body coords
-    # https://krpc.github.io/krpc/python/api/space-center/vessel.html#SpaceCenter.Vessel.reference_frame
-    tv__lhbody = thruster.thrust_direction(thruster.part.vessel.reference_frame)
-
-    # determine maximum effective thrust thruster can produce along burn vector
-    # thruster cannot produce negative thrust, thus take max with 0
-    max_effective_thrust = thruster.part.rcs.max_thrust * max(0.0, np.dot(bv__lhbody, tv__lhbody))
-
-    # determine maximum effective fuel consumption
-    max_effective_fuel_consumption = max_effective_thrust / (CONST.G0 * thruster.part.rcs.specific_impulse)
-
-    return max_effective_thrust, max_effective_fuel_consumption
-
 def convert_lhcbci_to_rhcbci(v__lhcbci: List[float]) -> List[float]:
     '''convert vector in left-handed celestial-body-centered-inertial coords 
         to right-handed cbci coords
@@ -210,3 +132,88 @@ def convert_rhbody_to_lhbody(v__rhbody: List[float]) -> List[float]:
     v__lhbody[0] = v__rhbody[1]
     v__lhbody[1] = v__rhbody[0]
     return v__lhbody
+
+
+###########################################################################
+
+## Broken/Non-functional code. Implementation details kept for posterity
+
+###########################################################################
+
+def BROKEN_get_rcs_net_directional_properties(vessel, burn_vec__rhbody):
+    '''compute the max thrust, specific impulse, and fuel consumption of rcs along a burn vector
+
+    BROKEN: DO NOT USE
+        This function is left in place because, in principle, it should work; however
+        There seems to be fundamental errors with krpc's handling of thruster objects
+        for RCS and engines
+    
+    Args:
+        vessel : krpc.SpaceCenter.Vessel
+            vessel object defined by krpc
+            https://krpc.github.io/krpc/python/api/space-center/vessel.html#SpaceCenter.Vessel
+        burn_vec__rhbody : List[float]
+            burn vector for rcs in right-hand vessel body coords (rhvbody)
+        
+    Returns:
+        net_max_thrust : float
+            [N] total thrust possible (max) from all rcs thrusters
+        net_specific_impulse : float
+            [s] combined specific impulse from all rcs thrusters
+            https://krpc.github.io/krpc/tutorials/parts.html#combined-specific-impulse
+        net_max_fuel_consumption : float
+            [kg/s] total mass flow possible from all rcs thrusters 
+    '''
+
+    # collect all thrusters on craft
+    thrusters = [t for r in vessel.parts.rcs for t in r.thrusters]
+
+    # collect directional properties of all thrusters
+    dir_thrust_props = [BROKEN_get_thruster_directional_properties(t, burn_vec__rhbody) for t in thrusters]
+
+    # compute total max thrust and fuel consumption from all thrusters
+    net_max_effective_thrust = sum(dtp[0] for dtp in dir_thrust_props)
+    net_max_effective_fuel_consumption = sum(dtp[1] for dtp in dir_thrust_props)
+
+    # compute total effective specific impulse
+    net_specific_impulse = net_max_effective_thrust / (net_max_effective_fuel_consumption * CONST.G0)
+    return net_max_effective_thrust, net_max_effective_fuel_consumption, net_specific_impulse
+
+def BROKEN_get_thruster_directional_properties(thruster, burn_vec__rhbody):
+    '''compute max thrust and fuel consumption of a thruster along a specific burn vector
+
+    BROKEN: DO NOT USE
+        This function is left in place because, in principle, it should work; however
+        There seems to be fundamental errors with krpc's handling of thruster objects
+        for RCS and engines
+
+    Args:
+        thruster : krpc.SpaceCenter.Thruster
+            thruster object to be analyzed
+        burn_vec__rhbody : List[float]
+            desired burn vector for thruster in right-hand vessel body coords (rhvbody)
+
+    Returns: 
+        max_effective_thrust : float
+            [N] total thrust that is effectively possible along body-fixed burn vector
+        max_effective_fuel_consumption : float
+            [kg/s] maximum fuel consumption effectively possible when burning along body-fixed vector
+    
+    Refs:
+        https://krpc.github.io/krpc/python/api/space-center/parts.html#thruster
+    '''
+    # convert desired burn vector into krpc's left handed body coords
+    bv__lhbody = convert_rhbody_to_lhbody(burn_vec__rhbody)
+
+    # get thrusters thrust orientation in lh body coords
+    # https://krpc.github.io/krpc/python/api/space-center/vessel.html#SpaceCenter.Vessel.reference_frame
+    tv__lhbody = thruster.thrust_direction(thruster.part.vessel.reference_frame)
+
+    # determine maximum effective thrust thruster can produce along burn vector
+    # thruster cannot produce negative thrust, thus take max with 0
+    max_effective_thrust = thruster.part.rcs.max_thrust * max(0.0, np.dot(bv__lhbody, tv__lhbody))
+
+    # determine maximum effective fuel consumption
+    max_effective_fuel_consumption = max_effective_thrust / (CONST.G0 * thruster.part.rcs.specific_impulse)
+
+    return max_effective_thrust, max_effective_fuel_consumption
