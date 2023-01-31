@@ -250,8 +250,7 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
     def lady_guard_policy(self):
         """ Behvaior policy to be continuously run by lady and guard vessels
         """
-        pass
-        # raise NotImplementedError("Must be implemented by child class")
+        raise NotImplementedError("Must be implemented by child class")
 
     def step(self, action):
         ''' Apply thrust and torque actuation for specified time duration
