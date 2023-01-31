@@ -45,7 +45,8 @@ This README documents/decodes the somewhat cryptic naming scheme used to uniquel
 
 ## Initial Orbit Environment Identifiers
 
-+ ID `i1`: Lady and Guard are in the same cicrular orbit with Guard ~500m prograde of the Lady. The Bandit is in an elliptical orbit with an upcoming tangential conjunction at apoapsis with the Lady spacecraft
++ ID `i1`: Lady and Guard are in the same cicrular orbit with Guard ~600m prograde of the Lady. The Bandit is in an elliptical orbit with an upcoming tangential conjunction at apoapsis with the Lady spacecraft
++ ID `i2`: Lady, Bandit, and Guard are all in the same circular orbit. Guard is in between Lady and Bandit with Guard ~600m retrograde of lady and Bandit ~2000m retrograde of Guard
 
 ## Evaluation Criteria 
 
