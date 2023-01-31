@@ -2,8 +2,8 @@
 # Subject to FAR 52.227-11 – Patent Rights – Ownership by the Contractor (May 2014).
 # SPDX-License-Identifier: MIT
 
-# Parent class of all LBG1 environments that use a passive (non-maneuvering)
-# policy for the Lady and Guard vessels
+# Parent and subclasses of all LBG1 environments that use a passive 
+# (non-maneuvering) policy for the Lady and Guard vessels
 
 from kspdg.lbg1.lbg1_base import LadyBanditGuardGroup1Env
 
