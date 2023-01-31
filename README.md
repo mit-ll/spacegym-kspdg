@@ -6,7 +6,7 @@
 
 This library provides a suite of differential game (DG) environments built within the [Kerbal Space Program (KSP)](https://www.kerbalspaceprogram.com/) game engine.
 
-The KSP differential game environments are implemented using the [OpenAI Gym](https://www.gymlibrary.ml/) and [PettingZoo](https://www.pettingzoo.ml/) standards. Non-GUI control of the KSP game engine is enabled by [kRPC](https://krpc.github.io/krpc/)
+The KSP differential game environments are implemented using the [OpenAI Gym](https://github.com/openai/gym) (or more specifically [Gymnasium](https://gymnasium.farama.org/) which is the drop-in-replacement, maintained fork of Gym) and [PettingZoo](https://pettingzoo.farama.org/) standards. Non-GUI control of the KSP game engine is enabled by [kRPC](https://krpc.github.io/krpc/) and control of physically distant spacecraft is enabled by [PhysicsRangeExtender](https://github.com/jrodrigv/PhysicsRangeExtender).
 
 ### Design Principles
 
