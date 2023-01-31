@@ -11,6 +11,7 @@ import numpy as np
 from types import SimpleNamespace
 from typing import List, Dict
 from threading import Thread
+from numpy.typing import ArrayLike
 
 import kspdg.utils.constants as C
 import kspdg.utils.utils as U
@@ -63,48 +64,50 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
     # [15:18] : guard position in reference orbit right-hand CBCI coords [m]
     # [18:21] : guard velocity in reference orbit right-hand CBCI coords [m/s]
     PARAMS.OBSERVATION.LEN = 21
-    PARAMS.OBSERVATION.K_MET = "mission_elapsed_time"
     PARAMS.OBSERVATION.I_MET = 0
-    PARAMS.OBSERVATION.K_BANDIT_MASS = "bandit_mass"
     PARAMS.OBSERVATION.I_BANDIT_MASS = 1
-    PARAMS.OBSERVATION.K_BANDIT_PROP_MASS = "bandit_propellant_mass" 
     PARAMS.OBSERVATION.I_BANDIT_PROP_MASS = 2
-    PARAMS.OBSERVATION.K_BANDIT_PX = "posx_bandit_cb__rhcbci"
     PARAMS.OBSERVATION.I_BANDIT_PX = 3
-    PARAMS.OBSERVATION.K_BANDIT_PY = "posy_bandit_cb__rhcbci"
     PARAMS.OBSERVATION.I_BANDIT_PY = 4
-    PARAMS.OBSERVATION.K_BANDIT_PZ = "posz_bandit_cb__rhcbci"
     PARAMS.OBSERVATION.I_BANDIT_PZ = 5
-    PARAMS.OBSERVATION.K_BANDIT_VX = "velx_bandit_cb__rhcbci"
     PARAMS.OBSERVATION.I_BANDIT_VX = 6
-    PARAMS.OBSERVATION.K_BANDIT_VY = "vely_bandit_cb__rhcbci"
     PARAMS.OBSERVATION.I_BANDIT_VY = 7
-    PARAMS.OBSERVATION.K_BANDIT_VZ = "velz_bandit_cb__rhcbci"
     PARAMS.OBSERVATION.I_BANDIT_VZ = 8
-    PARAMS.OBSERVATION.K_LADY_PX = "posx_lady_cb__rhcbci" 
     PARAMS.OBSERVATION.I_LADY_PX = 9
-    PARAMS.OBSERVATION.K_LADY_PY = "posy_lady_cb__rhcbci" 
     PARAMS.OBSERVATION.I_LADY_PY = 10
-    PARAMS.OBSERVATION.K_LADY_PZ = "posz_lady_cb__rhcbci" 
     PARAMS.OBSERVATION.I_LADY_PZ = 11
-    PARAMS.OBSERVATION.K_LADY_VX = "velx_lady_cb__rhcbci"
     PARAMS.OBSERVATION.I_LADY_VX = 12
-    PARAMS.OBSERVATION.K_LADY_VY = "vely_lady_cb__rhcbci"
     PARAMS.OBSERVATION.I_LADY_VY = 13
-    PARAMS.OBSERVATION.K_LADY_VZ = "velz_lady_cb__rhcbci"
     PARAMS.OBSERVATION.I_LADY_VZ = 14
-    PARAMS.OBSERVATION.K_GUARD_PX = "posx_guard_cb__rhcbci" 
     PARAMS.OBSERVATION.I_GUARD_PX = 15
-    PARAMS.OBSERVATION.K_GUARD_PY = "posy_guard_cb__rhcbci" 
     PARAMS.OBSERVATION.I_GUARD_PY = 16
-    PARAMS.OBSERVATION.K_GUARD_PZ = "posz_guard_cb__rhcbci" 
     PARAMS.OBSERVATION.I_GUARD_PZ = 17
-    PARAMS.OBSERVATION.K_GUARD_VX = "velx_guard_cb__rhcbci"
     PARAMS.OBSERVATION.I_GUARD_VX = 18
-    PARAMS.OBSERVATION.K_GUARD_VY = "vely_guard_cb__rhcbci"
     PARAMS.OBSERVATION.I_GUARD_VY = 19
-    PARAMS.OBSERVATION.K_GUARD_VZ = "velz_guard_cb__rhcbci"
     PARAMS.OBSERVATION.I_GUARD_VZ = 20
+
+    # # keys for observation fields
+    # PARAMS.OBSERVATION.K_MET = "mission_elapsed_time"
+    # PARAMS.OBSERVATION.K_BANDIT_MASS = "bandit_mass"
+    # PARAMS.OBSERVATION.K_BANDIT_PROP_MASS = "bandit_propellant_mass" 
+    # PARAMS.OBSERVATION.K_BANDIT_PX = "posx_bandit_cb__rhcbci"
+    # PARAMS.OBSERVATION.K_BANDIT_PY = "posy_bandit_cb__rhcbci"
+    # PARAMS.OBSERVATION.K_BANDIT_PZ = "posz_bandit_cb__rhcbci"
+    # PARAMS.OBSERVATION.K_BANDIT_VX = "velx_bandit_cb__rhcbci"
+    # PARAMS.OBSERVATION.K_BANDIT_VY = "vely_bandit_cb__rhcbci"
+    # PARAMS.OBSERVATION.K_BANDIT_VZ = "velz_bandit_cb__rhcbci"
+    # PARAMS.OBSERVATION.K_LADY_PX = "posx_lady_cb__rhcbci" 
+    # PARAMS.OBSERVATION.K_LADY_PY = "posy_lady_cb__rhcbci" 
+    # PARAMS.OBSERVATION.K_LADY_PZ = "posz_lady_cb__rhcbci" 
+    # PARAMS.OBSERVATION.K_LADY_VX = "velx_lady_cb__rhcbci"
+    # PARAMS.OBSERVATION.K_LADY_VY = "vely_lady_cb__rhcbci"
+    # PARAMS.OBSERVATION.K_LADY_VZ = "velz_lady_cb__rhcbci"
+    # PARAMS.OBSERVATION.K_GUARD_PX = "posx_guard_cb__rhcbci" 
+    # PARAMS.OBSERVATION.K_GUARD_PY = "posy_guard_cb__rhcbci" 
+    # PARAMS.OBSERVATION.K_GUARD_PZ = "posz_guard_cb__rhcbci" 
+    # PARAMS.OBSERVATION.K_GUARD_VX = "velx_guard_cb__rhcbci"
+    # PARAMS.OBSERVATION.K_GUARD_VY = "vely_guard_cb__rhcbci"
+    # PARAMS.OBSERVATION.K_GUARD_VZ = "velz_guard_cb__rhcbci"
 
     # info metric parameters
     PARAMS.INFO.K_CLOSEST_LB_APPROACH = "closest_lady_bandit_approach"
@@ -265,9 +268,9 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         '''
 
         # parse and apply action
-        self.vesPursue.control.forward = action[0]
-        self.vesPursue.control.right = action[1]
-        self.vesPursue.control.up = -action[2]
+        self.vesBandit.control.forward = action[0]
+        self.vesBandit.control.right = action[1]
+        self.vesBandit.control.up = -action[2]
 
         # execute maneuver for specified time, checking for end
         # conditions while you do
@@ -277,9 +280,9 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
                 break
 
         # zero out thrusts
-        self.vesPursue.control.forward = 0.0
-        self.vesPursue.control.up = 0.0
-        self.vesPursue.control.right = 0.0
+        self.vesBandit.control.forward = 0.0
+        self.vesBandit.control.up = 0.0
+        self.vesBandit.control.right = 0.0
 
         # get observation
         obs = self.get_observation()
@@ -383,11 +386,11 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
 
         return info
 
-    def get_observation(self):
+    def get_observation(self) -> ArrayLike:
         ''' return observation of bandit, lady, and guard pos-vel state
 
         Returns:
-            obs : list
+            obs : ArrayLike
                 [0] : mission elapsed time [s]
                 [1] : current vehicle (bandit) mass [kg]
                 [2] : current vehicle (bandit) propellant  (mono prop) [kg]
@@ -463,64 +466,7 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
             obs[self.PARAMS.OBSERVATION.I_GUARD_VZ]  = \
             v_g_cb__rhcbci
 
-        return obs
-
-    @classmethod
-    def observation_list_to_dict(cls, obs_list):
-        """convert observation from list to dict"""
-        assert len(obs_list) == cls.PARAMS.OBSERVATION.LEN
-        obs_dict = dict()
-        obs_dict[cls.PARAMS.OBSERVATION.K_MET] = obs_list[cls.PARAMS.OBSERVATION.I_MET]
-        obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_MASS] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_MASS]
-        obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PROP_MASS] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PROP_MASS]
-        obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PX] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PX]
-        obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PY] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PY]
-        obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PZ] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PZ]
-        obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VX] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VX]
-        obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VY] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VY]
-        obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VZ] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VZ]
-        obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PX] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_PX]
-        obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PY] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_PY]
-        obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PZ] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_PZ]
-        obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VX] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_VX]
-        obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VY] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_VY]
-        obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VZ] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_VZ]
-        obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PX] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PX]
-        obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PY] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PY]
-        obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PZ] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PZ]
-        obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VX] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VX]
-        obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VY] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VY]
-        obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VZ] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VZ]
-
-        return obs_dict
-
-    @classmethod
-    def observation_dict_to_list(cls, obs_dict):
-        """convert observation from list to dict"""
-        obs_list = cls.PARAMS.OBSERVATION.LEN * [None]
-        obs_list[cls.PARAMS.OBSERVATION.I_MET] = obs_dict[cls.PARAMS.OBSERVATION.K_MET]
-        obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_MASS] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_MASS]
-        obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PROP_MASS] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PROP_MASS]
-        obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PX] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PX]
-        obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PY] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PY]
-        obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PZ] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PZ]
-        obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VX] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VX]
-        obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VY] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VY]
-        obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VZ] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VZ]
-        obs_list[cls.PARAMS.OBSERVATION.I_LADY_PX] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PX]
-        obs_list[cls.PARAMS.OBSERVATION.I_LADY_PY] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PY]
-        obs_list[cls.PARAMS.OBSERVATION.I_LADY_PZ] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PZ]
-        obs_list[cls.PARAMS.OBSERVATION.I_LADY_VX] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VX]
-        obs_list[cls.PARAMS.OBSERVATION.I_LADY_VY] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VY]
-        obs_list[cls.PARAMS.OBSERVATION.I_LADY_VZ] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VZ]
-        obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PX] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PX]
-        obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PY] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PY]
-        obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PZ] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PZ]
-        obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VX] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VX]
-        obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VY] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VY]
-        obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VZ] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VZ]
-
-        return obs_list
+        return np.array(obs)
         
     def get_lb_relative_distance(self):
         '''compute relative distance between lady and bandit'''
@@ -571,3 +517,60 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
 
         # close connection to krpc server
         self.conn.close()
+
+    # @classmethod
+    # def observation_list_to_dict(cls, obs_list):
+    #     """convert observation from list to dict"""
+    #     assert len(obs_list) == cls.PARAMS.OBSERVATION.LEN
+    #     obs_dict = dict()
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_MET] = obs_list[cls.PARAMS.OBSERVATION.I_MET]
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_MASS] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_MASS]
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PROP_MASS] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PROP_MASS]
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PX] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PX]
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PY] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PY]
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PZ] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PZ]
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VX] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VX]
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VY] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VY]
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VZ] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VZ]
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PX] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_PX]
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PY] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_PY]
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PZ] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_PZ]
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VX] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_VX]
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VY] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_VY]
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VZ] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_VZ]
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PX] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PX]
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PY] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PY]
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PZ] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PZ]
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VX] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VX]
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VY] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VY]
+    #     obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VZ] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VZ]
+
+    #     return obs_dict
+
+    # @classmethod
+    # def observation_dict_to_list(cls, obs_dict):
+    #     """convert observation from list to dict"""
+    #     obs_list = cls.PARAMS.OBSERVATION.LEN * [None]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_MET] = obs_dict[cls.PARAMS.OBSERVATION.K_MET]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_MASS] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_MASS]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PROP_MASS] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PROP_MASS]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PX] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PX]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PY] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PY]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PZ] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PZ]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VX] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VX]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VY] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VY]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VZ] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VZ]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_LADY_PX] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PX]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_LADY_PY] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PY]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_LADY_PZ] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PZ]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_LADY_VX] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VX]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_LADY_VY] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VY]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_LADY_VZ] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VZ]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PX] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PX]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PY] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PY]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PZ] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PZ]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VX] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VX]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VY] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VY]
+    #     obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VZ] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VZ]
+
+    #     return obs_list
