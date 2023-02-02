@@ -17,7 +17,7 @@ class KSPDGBaseEnv(ABC, gym.Env):
     """ Abstract base class for all KSPDG gym environments
     """
 
-    def __init__(self, debug:bool) -> None:
+    def __init__(self, debug:bool=False) -> None:
         """
         Args:
             debug : bool
