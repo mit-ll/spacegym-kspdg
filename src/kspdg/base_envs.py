@@ -6,6 +6,7 @@
 
 import krpc
 import gymnasium as gym
+import logging
 
 from abc import ABC, abstractmethod
 from threading import Thread
@@ -15,6 +16,17 @@ from numpy.typing import ArrayLike
 class KSPDGBaseEnv(ABC, gym.Env):
     """ Abstract base class for all KSPDG gym environments
     """
+
+    def __init__(self, debug:bool) -> None:
+        """
+        Args:
+            debug : bool
+                if true, set logging config to debug
+        """
+
+        logging.basicConfig(level=logging.DEBUG)
+        
+        super().__init__()
 
     def reset(self) -> Tuple[ArrayLike, Dict]:
         """Restart env episode managing

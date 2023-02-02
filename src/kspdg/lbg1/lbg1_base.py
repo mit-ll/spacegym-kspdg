@@ -163,7 +163,8 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
     def __init__(self, loadfile:str, 
         episode_timeout:float = DEFAULT_EPISODE_TIMEOUT, 
         lady_capture_dist:float = DEFAULT_CAPTURE_DIST,
-        bandit_capture_dist:float = DEFAULT_CAPTURE_DIST):
+        bandit_capture_dist:float = DEFAULT_CAPTURE_DIST,
+        **kwargs):
         """
         Args:
             episode_timeout : float
@@ -173,6 +174,8 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
             bandit_capture_dist : float
                 distance at which bandit is considered captured by guard [m]
         """
+
+        super().__init__(**kwargs)
 
         assert episode_timeout > 0
         assert lady_capture_dist > 0
