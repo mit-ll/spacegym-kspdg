@@ -11,14 +11,18 @@ import numpy as np
 
 from typing import Tuple
 
+import kspdg.utils.utils as U
 from kspdg.lbg1.lbg1_base import LadyBanditGuardGroup1Env
 
 class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
 
-    BG_PURSUIT_THROTTLE = 0.5   # throttle level for guard to apply to pursue bandit
+    BG_PURSUIT_THROTTLE = 1.0   # throttle level for guard to apply to pursue bandit
     BG_MIN_REL_SPEED_THESHOLD = 2.0 # [m/s] threshold at which relative velocity is considered zero
     BG_MAX_REL_SPEED_THESHOLD = 10.0    # [m/s] velocity at which targeting cycle is switched from direct
                                         # pursuit to zeroing
+    BG_VEL_POS_ANG_THRESHOLD = 30*np.pi/180.0 # [rad] angular threshold between relative velocity and position at which
+                                                # coast phase will terminate
+    LOOP_TIMEOUT = 30 # [s] max time for a maneuver loop to prevent endless loop
 
     def __init__(self, loadfile: str, **kwargs):
         super().__init__(loadfile=loadfile, **kwargs)
@@ -36,59 +40,67 @@ class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
 
         # turn on low-thrust maneuver
         self.vesGuard.control.rcs = True
-        # self.vesGuard.control.forward = LBG1_LG1_ParentEnv.GUARD_BANDIT_PURSUIT_THROTTLE
-
-        # zero-out relative speed between bandit and guard
-        print("DEBUG: GUARD: Zero-ing relative velocity to Bandit...")
-
-        # point at negative relative velocity vector
-        vel_vesB_vesG__lhgntw = self.vesBandit.velocity(self.vesGuard.orbital_reference_frame)
-        spd_vesB_vesG = np.linalg.norm(vel_vesB_vesG__lhgntw)
-        uvel_vesB_vesG__lhgntw = vel_vesB_vesG__lhgntw/spd_vesB_vesG
-        self.vesGuard.auto_pilot.target_direction = -uvel_vesB_vesG__lhgntw
-        time.sleep(5.0)
-
-        # set negative throttle to zero-out relative vel
-        self.vesGuard.control.forward = -LBG1_LG1_ParentEnv.BG_PURSUIT_THROTTLE
-        time.sleep(5.0)
 
         while not self.stop_bot_thread: 
 
-            # get velocity and speed of bandit relative to guard
-            vel_vesB_vesG__lhgntw = self.vesBandit.velocity(self.vesGuard.orbital_reference_frame)
-            spd_vesB_vesG = np.linalg.norm(vel_vesB_vesG__lhgntw)
+            print("DEBUG: GUARD: Performing direct pursuit of Bandit...")
+            loop_start_time = time.time()
+            while True:
 
-            if spd_vesB_vesG < LBG1_LG1_ParentEnv.BG_MIN_REL_SPEED_THESHOLD:
+                # get velocity and speed of bandit relative to guard
+                vel_vesB_vesG__lhgntw = self.vesBandit.velocity(self.vesGuard.orbital_reference_frame)
+                spd_vesB_vesG = np.linalg.norm(vel_vesB_vesG__lhgntw)
+                print("DEBUG: Bandit-Guard relative speed = ",spd_vesB_vesG)
 
-                print("DEBUG: GUARD: Performing direct pursuit of Bandit...")
+                # check zero-ing vel breakout conditions to move to next step
+                if (spd_vesB_vesG < LBG1_LG1_ParentEnv.BG_MIN_REL_SPEED_THESHOLD) or \
+                    time.time() - loop_start_time > LBG1_LG1_ParentEnv.LOOP_TIMEOUT:
+                    break
 
-                # zero-out thrust to give time to re-orient
-                self.vesGuard.control.forward = 0
-
-                # get position of Bandit in Guard's NTW reference frame
-                pos_vesB_vesG__lhgntw = np.array(self.vesBandit.position(self.vesGuard.orbital_reference_frame))
-                upos_vesB_vesG__lhgntw = pos_vesB_vesG__lhgntw/np.linalg.norm(pos_vesB_vesG__lhgntw)
-
-                # set autopilot target direction to point at bandit
-                self.vesGuard.auto_pilot.target_direction = upos_vesB_vesG__lhgntw
-                time.sleep(2.0)
-
-                # throttle-up for fixed amount of time, and then restart cycle
-                self.vesGuard.control.forward = LBG1_LG1_ParentEnv.BG_PURSUIT_THROTTLE
-                time.sleep(5.0)
-
-            elif spd_vesB_vesG > LBG1_LG1_ParentEnv.BG_MAX_REL_SPEED_THESHOLD:
-
-                # zero-out relative speed between bandit and guard
-                print("DEBUG: GUARD: Zero-ing relative velocity to Bandit...")
-
-                # point at negative relative velocity vector
-                uvel_vesB_vesG__lhgntw = vel_vesB_vesG__lhgntw/spd_vesB_vesG
-                self.vesGuard.auto_pilot.target_direction = -uvel_vesB_vesG__lhgntw
-
-                # set negative throttle to zero-out relative vel
+                # point at negative relative velocity vector and burn for fixed time
+                self.vesGuard.auto_pilot.target_direction = -np.array(vel_vesB_vesG__lhgntw)
                 self.vesGuard.control.forward = -LBG1_LG1_ParentEnv.BG_PURSUIT_THROTTLE
-                time.sleep(5.0)
+                time.sleep(0.2)
+
+            print("DEBUG: GUARD: Performing direct pursuit of Bandit...")
+            loop_start_time = time.time()
+            while True:
+
+                # get velocity and speed of bandit relative to guard
+                vel_vesB_vesG__lhgntw = self.vesBandit.velocity(self.vesGuard.orbital_reference_frame)
+                spd_vesB_vesG = np.linalg.norm(vel_vesB_vesG__lhgntw)
+                print("DEBUG: Bandit-Guard relative speed = ",spd_vesB_vesG)
+
+                # check direct pursuit burn breakout conditions to move to next step
+                if (spd_vesB_vesG > LBG1_LG1_ParentEnv.BG_MAX_REL_SPEED_THESHOLD) or \
+                    time.time() - loop_start_time > LBG1_LG1_ParentEnv.LOOP_TIMEOUT:
+                    break
+
+                # Point at Bandint and burn for fixed time
+                pos_vesB_vesG__lhgntw = self.vesBandit.position(self.vesGuard.orbital_reference_frame)
+                self.vesGuard.auto_pilot.target_direction = pos_vesB_vesG__lhgntw
+                self.vesGuard.control.forward = LBG1_LG1_ParentEnv.BG_PURSUIT_THROTTLE
+                time.sleep(0.2)
+
+            self.vesGuard.control.forward = 0
+            print("DEBUG: GUARD: Coasting toward Bandit...")
+            loop_start_time = time.time()
+            while True:
+
+                # compute angle between relative velocity and relative position
+                # vectors for the Bandit-Guard system
+                vel_vesB_vesG__lhgntw = self.vesBandit.velocity(self.vesGuard.orbital_reference_frame)
+                pos_vesB_vesG__lhgntw = self.vesBandit.position(self.vesGuard.orbital_reference_frame)
+                ang_vel_pos_rad = U.angle_between(
+                    -np.array(vel_vesB_vesG__lhgntw), 
+                    np.array(pos_vesB_vesG__lhgntw))
+
+                print("DEBUG: Bandit-Guard vel-pos vector angle = ",ang_vel_pos_rad)
+
+                # check for coast breakout condition to repeat process
+                if ang_vel_pos_rad > LBG1_LG1_ParentEnv.BG_VEL_POS_ANG_THRESHOLD or \
+                    time.time() - loop_start_time > LBG1_LG1_ParentEnv.LOOP_TIMEOUT:
+                    break
         
         # terminate throttle
         self.vesGuard.control.forward = 0.0
