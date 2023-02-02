@@ -17,12 +17,15 @@ from kspdg.lbg1.lbg1_base import LadyBanditGuardGroup1Env
 class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
 
     BG_PURSUIT_THROTTLE = 1.0   # throttle level for guard to apply to pursue bandit
-    BG_MIN_REL_SPEED_THESHOLD = 2.0 # [m/s] threshold at which relative velocity is considered zero
+    BG_MIN_REL_SPEED_THESHOLD = 0.2 # [m/s] threshold at which relative velocity is considered zero
     BG_MAX_REL_SPEED_THESHOLD = 10.0    # [m/s] velocity at which targeting cycle is switched from direct
                                         # pursuit to zeroing
-    BG_VEL_POS_ANG_THRESHOLD = 30*np.pi/180.0 # [rad] angular threshold between relative velocity and position at which
+    BG_ANGLE_VEL_POS_THRESHOLD = 15*np.pi/180.0 # [rad] angular threshold between relative velocity and position at which
                                                 # coast phase will terminate
     LOOP_TIMEOUT = 30 # [s] max time for a maneuver loop to prevent endless loop
+    REORIENT_TIME = 1.0 # [s] time given to re-orient spacecraft
+    BG_MIN_BURN_TIME = 1.0  # [s] minimum burn time to ensure some progress in made toward bandit and that
+                            # vel-pos angle trigger doesn't immediately kick us out of direct burn phase
 
     def __init__(self, loadfile: str, **kwargs):
         super().__init__(loadfile=loadfile, **kwargs)
@@ -68,6 +71,7 @@ class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
         """Perform burn to zero-out relative velocity between bandit and guard"""
 
         print("DEBUG Zeroing: Zeroing Out Relative Velocities")
+
         loop_start_time = time.time()
         while True:
 
@@ -82,15 +86,29 @@ class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
                 self.stop_bot_thread:
                 break
 
-            # point at negative relative velocity vector and burn for fixed time
+            # point at negative relative velocity vector and burn
             self.vesGuard.auto_pilot.target_direction = -np.array(vel_vesB_vesG__lhgntw)
             self.vesGuard.control.forward = -LBG1_LG1_ParentEnv.BG_PURSUIT_THROTTLE
-            time.sleep(0.2)
+
+        # stop burn
+        self.vesGuard.control.forward = 0
 
     def direct_burn_guard_toward_bandit(self):
         """Point Guard directly at Bandit and burn until desired relative velocity met"""
 
         print("DEBUG DirectBurn: Performing direct pursuit of Bandit...")
+
+        # renaming vars for clarity
+        max_speed_thresh = LBG1_LG1_ParentEnv.BG_MAX_REL_SPEED_THESHOLD
+        loop_timeout = LBG1_LG1_ParentEnv.LOOP_TIMEOUT
+        ang_vel_pos_thresh = LBG1_LG1_ParentEnv.BG_ANGLE_VEL_POS_THRESHOLD
+        min_burn_time = LBG1_LG1_ParentEnv.BG_MIN_BURN_TIME
+
+        # point toward bandit and give some time to re-orient
+        pos_vesB_vesG__lhgntw = self.vesBandit.position(self.vesGuard.orbital_reference_frame)
+        self.vesGuard.auto_pilot.target_direction = pos_vesB_vesG__lhgntw
+        time.sleep(LBG1_LG1_ParentEnv.REORIENT_TIME)
+
         loop_start_time = time.time()
         while True:
 
@@ -99,17 +117,30 @@ class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
             spd_vesB_vesG = np.linalg.norm(vel_vesB_vesG__lhgntw)
             print("DEBUG DirectBurn: Bandit-Guard relative speed = ",spd_vesB_vesG)
 
+            # compute velocity-position angle
+            pos_vesB_vesG__lhgntw = self.vesBandit.position(self.vesGuard.orbital_reference_frame)
+            ang_vel_pos_rad = U.angle_between(
+                -np.array(vel_vesB_vesG__lhgntw), 
+                np.array(pos_vesB_vesG__lhgntw))
+
             # check direct pursuit burn breakout conditions to move to next step
-            if (spd_vesB_vesG > LBG1_LG1_ParentEnv.BG_MAX_REL_SPEED_THESHOLD) or \
-                time.time() - loop_start_time > LBG1_LG1_ParentEnv.LOOP_TIMEOUT or\
-                self.stop_bot_thread:
+            # Break out conditions:
+            # relative speed threshold is met OR
+            # top-level stop flag is thrown OR
+            # angular deviation between vel and pos vectors exceeds threshold AFTER a min burn time is achieved
+            loop_time = time.time() - loop_start_time
+            if spd_vesB_vesG > max_speed_thresh or \
+                loop_time > loop_timeout or\
+                self.stop_bot_thread or \
+                (ang_vel_pos_rad > ang_vel_pos_thresh and loop_time > min_burn_time ):
                 break
 
             # Point at Bandint and burn for fixed time
-            pos_vesB_vesG__lhgntw = self.vesBandit.position(self.vesGuard.orbital_reference_frame)
             self.vesGuard.auto_pilot.target_direction = pos_vesB_vesG__lhgntw
             self.vesGuard.control.forward = LBG1_LG1_ParentEnv.BG_PURSUIT_THROTTLE
-            time.sleep(0.2)
+
+        # stop burn
+        self.vesGuard.control.forward = 0
 
     def coast_until_pos_vel_misalign(self):
         """Coast until the relative position and relative velocity of Bandit-Guard misalign"""
@@ -130,10 +161,13 @@ class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
             print("DEBUG Coast: Bandit-Guard vel-pos vector angle = ",ang_vel_pos_rad)
 
             # check for coast breakout condition to repeat process
-            if ang_vel_pos_rad > LBG1_LG1_ParentEnv.BG_VEL_POS_ANG_THRESHOLD or \
+            if ang_vel_pos_rad > LBG1_LG1_ParentEnv.BG_ANGLE_VEL_POS_THRESHOLD or \
                 self.stop_bot_thread:
                 # time.time() - loop_start_time > LBG1_LG1_ParentEnv.LOOP_TIMEOUT:
                 break
+
+            # re-orient along velocity vector to make smoother transition to zeroing phase
+            self.vesGuard.auto_pilot.target_direction = -np.array(vel_vesB_vesG__lhgntw)
 
     # @staticmethod
     # def compute_target_pointing_angles(vesEgo, vesTarg) -> Tuple[float, float]:

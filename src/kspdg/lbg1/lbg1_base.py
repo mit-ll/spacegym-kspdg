@@ -503,6 +503,7 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
             if is_lady_captured or is_bandit_captured or is_timeout:
                 print("Terminating episode...\n")
                 self.is_episode_done = True
+                self.stop_bot_thread = True
                 self.stop_episode_termination_thread = True
 
     def close(self):
