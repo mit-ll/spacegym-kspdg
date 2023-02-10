@@ -89,6 +89,14 @@ class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
 
             # point at negative relative velocity vector and burn
             self.vesGuard.auto_pilot.target_direction = -np.array(vel_vesB_vesG__lhgntw)
+
+            # if pointing direction too far off, give a some time to reorient to avoid 
+            # "death spin"
+            if self.vesGuard.auto_pilot.error > 30.0:
+                self.vesGuard.control.forward = 0
+                logging.debug("Zeroing-Reorientation: Pointing error = {}".format(self.vesGuard.auto_pilot.error))
+                continue
+
             self.vesGuard.control.forward = -LBG1_LG1_ParentEnv.BG_PURSUIT_THROTTLE
 
         # stop burn
