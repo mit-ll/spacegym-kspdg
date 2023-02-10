@@ -122,7 +122,7 @@ class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
 
             # if pointing direction too far off, give a some time to reorient to avoid 
             # "death spin"
-            if self.vesGuard.auto_pilot.error > 30.0:
+            if self.vesGuard.auto_pilot.error > self.pointing_thresh:
                 self.vesGuard.control.forward = 0
                 logging.debug("Zeroing-Reorientation: Pointing error = {}".format(self.vesGuard.auto_pilot.error))
                 continue
