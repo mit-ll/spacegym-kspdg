@@ -5,9 +5,9 @@
 import time
 
 from numpy.random import rand
-from kspdg.pe1.base import PursuitEnv
+from kspdg.pe1.pe1_base import PursuitEvadeGroup1Env
 
-class PursuitEnv_eRandom(PursuitEnv):
+class PE1_E2_ParentEnv(PursuitEvadeGroup1Env):
     def __init__(self, loadfile: str, **kwargs):
         super().__init__(loadfile=loadfile, **kwargs)
 
@@ -58,3 +58,19 @@ class PursuitEnv_eRandom(PursuitEnv):
             self.vesEvade.control.forward = 0.0
             self.vesEvade.control.right = 0.0
             self.vesEvade.control.up = 0.0
+
+class PE1_E2_I1_Env(PE1_E2_ParentEnv):
+    def __init__(self, **kwargs):
+        super().__init__(loadfile=PursuitEvadeGroup1Env.LOADFILE_I1, **kwargs)
+    
+class PE1_E2_I2_Env(PE1_E2_ParentEnv):
+    def __init__(self, **kwargs):
+        super().__init__(loadfile=PursuitEvadeGroup1Env.LOADFILE_I2, **kwargs)
+
+class PE1_E2_I3_Env(PE1_E2_ParentEnv):
+    def __init__(self, **kwargs):
+        super().__init__(loadfile=PursuitEvadeGroup1Env.LOADFILE_I3, **kwargs)
+
+class PE1_E2_I4_Env(PE1_E2_ParentEnv):
+    def __init__(self, **kwargs):
+        super().__init__(loadfile=PursuitEvadeGroup1Env.LOADFILE_I4, **kwargs)
