@@ -17,7 +17,7 @@ from kspdg.base_envs import KSPDGBaseEnv
 DEFAULT_EPISODE_TIMEOUT = 240.0 # [sec]
 DEFAULT_CAPTURE_DIST = 5.0      # [m]
 
-class PursuitEnv(KSPDGBaseEnv):
+class PursuitEvadeGroup1Env(KSPDGBaseEnv):
     '''
     Base environment for 1v1 pursuit-evasion orbital scenarios
     
@@ -27,6 +27,13 @@ class PursuitEnv(KSPDGBaseEnv):
         inherited scenarios (although there is not a current enforcement of this)
         - Observation and Action spaces shared between all child envs
     '''
+
+    # mission loadfile names for variou initial condition
+    LOADFILE_I1 = "pe1_i1_init"
+    LOADFILE_I2 = "pe1_i2_init"
+    LOADFILE_I3 = "pe1_i3_init"
+    LOADFILE_I4 = "pe1_i4_init"
+
 
     # hard-coded, static parameters for pursuer vehicle
     # that are accessible yet constant (so shouldn't be
