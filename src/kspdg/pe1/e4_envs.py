@@ -3,11 +3,11 @@
 # SPDX-License-Identifier: MIT
 
 import time
-from kspdg.pe1.base import PursuitEnv
+from kspdg.pe1.pe1_base import PursuitEvadeGroup1Env
 
 _PROGRADE_EVASION_THROTTLE = 0.2
 
-class PursuitEnv_e4(PursuitEnv):
+class PE1_E4_ParentEnv(PursuitEvadeGroup1Env):
     def __init__(self, loadfile: str, **kwargs):
         super().__init__(loadfile=loadfile, **kwargs)
 
@@ -40,3 +40,19 @@ class PursuitEnv_e4(PursuitEnv):
         self.vesEvade.control.right = 0.0
         self.vesEvade.control.up = 0.0
         self.vesEvade.auto_pilot.disengage()
+
+class PE1_E4_I1_Env(PE1_E4_ParentEnv):
+    def __init__(self, **kwargs):
+        super().__init__(loadfile=PursuitEvadeGroup1Env.LOADFILE_I1, **kwargs)
+    
+class PE1_E4_I2_Env(PE1_E4_ParentEnv):
+    def __init__(self, **kwargs):
+        super().__init__(loadfile=PursuitEvadeGroup1Env.LOADFILE_I2, **kwargs)
+
+class PE1_E4_I3_Env(PE1_E4_ParentEnv):
+    def __init__(self, **kwargs):
+        super().__init__(loadfile=PursuitEvadeGroup1Env.LOADFILE_I3, **kwargs)
+
+class PE1_E4_I4_Env(PE1_E4_ParentEnv):
+    def __init__(self, **kwargs):
+        super().__init__(loadfile=PursuitEvadeGroup1Env.LOADFILE_I4, **kwargs)
