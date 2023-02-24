@@ -34,7 +34,6 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
     LOADFILE_I3 = "pe1_i3_init"
     LOADFILE_I4 = "pe1_i4_init"
 
-
     # hard-coded, static parameters for pursuer vehicle
     # that are accessible yet constant (so shouldn't be
     # in observation which should really only be variable values)
@@ -142,7 +141,8 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
 
     def __init__(self, loadfile:str, 
         episode_timeout:float = DEFAULT_EPISODE_TIMEOUT, 
-        capture_dist:float = DEFAULT_CAPTURE_DIST):
+        capture_dist:float = DEFAULT_CAPTURE_DIST,
+        **kwargs):
         """
         Args:
             episode_timeout : float
@@ -151,8 +151,10 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
                 distance at which evader is considered captured [m]
         """
 
+        super().__init__(**kwargs)
+
         assert episode_timeout > 0
-        assert capture_dist > 0
+        assert capture_dist > 0 or capture_dist is None
         self.episode_timeout = episode_timeout
         self.capture_dist = capture_dist
 
@@ -256,12 +258,20 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         obs = self.get_observation()
 
         # compute reward
-        rew = -self.get_pe_relative_distance()
+        rew = self.get_reward()
 
         # compute performance metrics
         info = self.get_info(obs, self.is_episode_done)
 
         return obs, rew, self.is_episode_done, info
+    
+    def get_reward(self) -> float:
+        """ Compute reward value
+        Returns:
+            rew : float
+                reward at current step
+        """
+        return -self.get_pe_relative_distance()
 
     def get_info(self, observation: List, done: bool) -> Dict:
         """compute performance metrics
@@ -470,9 +480,11 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         while not self.stop_episode_termination_thread:
             # get distance to pursuer
             d_vesE_vesP = self.get_pe_relative_distance()
-            is_captured = d_vesE_vesP < self.capture_dist
-            if is_captured:
-                print("\n~~~SUCCESSFUL CAPTURE!~~~\n")
+            is_captured = False
+            if self.capture_dist is not None:
+                is_captured = d_vesE_vesP < self.capture_dist
+                if is_captured:
+                    print("\n~~~SUCCESSFUL CAPTURE!~~~\n")
 
             # check for episode timeout
             is_timeout = self.vesPursue.met > self.episode_timeout
