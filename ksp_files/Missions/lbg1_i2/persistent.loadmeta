@@ -1,0 +1,16 @@
+saveMD5 = 
+lastWriteTime = 638107842360000000
+id = 0dfdccb9-e25d-4ae6-b649-be7e67beca57
+title = lbg1_i2
+briefing = Pursuer - Capture the Evader!\nEvader - Avoid the Pursuer!
+author = 
+hardIcon = False
+difficulty = Intermediate
+vesselCount = 3
+nodeCount = 7
+startUT = 0
+missionExpansionVersion = 1.12.1
+steamPublishedFileId = 0
+testModules = TestGrapple
+testModules = TestVesselStateCrashed
+actionModules = ActionCreateVessel
