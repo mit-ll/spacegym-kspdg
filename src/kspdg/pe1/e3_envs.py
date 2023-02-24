@@ -1,13 +1,13 @@
-# Copyright (c) 2022, MASSACHUSETTS INSTITUTE OF TECHNOLOGY
+# Copyright (c) 2023, MASSACHUSETTS INSTITUTE OF TECHNOLOGY
 # Subject to FAR 52.227-11 – Patent Rights – Ownership by the Contractor (May 2014).
 # SPDX-License-Identifier: MIT
 
-from kspdg.pe1.base import PursuitEnv
+from kspdg.pe1.pe1_base import PursuitEvadeGroup1Env
 
 DEFAULT_EVADE_DIST = 200.0   # [m]
 DEFAULT_EVADE_THROTTLE = 1.0
 
-class PursuitEnv_e3(PursuitEnv):
+class PE1_E3_ParentEnv(PursuitEvadeGroup1Env):
     def __init__(self, loadfile: str, 
         evade_dist:float = DEFAULT_EVADE_DIST, 
         evade_throttle:float = DEFAULT_EVADE_THROTTLE,
@@ -66,3 +66,43 @@ class PursuitEnv_e3(PursuitEnv):
             self.vesEvade.control.forward = 0.0
             self.vesEvade.control.right = 0.0
             self.vesEvade.control.up = 0.0
+
+class PE1_E3_I1_Env(PE1_E3_ParentEnv):
+    def __init__(self, **kwargs):
+        super().__init__(loadfile=PursuitEvadeGroup1Env.LOADFILE_I1, **kwargs)
+    
+class PE1_E3_I2_Env(PE1_E3_ParentEnv):
+    def __init__(self, **kwargs):
+        super().__init__(loadfile=PursuitEvadeGroup1Env.LOADFILE_I2, **kwargs)
+
+class PE1_E3_I3_Env(PE1_E3_ParentEnv):
+    def __init__(self, **kwargs):
+        super().__init__(loadfile=PursuitEvadeGroup1Env.LOADFILE_I3, **kwargs)
+
+class PE1_E3_I4_Env(PE1_E3_ParentEnv):
+    def __init__(self, **kwargs):
+        super().__init__(loadfile=PursuitEvadeGroup1Env.LOADFILE_I4, **kwargs)
+
+class PE1_E3_I20220516_Env(PE1_E3_ParentEnv):
+
+    INIT_LOADFILE = "20220516_PursuitEvade_init"
+    MISSION_DONE_DIST_THRESHOLD = 20.0     # [m]
+
+    def __init__(self):
+        super().__init__(loadfile=PE1_E3_I20220516_Env.INIT_LOADFILE)
+
+    def check_episode_termination(self) -> bool:
+        '''determine if episode termination conditions are met
+        
+        Returns:
+            bool
+                true if episode termination criteria is met
+        '''
+
+        while not self.stop_episode_termination_thread:
+            # get distance to pursuer
+            d_vesE_vesP = self.get_pe_relative_distance()
+            self.is_episode_done = d_vesE_vesP < PE1_E3_I20220516_Env.MISSION_DONE_DIST_THRESHOLD
+            if self.is_episode_done:
+                print("Successful Capture!")
+                self.stop_episode_termination_thread = True
