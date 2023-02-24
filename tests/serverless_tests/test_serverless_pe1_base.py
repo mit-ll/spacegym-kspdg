@@ -6,11 +6,11 @@ import pytest
 import numpy as np
 
 import kspdg.utils.constants as C
-from kspdg.pe1.base import PursuitEnv
+from kspdg.pe1.pe1_base import PursuitEvadeGroup1Env
 
 
 @pytest.fixture
 def pe1_base_env():
     """setup and teardown of the PursuitEnvV20220516 object connected to kRPC server"""
-    env = PursuitEnv(None)
+    env = PursuitEvadeGroup1Env(None)
     yield env

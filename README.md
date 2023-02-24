@@ -195,6 +195,9 @@ conda activate kspdg
 pytest tests/ksp_ingame_tests/test_pe1_e1_i3.py
 
 # for additional tests, load a different mission in KSP: 
+# ESC > Quit to Main Menu > Exit to Main Menu > Play Missions > `lbg1_i2` > Continue
+pytest tests/ksp_ingame_tests/test_lbg1_lg0_i2.py
+
 # ESC > Quit to Main Menu > Exit to Main Menu > Play Missions > 20220516_PursuitEvade > Continue
 pytest tests/ksp_ingame_tests/test_pursuit_v20220516.py
 ```

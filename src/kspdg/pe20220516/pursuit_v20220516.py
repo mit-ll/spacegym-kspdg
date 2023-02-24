@@ -1,4 +1,4 @@
-# Copyright (c) 2022, MASSACHUSETTS INSTITUTE OF TECHNOLOGY
+# Copyright (c) 2023, MASSACHUSETTS INSTITUTE OF TECHNOLOGY
 # Subject to FAR 52.227-11 – Patent Rights – Ownership by the Contractor (May 2014).
 # SPDX-License-Identifier: MIT
 
@@ -104,10 +104,7 @@ class PursuitEnvV20220516(KSPDGBaseEnv):
         self.reset()
         
     
-    def reset(self):
-
-        # connect to KRPC server and load mission save file 
-        self.connect_and_load_on_reset()
+    def _reset_vessels(self) -> None:
 
         # get vessel objects
         self.vesReferee, self.vesEvade, self.vesPursue = self.conn.space_center.vessels[:3]
@@ -136,18 +133,23 @@ class PursuitEnvV20220516(KSPDGBaseEnv):
         self.vesEvade.control.rcs = True
         self.vesPursue.control.rcs = True
 
-        # start process for evader maneuvers
+    def _reset_episode_metrics(self) -> None:
+        pass
+
+    def _start_bot_threads(self) -> None:
+        """ Start parallel thread to execute Evader's evasive maneuvers
+        """
+
         self.stop_evade_thread = False
+
+        # check that thread does not exist or is not running
+        if hasattr(self, "evade_thread"):
+            if self.evade_thread.is_alive():
+                raise ConnectionError("evade_thread is already running."+ 
+                    " Close and join evade_thread before restarting")
+
         self.evade_thread = Thread(target=self.evasive_maneuvers)
         self.evade_thread.start()
-
-        # start process for checking episode termination
-        self.is_episode_done = False
-        self.stop_episode_termination_thread = False
-        self.episode_termination_thread = Thread(target=self.check_episode_termination)
-        self.episode_termination_thread.start()
-
-        return self.get_observation()
 
     def step(self, action):
         ''' Apply thrust and torque actuation for speciefied time
@@ -187,6 +189,9 @@ class PursuitEnvV20220516(KSPDGBaseEnv):
         info = {}
 
         return obs, rew, self.is_episode_done, info
+    
+    def get_info(self, observation: List, done: bool):
+        return {}
 
     def convert_rhntw_to_rhpbody(self, v__rhntw: List[float]) -> List[float]:
         '''Converts vector in right-handed NTW frame to pursuer vessel right-oriented body frame
@@ -272,7 +277,7 @@ class PursuitEnvV20220516(KSPDGBaseEnv):
         p_vesE_vesP__lhpbody = self.vesEvade.position(self.vesPursue.reference_frame)
         return np.linalg.norm(p_vesE_vesP__lhpbody)
 
-    def check_episode_termination(self) -> bool:
+    def enforce_episode_termination(self) -> bool:
         '''determine if episode termination conditions are met
         
         Returns:

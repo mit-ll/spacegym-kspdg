@@ -13,12 +13,12 @@ import time
 import numpy as np
 
 import kspdg.utils.constants as C
-from kspdg.pe1.pe1_e1_i3 import PursuitEnv_ePassive_i3_v0
+from kspdg.pe1.e1_envs import PE1_E1_I3_Env
 
 @pytest.fixture
 def pe1_e1_i3_env():
     '''setup and teardown of the PursuitEnvV20220516 object connected to kRPC server'''
-    env = PursuitEnv_ePassive_i3_v0()
+    env = PE1_E1_I3_Env()
     env.reset()
     yield env
     env.close()
@@ -47,7 +47,7 @@ def test_get_info_0(pe1_e1_i3_env):
     # ~~ ARRANGE ~~
 
     if pe1_e1_i3_env is None:
-        env = PursuitEnv_ePassive_i3_v0()
+        env = PE1_E1_I3_Env()
         env.reset()
     else:
         env = pe1_e1_i3_env
