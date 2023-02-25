@@ -397,12 +397,12 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
                 [0] : mission elapsed time [s]
                 [1] : current vehicle (bandit) mass [kg]
                 [2] : current vehicle (bandit) propellant  (mono prop) [kg]
-                [3:6] : bandit position in reference orbit right-hand CBCI coords [m]
-                [6:9] : bandit velocity in reference orbit right-hand CBCI coords [m/s]
-                [9:12] : lady position in reference orbit right-hand CBCI coords [m]
-                [12:15] : lady velocity in reference orbit right-hand CBCI coords [m/s]
-                [15:18] : guard position in reference orbit right-hand CBCI coords [m]
-                [18:21] : guard velocity in reference orbit right-hand CBCI coords [m/s]
+                [3:6] : bandit position wrt CB in right-hand CBCI coords [m]
+                [6:9] : bandit velocity wrt CB in right-hand CBCI coords [m/s]
+                [9:12] : lady position wrt CB in right-hand CBCI coords [m]
+                [12:15] : lady velocity wrt CB in right-hand CBCI coords [m/s]
+                [15:18] : guard position wrt CB in right-hand CBCI coords [m]
+                [18:21] : guard velocity wrt CB in right-hand CBCI coords [m/s]
 
         Ref: 
             - CBCI stands for celestial-body-centered inertial which is a coralary to ECI coords

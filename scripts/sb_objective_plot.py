@@ -8,24 +8,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-def sb_objective(r, t, r_d, A=1, B=1):
+def sb_objective(r, t, r_d=50, A=1, B=0.001):
     return - A * np.exp(-B * (r-r_d)**2) * np.cos(t)
 
 if __name__ == "__main__":
 
     # setup range and angle arrays
-    r = np.linspace(0, 10 ,100)
+    r = np.linspace(0, 100 ,100)
     t = np.linspace(0, 2*np.pi, 100)
     R, T = np.meshgrid(r, t)
 
     # evaluate function on meshgrid
-    Z = sb_objective(R, T, 2)
+    Z = sb_objective(R, T)
 
     # Create a 3D plot of the function
     fig = plt.figure(figsize=(8,8))
     ax = fig.add_subplot(111, projection='3d')
     ax.plot_surface(R*np.cos(T), R*np.sin(T), Z, cmap='viridis')
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    ax.set_zlabel('z')
+    ax.set_xlabel('x-pos [m]')
+    ax.set_ylabel('y-po [m]')
+    ax.set_zlabel('reward [-]')
     plt.show()
