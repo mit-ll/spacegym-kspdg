@@ -1,22 +1,34 @@
 # KSPDG: Kerbal Space Program Differential Games
 
-~~> TODO: *Add emblem/logo upon completion*
+![Logo](docs/20230309_logo.png)
 
 ## Overview
 
-This library provides a suite of differential game (DG) environments built within the [Kerbal Space Program (KSP)](https://www.kerbalspaceprogram.com/) game engine.
+This library provides a suite of differential game (DG) challenge problems / environments set in the orbital domain built within the [Kerbal Space Program (KSP)](https://www.kerbalspaceprogram.com/) game engine. The intent of the KSPDG library is to provide benchmark challenge problems for evaluating autonomous control and AI algorithms applied to non-cooperative space operations.
 
 The KSP differential game environments are implemented using the [OpenAI Gym](https://github.com/openai/gym) (or more specifically [Gymnasium](https://gymnasium.farama.org/) which is the drop-in-replacement, maintained fork of Gym) and [PettingZoo](https://pettingzoo.farama.org/) standards. Non-GUI control of the KSP game engine is enabled by [kRPC](https://krpc.github.io/krpc/) and control of physically distant spacecraft is enabled by [PhysicsRangeExtender](https://github.com/jrodrigv/PhysicsRangeExtender).
 
 ### Design Principles
 
-*TODO*
++ Differential Games in the Orbital Domain
+    + First and foremost, KSPDG defines a set of differential games (e.g. pursuit-evasion) to be solved in the orbital domain. 
++ Standardized API
+    + KSPDG uses the [OpenAI Gym](https://github.com/openai/gym) API for agent interactions to provide an industry-standard interface for control algorithms and agents
++ Open Source and Extensible
+    + KSPDG is made open source so that the broader community can create new scenarios/environments for benchmarking
++ Evaluation, Not Training
+    + KSPDG provides evaluations environments, _NOT_ training environments for reinforcement learning algorithms. There are several reasons for this. Practically speaking, KSP was not designed for the massively parallel, faster-than-real-time, headless execution typically needed for large-scale RL training. From a more principled perspective, it can be argued that non-trainable evaluation environments are of vital importance to the RL research community as they act as the true "test set" for which you cannot overfit your agents upon because they cannot be directly trained upon.
++ Environments, Not Agents
+    + Similar to other "gym" libraries, KSPDG only provides environments (aka scenarios, challenge problems), not the agents that solve those environments. Developing agents that best solve the KSPDG environments is work for the broader community (and they problems wouldn't be that interesting if we can propose them and solve them in the same )
++ Non-Blocking Step Function
+    + In KSPDG, game time does not pause while agents make decisions. This is a defining characteristic of KSPDG as best matches the real world and provides an inherent penalty to decision and control policies that take a long time to compute.
+
 
 ------------
 
 ## Citation
 
-~~> TODO: *Zenodo DOI to be added upon making repo public*
+[![DOI](https://zenodo.org/badge/572083084.svg)](https://zenodo.org/badge/latestdoi/572083084)
 
 ~~> TODO: *SpaceGym paper citation to be added upon publication at IEEE AeroConf 2023*
 
