@@ -1,6 +1,7 @@
 # KSPDG: Kerbal Space Program Differential Games
 
-![Logo](docs/20230309_logo.png)
+<!-- ![Logo](docs/20230309_logo.png) -->
+<img src="docs/20230309_logo.png" width="250">
 
 ## Overview
 
