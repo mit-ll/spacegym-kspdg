@@ -219,6 +219,14 @@ pytest tests/ksp_ingame_tests/test_pursuit_v20220516.py
 > :warning: **Troubleshooting**
 > If you are using a Mac with an arm64 architecture (e.g. M1 chipset) and recieve an error like `(mach-o file, but is an incompatible architecture (have 'x86_64', need 'arm64e'))`, please refer to instructions in the [kspdg library installation section](#install-kspdg) about installing `pyerfa` from source.
 
+------------
+
+## Example: Random Agent in Pursuit-Evade
+
+Here we provide a "hello world" example of implementing an pursuit agent in the simple Pursuit-Evade environment
+
+__TODO__
+
 
 ------------
 
