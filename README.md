@@ -18,9 +18,12 @@ The KSP differential game environments are implemented using the [OpenAI Gym](ht
 + Open Source and Extensible
     + KSPDG is made open source so that the broader community can create new scenarios/environments for benchmarking
 + Evaluation, Not Training
-    + KSPDG provides evaluations environments, _NOT_ training environments for reinforcement learning algorithms. There are several reasons for this. Practically speaking, KSP was not designed for the massively parallel, faster-than-real-time, headless execution typically needed for large-scale RL training. From a more principled perspective, it can be argued that non-trainable evaluation environments are of vital importance to the RL research community as they act as the true "test set" for which you cannot overfit your agents upon because they cannot be directly trained upon.
+    + KSPDG provides evaluations environments, _NOT_ training environments for reinforcement learning algorithms. There are several reasons for this. 
+    + Practically speaking, KSP was not designed for the massively parallel, faster-than-real-time, headless execution typically needed for large-scale RL training. 
+    + From a more principled perspective, it can be argued that non-trainable evaluation environments are of vital importance to the RL research community as they act as the true "test set" for which you cannot overfit your agents upon because they cannot be directly trained upon.
+    + Furthermore, trainable environments tend to imply that RL is the most effective solution method. We make no such assumption; indeed optimal control techniques and numerical differential game solvers may produce superior results in terms of development time, robustness, and optimality. 
 + Environments, Not Agents
-    + Similar to other "gym" libraries, KSPDG only provides environments (aka scenarios, challenge problems), not the agents that solve those environments. Developing agents that best solve the KSPDG environments is work for the broader community (and they problems wouldn't be that interesting if we can propose them and solve them in the same )
+    + Similar to other "gym" libraries, KSPDG only provides environments (aka scenarios, challenge problems), not the agents that solve those environments. Developing agents that best solve the KSPDG environments is work for the broader community.
 + Non-Blocking Step Function
     + In KSPDG, game time does not pause while agents make decisions. This is a defining characteristic of KSPDG as best matches the real world and provides an inherent penalty to decision and control policies that take a long time to compute.
 
