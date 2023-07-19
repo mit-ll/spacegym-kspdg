@@ -31,7 +31,16 @@ The KSP differential game environments are implemented using the [OpenAI Gym](ht
 
 [![DOI](https://zenodo.org/badge/572083084.svg)](https://zenodo.org/badge/latestdoi/572083084)
 
-~~> TODO: *SpaceGym paper citation to be added upon publication at IEEE AeroConf 2023*
+```
+@inproceedings{allen2023spacegym,
+  title={SpaceGym: Discrete and Differential Games in Non-Cooperative Space Operations},
+  author={Allen, Ross E and Rachlin, Yaron and Ruprecht, Jessica and Loughran, Sean and Varey, Jacob and Viggh, Herbert},
+  booktitle={2023 IEEE Aerospace Conference},
+  pages={1--12},
+  year={2023},
+  organization={IEEE}
+}
+```
 
 ------------
 
