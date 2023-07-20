@@ -9,7 +9,7 @@ Distinct environments are compositions of Lady-Guard policies and initial orbita
 ##  Environment Naming Scheme
 
 This README documents/decodes the somewhat cryptic naming scheme used to uniquely identify environments. 
-+ The naming scheme follows a patter of: `{GroupID}_lb{LadyGuardPolicyID}_i{InitCondID}_v{VersionNum}`
++ The naming scheme follows a patter of: `{GroupID}_lg{LadyGuardPolicyID}_i{InitCondID}_v{VersionNum}`
 + The primary reason for these cryptic naming schemes is brevity; it becomes ungainly and impractical to have files named things like: `LadyBanditGuardEnvGroup1_LadyNashPolicy3_GuardHeuristicPolicy4_EllipticalCircularInitOrbits12_v5`
 + *GroupID* identifies a collection of environments with shared properties. 
     + Example: `lbg1` is this group's name which represents "Lady-Bandit-Guard Environments Group 1"

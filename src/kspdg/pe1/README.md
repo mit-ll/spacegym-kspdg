@@ -6,7 +6,7 @@ A collection of 1-v-1 pursuit-evasion environments with shared parameters/charac
 
 This README documents/decodes the somewhat cryptic naming scheme used to uniquely identify environments. 
 
-+ The naming scheme follows a patter of: `{GroupID}_lb{EvasionID}_i{InitCondID}_v{VersionNum}`
++ The naming scheme follows a patter of: `{GroupID}_e{EvasionID}_i{InitCondID}_v{VersionNum}`
 + The primary reason for these cryptic naming schemes is brevity; it becomes ungainly and impractical to have files named things like: `PursuitEvadeEnvGroup1_EvaderPolicy3_EllipticalCircularInitOrbits12_v5`
 + *GroupID* identifies a collection of environments with shared properties. 
     + Example: `pe1` is this group's name which represents "Pursuit-Evasion Environments Group 1"
