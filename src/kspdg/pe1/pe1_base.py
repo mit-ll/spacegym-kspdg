@@ -50,10 +50,10 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
     # [0] : mission elapsed time [s]
     # [1] : current vehicle (pursuer) mass [kg]
     # [2] : current vehicle (pursuer) propellant  (mono prop) [kg]
-    # [3:6] : pursuer position in reference orbit right-hand CBCI coords [m]
-    # [6:9] : pursuer velocity in reference orbit right-hand CBCI coords [m/s]
-    # [9:12] : evader position in reference orbit right-hand CBCI coords [m]
-    # [12:15] : evader velocity in reference orbit right-hand CBCI coords [m/s]
+    # [3:6] : pursuer position wrt CB in right-hand CBCI coords [m]
+    # [6:9] : pursuer velocity wrt CB in right-hand CBCI coords [m/s]
+    # [9:12] : evader position wrt CB in right-hand CBCI coords [m]
+    # [12:15] : evader velocity wrt CB in right-hand CBCI coords [m/s]
     PARAMS.OBSERVATION.LEN = 15
     PARAMS.OBSERVATION.K_MET = "mission_elapsed_time"
     PARAMS.OBSERVATION.I_MET = 0
