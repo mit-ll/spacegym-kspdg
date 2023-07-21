@@ -231,12 +231,30 @@ pytest tests/ksp_ingame_tests/test_pursuit_v20220516.py
 
 ------------
 
-## Example: Random Agent in Pursuit-Evade
+## Example: Naive Agent in Pursuit-Evade
 
-Here we provide a "hello world" example of implementing an pursuit agent in the simple Pursuit-Evade environment
+Here we provide a "hello world" example of implementing a pursuit agent in the simple Pursuit-Evade environment. This agent simply points at the pursuer and burns full throttle (Do you think that can interecept even a non-maneuvering evader? Try it and find out!)
 
-__TODO__
+See [`scripts/newbie_pursuer.py`](scripts/newbie_pursuer.py)
 
+```
+from kspdg.pe1.e1_envs import PE1_E1_I3_Env
+
+# instantiate and reset the environment to populate game
+env = PE1_E1_I3_Env()
+env.reset()
+
+is_done = False
+act = [1.0, 0, 0, 1.0]  # forward throttle, right throttle, down throttle, duration [s]
+while not is_done:
+    obs, rew, is_done, info = env.step(act)
+
+# printout info to see evaluation metrics of episode
+print(info)
+
+# close the environments to cleanup any processes
+env.close()
+```
 
 ------------
 
