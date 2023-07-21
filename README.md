@@ -238,9 +238,11 @@ pytest tests/ksp_ingame_tests/test_pursuit_v20220516.py
 
 Here we provide a "hello world" example of implementing a pursuit agent in the simple Pursuit-Evade environment. This agent simply points at the pursuer and burns full throttle (Do you think that can interecept even a non-maneuvering evader? Try it and find out!)
 
-See [`scripts/newbie_pursuer.py`](scripts/newbie_pursuer.py)
+1. Start KSP game application. 
+2. Select `Start Game` > `Play Missions` > `Community Created` > `pe1_i3` > `Continue`
+3. In kRPC dialog box click `Add server`. Select `Show advanced settings` and select `Auto-accept new clients`. Then select `Start Server`
 
-```
+```python
 from kspdg.pe1.e1_envs import PE1_E1_I3_Env
 
 # instantiate and reset the environment to populate game
@@ -258,6 +260,8 @@ print(info)
 # close the environments to cleanup any processes
 env.close()
 ```
+
+See [`scripts/newbie_pursuer.py`](scripts/newbie_pursuer.py) for more details
 
 ------------
 
