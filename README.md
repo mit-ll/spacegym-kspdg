@@ -261,7 +261,7 @@ print(info)
 env.close()
 ```
 
-See [`scripts/newbie_pursuer.py`](scripts/newbie_pursuer.py) for more details
+See [`scripts/example_hello_kspdg.py`](scripts/example_hello_kspdg.py) for more details
 
 ------------
 

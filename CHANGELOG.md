@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - First implementation of sun-blocking environments (sb1) 
-- `newbie_pursuer.py` a "hello world" scirpt for defining an agent
+- `example_hello_kspdg.py` a "hello world" scirpt for defining an agent
 - `agent_api` subpackage used for defining KSPDG solver agents that integrate and run within KSPDG environments in a streamlined, systematic fashion
 
 ### Fixed
