@@ -6,22 +6,21 @@ import time
 import logging
 import multiprocessing as mp
 
-from abc import ABC, abstractmethod
 from typing import Dict
 
 from kspdg.base_envs import KSPDGBaseEnv
+from kspdg.agent_api.base_agent import KSPDGBaseAgent
 from kspdg.utils.loggers import create_logger
 from kspdg.agent_api.ksp_interface import ksp_interface_loop
 
 DEFAULT_RUNNER_TIMEOUT = 600 #[s]
-DEFAULT_ACTION_ROLLOUT_TIME_HORIZON = 5.0 # [s]
 
-class BaseAgentEnvRunner(ABC):
+class AgentEnvRunner():
     def __init__(self, 
+        agent:KSPDGBaseAgent,
         env_cls:type[KSPDGBaseEnv], 
         env_kwargs:Dict, 
         runner_timeout:float=DEFAULT_RUNNER_TIMEOUT, 
-        action_rollout_time_horizon:float=DEFAULT_ACTION_ROLLOUT_TIME_HORIZON,
         debug:bool=False):
         """ instantiates agent-environment pair and brokers communication between processes
 
@@ -50,9 +49,9 @@ class BaseAgentEnvRunner(ABC):
                 if true, set logging level to debug
         """
         
+        self.agent = agent
         self.env_cls = env_cls
         self.env_kwargs = env_kwargs
-        self.action_rollout_time_horizon = action_rollout_time_horizon
         self.runner_timeout = runner_timeout
         self.debug = debug
 
@@ -133,12 +132,15 @@ class BaseAgentEnvRunner(ABC):
                 break
 
             # compute agent-specific action and send to env interface process
-            action = self.get_action(observation=observation)
-            self.act_conn_send.send(action)
+            action = self.agent.get_action(observation=observation)
 
-            # allow current schedule to be executed for fixed time horizon
-            self.logger.debug("sleeping {:.2f} sec to allow action rollout".format(self.action_rollout_time_horizon))
-            time.sleep(self.action_rollout_time_horizon)
+            # Agent can choose to not change or update it's current action
+            # by returning a value of None
+            # Only update the action to be rolled out in the environment
+            # if agent returns non-None action
+            if action is not None:
+                self.act_conn_send.send(action)
+
 
             # check for agent timeout
             if time.time() - policy_loop_start > self.runner_timeout:
@@ -148,7 +150,3 @@ class BaseAgentEnvRunner(ABC):
 
         # cleanup agent
         self.stop_agent()
-
-    @abstractmethod
-    def get_action(self, observation):
-        raise NotImplementedError("Must be implemented by child class")

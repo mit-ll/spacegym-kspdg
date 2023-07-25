@@ -14,24 +14,14 @@ Instructions to Run:
 
 """
 
+from kspdg.agent_api.base_agent import KSPDGBaseAgent
 from kspdg.pe1.e1_envs import PE1_E1_I3_Env
-from kspdg.agent_api.runner import BaseAgentEnvRunner
+from kspdg.agent_api.runner import AgentEnvRunner
 
-class NaivePursuitAgent(BaseAgentEnvRunner):
+class NaivePursuitAgent(KSPDGBaseAgent):
     """An agent that naively burns directly toward it's target"""
-    def __init__(self, runner_timeout:float, debug:bool=True):
-        """
-        Args:
-            runner_timeout : float
-                total time to run agent-environment pair
-            debug : bool
-                if true, set logging level to debug
-        """
-        super().__init__(
-            env_cls=PE1_E1_I3_Env, 
-            env_kwargs=None, 
-            runner_timeout=runner_timeout,
-            debug=debug)
+    def __init__(self):
+        super().__init__()
 
     def get_action(self, observation):
         """ compute agent's action given observation
@@ -43,6 +33,12 @@ class NaivePursuitAgent(BaseAgentEnvRunner):
         return [1.0, 0, 0, 1.0]  # forward throttle, right throttle, down throttle, duration [s]
 
 if __name__ == "__main__":
-    naive_agent = NaivePursuitAgent(60)    # agent that will timeout after 200 seconds
-    naive_agent.run()
+    naive_agent = NaivePursuitAgent()    
+    runner = AgentEnvRunner(
+        agent=naive_agent, 
+        env_cls=PE1_E1_I3_Env, 
+        env_kwargs=None,
+        runner_timeout=100,     # agent runner that will timeout after 100 seconds
+        debug=True)
+    runner.run()
 
