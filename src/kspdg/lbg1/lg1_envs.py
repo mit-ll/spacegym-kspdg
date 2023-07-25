@@ -8,7 +8,6 @@
 
 import time
 import numpy as np
-import logging
 
 from types import SimpleNamespace
 
@@ -101,7 +100,7 @@ class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
     def zeroout_bandit_guard_velocity(self):
         """Perform burn to zero-out relative velocity between bandit and guard"""
 
-        logging.debug("Zeroing: Zeroing Out Relative Velocities")
+        self.logger.debug("Zeroing: Zeroing Out Relative Velocities")
 
         loop_start_time = time.time()
         while True:
@@ -109,7 +108,7 @@ class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
             # get velocity and speed of bandit relative to guard
             vel_vesB_vesG__lhgntw = self.vesBandit.velocity(self.vesGuard.orbital_reference_frame)
             spd_vesB_vesG = np.linalg.norm(vel_vesB_vesG__lhgntw)
-            logging.debug("Zeroing: Bandit-Guard relative speed = {}".format(spd_vesB_vesG))
+            self.logger.debug("Zeroing: Bandit-Guard relative speed = {}".format(spd_vesB_vesG))
 
             # check zero-ing vel breakout conditions to move to next step
             if (spd_vesB_vesG < self.min_speed_thresh) or \
@@ -124,7 +123,7 @@ class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
             # "death spin"
             if self.vesGuard.auto_pilot.error > self.pointing_thresh:
                 self.vesGuard.control.forward = 0
-                logging.debug("Zeroing-Reorientation: Pointing error = {}".format(self.vesGuard.auto_pilot.error))
+                self.logger.debug("Zeroing-Reorientation: Pointing error = {}".format(self.vesGuard.auto_pilot.error))
                 continue
 
             self.vesGuard.control.forward = -self.pursuit_throttle
@@ -135,7 +134,7 @@ class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
     def direct_burn_guard_toward_bandit(self):
         """Point Guard directly at Bandit and burn until desired relative velocity met"""
 
-        logging.debug("DirectBurn: Performing direct pursuit of Bandit...")
+        self.logger.debug("DirectBurn: Performing direct pursuit of Bandit...")
 
         # point toward bandit and give some time to re-orient
         pos_vesB_vesG__lhgntw = self.vesBandit.position(self.vesGuard.orbital_reference_frame)
@@ -148,7 +147,7 @@ class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
             # get velocity and speed of bandit relative to guard
             vel_vesB_vesG__lhgntw = self.vesBandit.velocity(self.vesGuard.orbital_reference_frame)
             spd_vesB_vesG = np.linalg.norm(vel_vesB_vesG__lhgntw)
-            logging.debug("DirectBurn: Bandit-Guard relative speed = {}".format(spd_vesB_vesG))
+            self.logger.debug("DirectBurn: Bandit-Guard relative speed = {}".format(spd_vesB_vesG))
 
             # compute velocity-position angle
             pos_vesB_vesG__lhgntw = self.vesBandit.position(self.vesGuard.orbital_reference_frame)
@@ -179,7 +178,7 @@ class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
         """Coast until the relative position and relative velocity of Bandit-Guard misalign"""
 
         self.vesGuard.control.forward = 0
-        logging.debug("Coast: Coasting toward Bandit...")
+        self.logger.debug("Coast: Coasting toward Bandit...")
         # loop_start_time = time.time()
         while True:
 
@@ -191,7 +190,7 @@ class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
                 -np.array(vel_vesB_vesG__lhgntw), 
                 np.array(pos_vesB_vesG__lhgntw))
 
-            logging.debug("Coast: Bandit-Guard vel-pos vector angle = {}".format(ang_vel_pos_rad))
+            self.logger.debug("Coast: Bandit-Guard vel-pos vector angle = {}".format(ang_vel_pos_rad))
 
             # check for coast breakout condition to repeat process
             if ang_vel_pos_rad > self.ang_vel_pos_thresh or \

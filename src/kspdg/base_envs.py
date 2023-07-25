@@ -5,13 +5,15 @@
 # Abstract base classes for KSPDG environment classes
 
 import krpc
-import gymnasium as gym
 import logging
+import gymnasium as gym
 
 from abc import ABC, abstractmethod
 from threading import Thread
 from typing import Tuple, Dict
 from numpy.typing import ArrayLike
+
+from kspdg.utils.loggers import create_logger
 
 class KSPDGBaseEnv(ABC, gym.Env):
     """ Abstract base class for all KSPDG gym environments
@@ -23,10 +25,13 @@ class KSPDGBaseEnv(ABC, gym.Env):
             debug : bool
                 if true, set logging config to debug
         """
-
-        logging.basicConfig(level=logging.DEBUG)
         
         super().__init__()
+
+        # create logger to store environment metrics
+        self.logger = create_logger(
+            __name__, 
+            stream_log_level=logging.DEBUG if debug else logging.INFO)
 
     def reset(self) -> Tuple[ArrayLike, Dict]:
         """Restart env episode managing
