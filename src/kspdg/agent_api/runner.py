@@ -25,12 +25,12 @@ class BaseAgentEnvRunner(ABC):
         debug:bool=False):
         """ instantiates agent-environment pair and brokers communication between processes
 
-        Even though KSBDGBaseEnv objects are Gym (Gymnasium) Environments with the standard API
+        Even though KSPDGBaseEnv objects are Gym (Gymnasium) Environments with the standard API
         (e.g. step(), reset(), observation_space, action_space, etc.), they have several characteristics
         that necessitate this additional class to pair an agent to an environment
             1. A kRPC connection is required to send commands and get observations from KSP. This class 
                 helps manage that connection
-            2. KSBDG environments run in non-blocking fashion; i.e. environment simulation time
+            2. KSPDG environments run in non-blocking fashion; i.e. environment simulation time
                 marches forward in between calls to step(). This is a key difference from traditional
                 Gym environments. Therefore it is desirable and necessary to have a separate process 
                 running in parallel for your agent to compute actions. This class manages those

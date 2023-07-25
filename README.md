@@ -234,7 +234,7 @@ pytest tests/ksp_ingame_tests/test_pursuit_v20220516.py
 
 ------------
 
-## Example: Naive Agent in Pursuit-Evade
+## Example: Hello KSPDG
 
 Here we provide a "hello world" example of implementing a pursuit agent in the simple Pursuit-Evade environment. This agent simply points at the pursuer and burns full throttle (Do you think that can interecept even a non-maneuvering evader? Try it and find out!)
 
@@ -262,6 +262,54 @@ env.close()
 ```
 
 See [`scripts/example_hello_kspdg.py`](scripts/example_hello_kspdg.py) for more details
+
+------------
+
+## Example: Agent-Environment Runner
+
+Even though KSPDG environments are Gym (Gymnasium) environments, they require special handling because they must manage server connections to the KSP game engine, as well as handle the non-blocking nature of KSPDG environments (i.e. simulation time continues during and between calls to `env.step()`) which requires parallel processes for the environment interactions and agent's policy computation.
+
+Therefore we have defined a Agent-Environment Runner class that helps manage these interactions. Users can define agents by extending the `BaseAgentEnvRunner` and execute their agents as follows
+
+1. Start KSP game application. 
+2. Select `Start Game` > `Play Missions` > `Community Created` > `pe1_i3` > `Continue`
+3. In kRPC dialog box click `Add server`. Select `Show advanced settings` and select `Auto-accept new clients`. Then select `Start Server`
+
+```python
+from kspdg.pe1.e1_envs import PE1_E1_I3_Env
+from kspdg.agent_api.runner import BaseAgentEnvRunner
+
+class NaivePursuitAgent(BaseAgentEnvRunner):
+    """An agent that naively burns directly toward it's target"""
+    def __init__(self, runner_timeout:float, debug:bool=True):
+        """
+        Args:
+            runner_timeout : float
+                total time to run agent-environment pair
+            debug : bool
+                if true, set logging level to debug
+        """
+        super().__init__(
+            env_cls=PE1_E1_I3_Env, 
+            env_kwargs=None, 
+            runner_timeout=runner_timeout,
+            debug=debug)
+
+    def get_action(self, observation):
+        """ compute agent's action given observation
+
+        This function is necessary to define as it overrides 
+        an abstract method
+        """
+
+        return [1.0, 0, 0, 1.0]  # forward throttle, right throttle, down throttle, duration [s]
+
+if __name__ == "__main__":
+    naive_agent = NaivePursuitAgent(60)    # agent that will timeout after 200 seconds
+    naive_agent.run()
+```
+
+See [`scripts/example_agent_runner.py`](scripts/example_agent_runner.py) for more details
 
 ------------
 
