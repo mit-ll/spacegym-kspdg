@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 import time
+import logging
 import numpy as np
 import multiprocessing as mp
 
@@ -10,6 +11,7 @@ from abc import ABC, abstractmethod
 from typing import Dict
 
 from kspdg.base_envs import KSPDGBaseEnv
+from kspdg.utils.loggers import create_logger
 
 DEFAULT_RUNNER_TIMEOUT = 600 #[s]
 DEFAULT_ACTION_ROLLOUT_TIME_HORIZON = 5.0 # [s]
@@ -19,7 +21,8 @@ class BaseAgentEnvRunner(ABC):
         env_cls:type[KSPDGBaseEnv], 
         env_kwargs:Dict, 
         runner_timeout:float=DEFAULT_RUNNER_TIMEOUT, 
-        action_rollout_time_horizon:float=DEFAULT_ACTION_ROLLOUT_TIME_HORIZON):
+        action_rollout_time_horizon:float=DEFAULT_ACTION_ROLLOUT_TIME_HORIZON,
+        debug:bool=False):
         """ instantiates agent-environment pair and brokers communication between processes
 
         Even though KSBDGBaseEnv objects are Gym (Gymnasium) Environments with the standard API
@@ -43,8 +46,185 @@ class BaseAgentEnvRunner(ABC):
             action_rollout_time_horizon : float
                 amount of time to allocate for an action to rollout in the environment
                 before a new action is queried from the agent
+            debug : bool
+                if true, set logging level to debug
         """
+        
         self.env_cls = env_cls
         self.env_kwargs = env_kwargs
         self.action_rollout_time_horizon = action_rollout_time_horizon
         self.runner_timeout = runner_timeout
+
+        # create logger for Agent-Env Runner
+        # (distinct from environment logger)
+        self.logger = create_logger(
+            __name__, 
+            stream_log_level=logging.DEBUG if debug else logging.INFO)
+
+    def run(self):
+        """start environment-interface process and agent policy loop"""
+
+        # create ways for processes to talk to each other
+        self.termination_event = mp.Event()
+        self.observation_query_event = mp.Event()
+        self.obs_conn_recv, obs_conn_send = mp.Pipe(duplex=False)
+        act_conn_recv, self.act_conn_send = mp.Pipe(duplex=False)
+
+        # create parallel process to run KSPDG environment with 
+        # interface for agent interaction, return information
+        return_dict = mp.Manager().dict()
+        self.env_interface_process = mp.Process(
+            target=ksp_interface_loop, 
+            args=(
+                self.env_cls, 
+                self.env_kwargs,
+                obs_conn_send, 
+                act_conn_recv, 
+                self.termination_event, 
+                self.observation_query_event,
+                return_dict
+                )
+        )
+        self.env_interface_process.start()
+
+        # start agent policy loop that computes actions
+        # given observations from environment
+        self.policy_loop()
+
+        # cleanup
+        self.stop_agent()
+
+        # return info from environment
+        return dict(return_dict)
+    
+    def __del__(self):
+        self.stop_agent()
+
+    def stop_agent(self):
+
+        # send termination event and join processes
+        self.termination_event.set()
+        self.env_interface_process.join()
+
+    def policy_loop(self):
+        """ this is the agent's "main loop" that computes/infers actions based on observations
+        """
+
+        # track start time so we can enforce a timeout
+        policy_loop_start = time.time()
+
+        while not self.termination_event.is_set():
+
+            # request/receive observation from environment
+            self.logger.debug("requesting new environment observation")
+            self.observation_query_event.set()
+            if self.obs_conn_recv.poll(timeout=20.0):
+                try:
+                    observation = self.obs_conn_recv.recv()
+                except EOFError:
+                    self.logger.info("environment closed, terminating agent...")
+                    self.termination_event.set()
+                    break
+            else:
+                self.logger.info("non-responsive executor, terminating agent...")
+                self.termination_event.set()
+                break
+
+            # compute agent-specific action and send to env interface process
+            action = self.get_action(observation=observation)
+            self.act_conn_send.send(action)
+
+            # allow current schedule to be executed for fixed time horizon
+            self.logger.debug("sleeping {:.2f} sec to allow action rollout".format(self.action_rollout_time_horizon))
+            time.sleep(self.action_rollout_time_horizon)
+
+            # check for agent timeout
+            if time.time() - policy_loop_start > self.runner_timeout:
+                self.termination_event.set()
+                self.logger.info("\n~~~AGENT TIMEOUT REACHED~~~\n")
+                break
+
+        # cleanup agent
+        self.stop_agent()
+
+    @abstractmethod
+    def get_action(self, observation):
+        raise NotImplementedError("Must be implemented by child class")
+    
+def ksp_interface_loop(
+        env_cls, 
+        env_kwargs, 
+        obs_conn_send, 
+        act_conn_recv, 
+        termination_event, 
+        observation_query_event, 
+        return_dict):
+    """ Parallel process for running and interacting with environment
+    
+    This loop creates a separate process so that environment and agent (policy) can be run concurrently
+    It handles KSPDG environment instantiation, 
+    querying observations from the environment, 
+    sending actions to KSPDG environment,
+    and cleanup of connections and environment at termination
+
+    Args:
+        env_cls : type[KSPDGBaseEnv]
+            class of (not instance of) KSPDG environment to run agent within
+        env_kwargs : dict
+            keyword args to be passed when instantiating environment class
+    """
+
+    # create a separate logger becasue this is a separate process
+    logger = create_logger("ksp_interface", logging.DEBUG)
+
+    def observation_handshake():
+        # check for environment observation request from solver
+        if observation_query_event.is_set():
+            logger.debug("env observation request received. Transmitting...")
+            obs_conn_send.send(env.get_observation())
+            observation_query_event.clear()
+
+    # Create environment
+    logger.info("\n~~~Instantiating KSPDG envrionment~~~\n")
+    env_cls = env_cls
+    if env_kwargs is not None:
+        env = env_cls(**env_kwargs)
+    else:
+        env = env_cls()
+    _, env_info = env.reset()
+
+    # execute accel schedule until agent termination
+    agent_act = None
+    while not termination_event.is_set():
+        
+        # check for environment observation request from solver
+        observation_handshake()
+
+        # wait for agent action
+        if act_conn_recv.poll():
+            logger.debug("receiving new agent action")
+            agent_act = act_conn_recv.recv()
+
+        # if no current action provided, loop back to start to wait for agent action
+        if agent_act is None:
+            continue
+
+        # execute DG solution in KSP environment
+        _, _, env_done, env_info = env.step(action=agent_act)
+
+        # terminate loops if successful capture
+        if env_done:
+            logger.info("Environment Done")
+            termination_event.set()
+            break
+
+        if termination_event.is_set():
+            break
+
+    # return procedure for mp.Process
+    logger.info("\nsaving environment info...")
+    return_dict["env_info"] =  env_info
+
+    # cleanup
+    logger.info("\n~~~Closing KSPDG envrionment~~~\n")
+    env.close()
