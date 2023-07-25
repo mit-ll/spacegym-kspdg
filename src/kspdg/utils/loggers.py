@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 import logging
+import sys
 
 def create_logger(
         logger_name:str, 
@@ -23,6 +24,9 @@ def create_logger(
             level to log to log file
     """
     logger = logging.getLogger(logger_name)
+
+    # set logger level at the minimum between handlers
+    logger.setLevel(min(stream_log_level, file_log_level))
 
     # Create handlers
     c_handler = logging.StreamHandler()

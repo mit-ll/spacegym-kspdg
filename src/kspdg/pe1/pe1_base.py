@@ -186,13 +186,13 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         # and target evader
         self.conn.space_center.active_vessel = self.vesPursue
         self.conn.space_center.target_vessel = self.vesEvade
-        print("Changing active vehicle...")
+        self.logger.info("Changing active vehicle...")
         time.sleep(1)   # give time to re-orient
 
         # set the evader to stability assist and orient in orbit-normal direction
         # orient pursuer in target-pointing direction
 
-        print("Activating Pursuer SAS, RCS and orienting to Evader...")
+        self.logger.info("Activating Pursuer SAS, RCS and orienting to Evader...")
         self.vesPursue.control.sas = True
         time.sleep(0.1)   # give time to re-orient
         self.vesPursue.control.sas_mode = self.vesPursue.control.sas_mode.target
@@ -485,15 +485,15 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
             if self.capture_dist is not None:
                 is_captured = d_vesE_vesP < self.capture_dist
                 if is_captured:
-                    print("\n~~~SUCCESSFUL CAPTURE!~~~\n")
+                    self.logger.info("\n~~~SUCCESSFUL CAPTURE!~~~\n")
 
             # check for episode timeout
             is_timeout = self.vesPursue.met > self.episode_timeout
             if is_timeout:
-                print("\n~~~EPISODE TIMEOUT~~~\n")
+                self.logger.info("\n~~~EPISODE TIMEOUT~~~\n")
 
             if is_captured or is_timeout:
-                print("Terminating episode...\n")
+                self.logger.info("Terminating episode...\n")
                 self.is_episode_done = True
                 self.stop_episode_termination_thread = True
 

@@ -83,7 +83,7 @@ class KSPDGBaseEnv(ABC, gym.Env):
 
         # establish krpc connect to send remote commands
         self.conn = krpc.connect(name='kspdg_env')
-        print("Connected to kRPC server")
+        self.logger.info("Connected to kRPC server")
 
         # Load save file from start of mission scenario
         self.conn.space_center.load(self.loadfile)
