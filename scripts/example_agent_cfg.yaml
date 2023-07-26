@@ -1,0 +1,12 @@
+# Copyright (c) 2023, MASSACHUSETTS INSTITUTE OF TECHNOLOGY
+# Subject to FAR 52.227-11 – Patent Rights – Ownership by the Contractor (May 2014).
+# SPDX-License-Identifier: MIT
+
+# Example agent configuration YAML file
+
+agent_module_path: "../src/kspdg/agent_api/example_agent.py"  # this must be relative to working directory when script is called
+agent_cls: NaivePursuitAgent
+kwargs:
+  arg1: value1
+  arg2: value2
+  arg3: value3
