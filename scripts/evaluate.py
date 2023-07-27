@@ -86,8 +86,11 @@ def main():
     env_cls = getattr(env_module, args.env_cls)
 
     # create agent runner and run
-    runner = AgentEnvRunner(agent, env_cls, env_kwargs=None)
-    runner.run()
+    runner = AgentEnvRunner(agent, env_cls, env_kwargs=None, runner_timeout=30, debug=True)
+    eval_results = runner.run()
+    print(eval_results)
+
+    # hash the results with key
     
 
 if __name__ == "__main__":
