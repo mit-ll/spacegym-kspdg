@@ -5,7 +5,9 @@
 
 ## _Announcement: AIAA SciTech 2024 KSPDG Challenge_ 
 
-_Join us for a software design competition where participants develop autonomous agents for maneuvering satellites engaged in non-cooperative space operations._
+_Join us at [AIAA SciTech 2024](https://www.aiaa.org/SciTech) for a software design competition where participants develop autonomous agents for maneuvering satellites engaged in non-cooperative space operations._
+
+_Interested teams should sign up at https://www.surveymonkey.com/r/P2SQVF8, then they will be notified of upcoming meetings._
 
 + Participants will develop agents capable of solving several challenge problems related to non-cooperative space operations, e.g., pursuing an evasive satellite, multi-satellite proximity operations, etc.
 + Participants are encouraged to develop agents using a range of technologies, e.g., reinforcement learning, optimal control, game theoretical techniques, etc.
@@ -14,8 +16,6 @@ _Join us for a software design competition where participants develop autonomous
 + Monthly meetings will be held in the lead up to SciTech to allow technical exchanges between participants, MIT Lincoln Laboratory developers, and AIAA SciTech organizers. 
 
 There is no cost to participate and membership and/or SciTech registration is not required. 
-
-Interested teams should sign up at https://www.surveymonkey.com/r/P2SQVF8, then they will be notified of upcoming meetings.
 
 Questions? Contact Dr. Ross Allen at ross.allen@ll.mit.edu 
 
