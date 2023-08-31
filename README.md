@@ -3,7 +3,23 @@
 <!-- ![Logo](docs/20230309_logo.png) -->
 <img src="docs/20230309_logo.png" width="250">
 
-## Overview
+## _Announcement: AIAA SciTech 2024 KSPDG Challenge_ 
+
+_Join us for a software design competition where participants develop autonomous agents for maneuvering satellites engaged in non-cooperative space operations._
+
++ Participants will develop agents capable of solving several challenge problems related to non-cooperative space operations, e.g., pursuing an evasive satellite, multi-satellite proximity operations, etc.
++ Participants are encouraged to develop agents using a range of technologies, e.g., reinforcement learning, optimal control, game theoretical techniques, etc.
++ Participants’ agents will be evaluated on a range of metrics, such as time to completion of mission, fuel consumption, relative distances achieved, etc.
++ The participant pool will undergo a series of elimination events and teams with the best performing agents will be invited to present their agents via a live demonstration during a special session at AIAA SciTech in January 2024
++ Monthly meetings will be held in the lead up to SciTech to allow technical exchanges between participants, MIT Lincoln Laboratory developers, and AIAA SciTech organizers. 
+
+There is no cost to participate and membership and/or SciTech registration is not required. 
+
+Interested teams should sign up at https://www.surveymonkey.com/r/P2SQVF8, then they will be notified of upcoming meetings.
+
+Questions? Contact Dr. Ross Allen at ross.allen@ll.mit.edu 
+
+## KSPDG Overview
 
 This library provides a suite of differential game (DG) challenge problems / environments set in the orbital domain built within the [Kerbal Space Program (KSP)](https://www.kerbalspaceprogram.com/) game engine. The intent of the KSPDG library is to provide benchmark challenge problems for evaluating autonomous control and AI algorithms applied to non-cooperative space operations.
 
