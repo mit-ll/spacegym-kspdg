@@ -3,6 +3,8 @@
 <!-- ![Logo](docs/20230309_logo.png) -->
 <img src="docs/20230309_logo.png" width="250">
 
+![Lady-Bandit-Guard Demo](https://github.com/mit-ll/spacegym-kspdg/blob/main/docs/20230831_LBG1_LG1_I2_Demo_reduced.gif)
+
 ## _Announcement: AIAA SciTech 2024 KSPDG Challenge_ 
 
 _Join us at [AIAA SciTech 2024](https://www.aiaa.org/SciTech) for a software design competition where participants develop autonomous agents for maneuvering satellites engaged in non-cooperative space operations._
