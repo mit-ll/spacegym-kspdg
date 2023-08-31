@@ -1,9 +1,6 @@
 # KSPDG: Kerbal Space Program Differential Games
 
-<!-- ![Logo](docs/20230309_logo.png) -->
-<img src="docs/20230309_logo.png" width="250">
-
-![Lady-Bandit-Guard Demo](https://github.com/mit-ll/spacegym-kspdg/blob/main/docs/20230831_LBG1_LG1_I2_Demo_reduced.gif)
+<img src="docs/20230309_logo.png" width="250">   <img src="docs/20230831_LBG1_LG1_I2_Demo_reduced.gif" width="400">
 
 ## _Announcement: AIAA SciTech 2024 KSPDG Challenge_ 
 
