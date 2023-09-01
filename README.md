@@ -42,6 +42,15 @@ The KSP differential game environments are implemented using the [OpenAI Gym](ht
 + Non-Blocking Step Function
     + In KSPDG, game time does not pause while agents make decisions. This is a defining characteristic of KSPDG as best matches the real world and provides an inherent penalty to decision and control policies that take a long time to compute.
 
+### Environments / Challenge Scenarios
+
+KSPDG is collection of orbital challenge problems defined within different scenario groups (i.e. "evaluation environments" to use nomenclature from reinforcement learning literature). As of Sep 2023, the challenge problems thus far implemented in KSPDG can be grouped into the following types of scenarios
+
++ Basic [Pursuit-Evasion](https://github.com/mit-ll/spacegym-kspdg/tree/main/src/kspdg/pe1)
++ Multi-agent target guarding, referred to as a [Lady-Bandit-Guard problem](https://github.com/mit-ll/spacegym-kspdg/tree/main/src/kspdg/lbg1)
++ 1-v-1 [Sun-blocking problem](https://github.com/mit-ll/spacegym-kspdg/tree/main/src/kspdg/sb1)
+
+In future development plans include scenarios with features like partial observability, multi-agent inspection problems with vision-based observation spaces, and head-to-head scenarios that leaverage the [Luna Multiplayer mod](http://lunamultiplayer.com/) that allow direct competition between two different AI players (current scenarios involve testing AI against pre-scipted bot adversaries)
 
 ------------
 
@@ -241,7 +250,7 @@ pytest tests/ksp_ingame_tests/test_lbg1_lg0_i2.py
 # ESC > Quit to Main Menu > Exit to Main Menu > Play Missions > 20220516_PursuitEvade > Continue
 pytest tests/ksp_ingame_tests/test_pursuit_v20220516.py
 ```
-5. You should see the KSP game reset and focus on a vehicle that then performs several oreintation and propulsive maneuvers. The pytest command should then indicate the number of passed tests.
+5. You should see the KSP game reset and focus on a vehicle that then performs several orientation and propulsive maneuvers. The pytest command should then indicate the number of passed tests.
 
 
 > :warning: **Troubleshooting**
