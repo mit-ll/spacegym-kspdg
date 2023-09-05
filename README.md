@@ -16,7 +16,7 @@ _Interested teams should sign up at https://www.surveymonkey.com/r/P2SQVF8, then
 
 There is no cost to participate and membership and/or SciTech registration is not required. 
 
-Questions? Contact Dr. Ross Allen at ross.allen@ll.mit.edu 
+Questions? Contact Ross Allen at ross <DOT> allen <AT> ll <DOT> mit <DOT> edu 
 
 ## KSPDG Overview
 
