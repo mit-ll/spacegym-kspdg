@@ -16,6 +16,8 @@ _Interested teams should sign up at https://www.surveymonkey.com/r/P2SQVF8, then
 
 There is no cost to participate and membership and/or SciTech registration is not required. 
 
+__Getting Started?__ See our [installation process](#installation) and examples for how to create agents ([here](#example-hello-kspdg) and [here](#example-agent-environment-runner)) and how to [evaluate agents for scoring purposes](#example-agent-environment-evaluator-for-scitech-challenge)
+
 Questions? Contact Ross Allen at: ross [DOT] allen [AT] ll [DOT] mit [DOT] edu 
 
 ## KSPDG Overview
@@ -301,6 +303,49 @@ Therefore we have defined a Agent-Environment Runner class that helps manage the
 4. In a terminal, run `python scripts/example_agent_runner.py`
 
 See [`scripts/example_agent_runner.py`](scripts/example_agent_runner.py) for more details
+
+------------
+
+## Example: Agent-Environment Evaluator for SciTech Challenge
+
+This example walks through how to evaluate agents for scoring purpose in the AIAA SciTech 2024 Challenge. Due to the GUI-based interface of KSP that requires manual interaction, there is not a straight-forward process for hosting a centralized evaluation server upon which participants can submit agents. Instead we have adopted a decentralized process where agents are evaluated locally on particapants' own computers. Participants will then upload their evaluation results to a centralized scoreboard where they will be authenticated and ranked against other participants.
+
+> :warning: **Honor System**
+> While we have taken some steps to prevent falsification of results, there is still potential for cheating. 
+> Therefore this competition works largely on the __honor system__. 
+>
+> _If you think you are doing something inappropriate or unfair, you probably are._ 
+> 
+> __We reserve the right to disqualify teams for unsporting behavior__
+
+The agent evaluation process uses a compiled python script located in `scripts/evaluate.cpython-39.pyc` with input arguments in the ordering: `<agent-config-file> <environment-module> <environment-class>`. 
+
+The `<agent-config-file>` points to a `.yaml` file that configures the user-defined agent to be evaluated; including a path to the agent module, the name of the agent class to be instantiated, and any arguments to be passed to the agent during instantiation.
+
+The `<environment-module>` and `<environment-class>` define the environment in which the agent will be evaluated. `<environment-module>` points to the module within the `kspdg` library to be imported (using dot-separated notation with the root package `kspdg` omitted as it is assumed) and `<environment-class>` defines the specific environment (aka scenario or challenge problem) to be instantiated.
+
+Here is a basic example for running an agent-environment evaluation. As with other examples, you begin by:
+
+1. Start KSP game application. 
+2. Select `Start Game` > `Play Missions` > `Community Created` > `pe1_i3` > `Continue`
+3. In kRPC dialog box click `Add server`. Select `Show advanced settings` and select `Auto-accept new clients`. Then select `Start Server`
+
+```bash
+conda activate kspdg # while it is not strictly necessary to use conda environments, it is encouraged for development and debugging purpose
+cd scripts # working directory is important due to relative path in cfg.yaml
+python evaluate.cpython-39.pyc example_agent_cfg.yaml pe1.e1_envs PE1_E1_I3_Env
+```
+
+This should output something like the following (exact numbers will differe)
+
+```
+{'env_info': {'closest_approach': 2306.931807059705, 'closest_approach_time': 28.61999999999948, 'minimum_position_velocity_product': 20074.546353044923, 'pursuer_fuel_usage': 76.3798828125, 'evader_fuel_usage': 0.0, 'expected_deltav_at_final_time': None}}
+2578683058
+```
+
+This output string will then be sent verbatim to the authentication and scoreboard server. 
+
+_DETAILS ON THIS PROCESS ARE FORTHCOMING_
 
 ------------
 
