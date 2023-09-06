@@ -6,13 +6,14 @@ import gymnasium as gym
 import numpy as np
 
 from typing import List, Dict
+from copy import deepcopy
 
 import kspdg.utils.utils as U
 from kspdg.pe1.pe1_base import PursuitEvadeGroup1Env
 
 DEFAULT_EPISODE_TIMEOUT = 240.0 # [sec]
-DEFAULT_TARGET_VIEWING_DISTANCE = 50.0 # [m]
-DEFAULT_REWARD_DECAY_COEF = 0.001 # [1/m^2] 
+DEFAULT_TARGET_VIEWING_DISTANCE = 100.0 # [m]
+DEFAULT_REWARD_DECAY_COEF = 1e-5 # [1/m^2] 
 
 class SunBlockingGroup1Env(PursuitEvadeGroup1Env):
     '''
@@ -25,6 +26,20 @@ class SunBlockingGroup1Env(PursuitEvadeGroup1Env):
         inherited scenarios (although there is not a current enforcement of this)
         - Observation and Action spaces shared between all child envs
     '''
+
+    # mission loadfile names for variou initial condition
+    LOADFILE_I1 = "sb1_i1_init"
+    LOADFILE_I2 = "sb1_i2_init"
+    LOADFILE_I3 = "sb1_i3_init"
+    LOADFILE_I4 = "sb1_i4_init"
+    LOADFILE_I5 = "sb1_i5_init"
+
+    PARAMS = deepcopy(PursuitEvadeGroup1Env.PARAMS)
+
+    # info metric parameters
+    PARAMS.INFO.K_CUM_REWARD = "cumulative_reward"
+    PARAMS.INFO.K_MAX_REWARD = "max_reward"
+    PARAMS.INFO.K_MIN_REWARD = "min_reward"
 
     def __init__(self, loadfile:str, 
         episode_timeout:float = DEFAULT_EPISODE_TIMEOUT, 
@@ -65,9 +80,11 @@ class SunBlockingGroup1Env(PursuitEvadeGroup1Env):
     def _reset_episode_metrics(self) -> None:
         """ Reset attributes that track proximity, timing, and propellant use metrics
         """
-
-        # TODO: customize this for sun-blocking beyond pure pursuit-evade
         super()._reset_episode_metrics()
+
+        self.cum_reward = 0.0
+        self.min_reward = np.inf
+        self.max_reward = -np.inf
     
     def get_reward(self) -> float:
         """ Compute reward value
@@ -106,8 +123,24 @@ class SunBlockingGroup1Env(PursuitEvadeGroup1Env):
                 True if last step of episode
         """
 
-        # TODO: customize this for sun-blocking beyond pure pursuit-evade
-        return super().get_info(observation=observation, done=done)
+        info = dict()
+
+        # sun-blocking reward metrics
+        cur_reward = self.get_reward()
+        self.cum_reward += cur_reward
+        if cur_reward < self.min_reward:
+            self.min_reward = cur_reward
+        if cur_reward > self.max_reward:
+            self.max_reward = cur_reward
+        info[self.PARAMS.INFO.K_CUM_REWARD] = self.cum_reward
+        info[self.PARAMS.INFO.K_MIN_REWARD] = self.min_reward
+        info[self.PARAMS.INFO.K_MAX_REWARD] = self.max_reward
+
+        # fuel usage 
+        info[self.PARAMS.INFO.K_PURSUER_FUEL_USAGE] = self.pursuer_init_mass - self.vesPursue.mass
+        info[self.PARAMS.INFO.K_EVADER_FUEL_USAGE] = self.evader_init_mass - self.vesEvade.mass
+
+        return info
 
     def get_observation(self):
         """ return observation of pursuit and evader vessels from referee ref frame
@@ -146,6 +179,15 @@ class SunBlockingGroup1Env(PursuitEvadeGroup1Env):
         obs.extend(u_sun_vesP__rhcbci)
 
         return obs
-
+    
+    @classmethod
+    def observation_list_to_dict(cls, obs_list):
+        """convert observation from list to dict"""
+        raise NotImplementedError
+    
+    @classmethod
+    def observation_dict_to_list(cls, obs_dict):
+        """convert observation from list to dict"""
+        raise NotImplementedError
 
 

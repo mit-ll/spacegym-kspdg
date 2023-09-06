@@ -28,3 +28,7 @@ class SB1_E1_I3_Env(SB1_E1_ParentEnv):
 class SB1_E1_I4_Env(SB1_E1_ParentEnv):
     def __init__(self, **kwargs):
         super().__init__(loadfile=SunBlockingGroup1Env.LOADFILE_I4, **kwargs)
+
+class SB1_E1_I5_Env(SB1_E1_ParentEnv):
+    def __init__(self, **kwargs):
+        super().__init__(loadfile=SunBlockingGroup1Env.LOADFILE_I5, **kwargs)

@@ -8,13 +8,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-def sb_objective(r, t, r_d=50, A=1, B=0.001):
+def sb_objective(r, t, r_d=100, A=1, B=1e-5):
     return - A * np.exp(-B * (r-r_d)**2) * np.cos(t)
 
 if __name__ == "__main__":
 
     # setup range and angle arrays
-    r = np.linspace(0, 100 ,100)
+    r = np.linspace(0, 1000, 100)
     t = np.linspace(0, 2*np.pi, 100)
     R, T = np.meshgrid(r, t)
 
