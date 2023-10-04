@@ -176,7 +176,7 @@ cp -r ~/Desktop/PhysicsRangeExtender/PhysicsRangeExtender/Distribution/GameData/
 
 ### Install `kspdg`
 
-Clone this repository locally on your machine
+If you have not yet done so, clone this repository locally on your machine
 
 ```bash
 git clone git@github.com:mit-ll/spacegym-kspdg.git
@@ -185,7 +185,7 @@ git clone git@github.com:mit-ll/spacegym-kspdg.git
 To install this package, run:
 
 ```bash
-cd kspdg
+cd spacegym-kspdg
 pip install -e .
 pip install krpc    # must be installed after kspdg installattion due to setuptools compatability
 ```
@@ -193,7 +193,7 @@ pip install krpc    # must be installed after kspdg installattion due to setupto
 For development of this package, we recommend using the conda environment defined in `environment.yml`. To create and activate this environment, run:
 
 ```bash
-cd kspdg
+cd spacegym-kspdg
 conda env create -f environment.yml
 conda activate kspdg
 pip install krpc    # must be installed after conda env creation for setuptools compatability
@@ -230,7 +230,7 @@ __NOTE:__ Because the KSPDG environments are inexorably linked to the KSP game e
 __Serverless Tests:__ Quick test to run without KSP game engine running nor kRPC server connection
 
 ```bash
-cd kspdg
+cd spacegym-kspdg
 conda activate kspdg
 pytest tests/serverless_tests/
 ```
@@ -242,7 +242,7 @@ __KSP In-Game Tests:__ These tests require the KSP game engine to be running, th
 3. In kRPC dialog box click `Add server`. Select `Show advanced settings` and select `Auto-accept new clients`. Then select `Start Server`
 4. In a bash terminal:
 ```bash
-cd kspdg
+cd spacegym-kspdg
 conda activate kspdg
 pytest tests/ksp_ingame_tests/test_pe1_e1_i3.py
 
