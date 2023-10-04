@@ -103,16 +103,16 @@ The installation process includes several components:
 + [Luna Multiplayer](http://lunamultiplayer.com/) (optional/future work)
 
 > :warning: **Note**
-> These instructions have been written and verified on a macOS. Other operating systems should be similar with deviations on file and directory names
+> These instructions have been written and verified on a macOS. They have been partially tested on Ubuntu 18.04 as well. Other operating systems should be similar with deviations on file and directory names
 
 
 ### Install KSP & Making History Expansion
 
 1. Purchase and Download Kerbal Space Program and Making History expansion: https://store.privatedivision.com/game/buy-kerbal-space-program-ksp
     + Make sure to purchase _Direct Download / DRM Free Private Division_ as the platform. Make sure you are buying KSP1 and not the recently released KSP2; none of this will work on KSP2!
-    + Download the most recent version of KSP  "On Final Approach" Portable (.zip). As of this writing and testing, the most recent version was v1.12.3 but more recent patches have been released (i.e. 1.12.5)
+    + Download the most recent version of KSP  "On Final Approach" Portable (.zip). As of this writing and testing, the most recent version was v1.12.5
     + Download the most recent version of Making History expansion pack. As of this writing the most recent version was v1.12.1 
-2. Unzip `ksp-osx-1.12.3.zip` to desired location; for simplicity, all instructions assume the unzipped KSP folder is placed on the Desktop
+2. Unzip `ksp-osx-1.12.5.zip` to desired location; for simplicity, all instructions assume the unzipped KSP folder is placed on the Desktop
 3. Attempt to open the KSP game executable/app (e.g. `KSP.app` on Mac)
 
 > :warning: **Troubleshooting**
@@ -151,12 +151,12 @@ cp -r ksp_files/Missions/. ~/Desktop/KSP_osx/Missions
 ### Install kRPC Server
 
 kRPC is what allows external scripts and processes (such as python programs) to send commands to and control the KSP game engine
-1. Download `krpc-0.4.8.zip` from [GitHub link on the kRPC Getting Started Page](https://krpc.github.io/krpc/getting-started.html#installation)
-2. Unzip `krpc-0.4.8/` folder to `~/Desktop/krpc-0.4.8/`
+1. Download latest version of kRPC from the [GitHub link on the kRPC Getting Started Page](https://krpc.github.io/krpc/getting-started.html#installation). As of this writing, you should download `krpc-0.5.2.zip`. __NOTE:__ make sure to download a full version, not just the python package; v0.5.2 is a full version but v0.5.3 is just the python package
+2. Unzip `krpc-0.5.2/` folder to `~/Desktop/krpc-0.5.2/`
 3. Create a new directory in KSP's `GameData` directory and move all of the krpc contents there
 ```bash
 mkdir ~/Desktop/KSP_osx/GameData/kRPC
-mv ~/Desktop/krpc-0.4.8/* ~/Desktop/KSP_osx/GameData/kRPC/
+mv ~/Desktop/krpc-0.5.2/* ~/Desktop/KSP_osx/GameData/kRPC/
 ```
 
 ### Install PhysicsRangeExtender
@@ -187,7 +187,6 @@ To install this package, run:
 ```bash
 cd spacegym-kspdg
 pip install -e .
-pip install krpc    # must be installed after kspdg installattion due to setuptools compatability
 ```
 
 For development of this package, we recommend using the conda environment defined in `environment.yml`. To create and activate this environment, run:
@@ -196,7 +195,6 @@ For development of this package, we recommend using the conda environment define
 cd spacegym-kspdg
 conda env create -f environment.yml
 conda activate kspdg
-pip install krpc    # must be installed after conda env creation for setuptools compatability
 ``` 
 
 > :warning: **Troubleshooting**
