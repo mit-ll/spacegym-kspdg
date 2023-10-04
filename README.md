@@ -109,9 +109,9 @@ The installation process includes several components:
 ### Install KSP & Making History Expansion
 
 1. Purchase and Download Kerbal Space Program and Making History expansion: https://store.privatedivision.com/game/buy-kerbal-space-program-ksp
-    + Make sure to purchase _DRM Free Private Division_ as the platform
-    + Download KSP v1.12.3 "On Final Approach" Portable (.zip)
-    + Download Making History v1.12.1 
+    + Make sure to purchase _Direct Download / DRM Free Private Division_ as the platform. Make sure you are buying KSP1 and not the recently released KSP2; none of this will work on KSP2!
+    + Download the most recent version of KSP  "On Final Approach" Portable (.zip). As of this writing and testing, the most recent version was v1.12.3 but more recent patches have been released (i.e. 1.12.5)
+    + Download the most recent version of Making History expansion pack. As of this writing the most recent version was v1.12.1 
 2. Unzip `ksp-osx-1.12.3.zip` to desired location; for simplicity, all instructions assume the unzipped KSP folder is placed on the Desktop
 3. Attempt to open the KSP game executable/app (e.g. `KSP.app` on Mac)
 
@@ -142,7 +142,8 @@ The save files are located in this repo under `ksp_files/saves/missions` and `ks
 
 Copy the contents of `ksp_files/saves/missions/` and `ksp_files/Missions` directory into your local installation of KSP. For example, on a Mac with this repo and KSP's install directories on the desktop this would look like:
 ```bash
-cd kspdg
+git clone git@github.com:mit-ll/spacegym-kspdg.git
+cd spacegym-kspdg
 cp -r ksp_files/saves/missions/. ~/Desktop/KSP_osx/saves/missions
 cp -r ksp_files/Missions/. ~/Desktop/KSP_osx/Missions
 ```
