@@ -16,8 +16,8 @@ setup(name="kspdg",
       package_dir={'': 'src'},
       python_requires=">=3",
       install_requires=[
-        "setuptools<=57.5.0", # pin setuptools to avoid error with use_2to3 in krpc
-        "protobuf<=3.20", # pin to avoid major version change at 4.21 that breaks krpc
+        "setuptools",
+        "krpc",
         "numpy",
         "gymnasium",
         "poliastro",
