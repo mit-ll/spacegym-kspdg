@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Upgrading kRPC dependency from v0.4.8 to v0.5.2 which fixed several issues that had required hard-pinning some dependencies (setuptools, protobuf). By un-pinning these, the library is more flexible / less brittle
+
 ### Removed
 
 ## [v0.0.23] - 2023-09-07
