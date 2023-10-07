@@ -1,0 +1,7 @@
+{
+    "image": "adrianorenstein/spaceapps-ksp-ai"
+    // "runArgs": [
+    //     "--gpus", "all",
+    //     "--ipc", "host",
+    // ],
+}
