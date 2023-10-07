@@ -6,10 +6,9 @@
 
 from types import SimpleNamespace
 
-G0 = 9.80665 # standard gravity [m/s/s]
+G0 = 9.80665  # standard gravity [m/s/s]
 
 # parameters of celestial body Kerbin
 KERBIN = SimpleNamespace()
-KERBIN.RADIUS = 6.0e5 # [m] https://wiki.kerbalspaceprogram.com/wiki/Kerbin
-KERBIN.MU = 3.5316e12 # [m^3/s^2] https://wiki.kerbalspaceprogram.com/wiki/Kerbin
-
+KERBIN.RADIUS = 6.0e5  # [m] https://wiki.kerbalspaceprogram.com/wiki/Kerbin
+KERBIN.MU = 3.5316e12  # [m^3/s^2] https://wiki.kerbalspaceprogram.com/wiki/Kerbin

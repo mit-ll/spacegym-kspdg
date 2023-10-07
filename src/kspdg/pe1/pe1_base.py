@@ -2,31 +2,31 @@
 # Subject to FAR 52.227-11 – Patent Rights – Ownership by the Contractor (May 2014).
 # SPDX-License-Identifier: MIT
 
-import time
-import gymnasium as gym
-import numpy as np
-
-from types import SimpleNamespace
-from typing import List, Dict
 from threading import Thread
+import time
+from types import SimpleNamespace
+from typing import Dict, List
 
+import gymnasium as gym
+from kspdg.base_envs import KSPDGBaseEnv
 import kspdg.utils.constants as C
 import kspdg.utils.utils as U
-from kspdg.base_envs import KSPDGBaseEnv
+import numpy as np
 
-DEFAULT_EPISODE_TIMEOUT = 240.0 # [sec]
-DEFAULT_CAPTURE_DIST = 5.0      # [m]
+DEFAULT_EPISODE_TIMEOUT = 240.0  # [sec]
+DEFAULT_CAPTURE_DIST = 5.0  # [m]
+
 
 class PursuitEvadeGroup1Env(KSPDGBaseEnv):
-    '''
+    """
     Base environment for 1v1 pursuit-evasion orbital scenarios
-    
+
     All inherited classes share the following
         - Agent controls the pursuer and evader has a scripted policy (although specific policy varies)
         - Pursuer and evader vehicles are identical and are meant to be the same through all
         inherited scenarios (although there is not a current enforcement of this)
         - Observation and Action spaces shared between all child envs
-    '''
+    """
 
     # mission loadfile names for variou initial condition
     LOADFILE_I1 = "pe1_i1_init"
@@ -37,7 +37,7 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
     # hard-coded, static parameters for pursuer vehicle
     # that are accessible yet constant (so shouldn't be
     # in observation which should really only be variable values)
-    # Need for hard-coding rsc properties comes from the errors in 
+    # Need for hard-coding rsc properties comes from the errors in
     # krpc's handling of thruster objects.
     PARAMS = SimpleNamespace()
     PARAMS.PURSUER = SimpleNamespace()
@@ -59,7 +59,7 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
     PARAMS.OBSERVATION.I_MET = 0
     PARAMS.OBSERVATION.K_PURSUER_MASS = "pursuer_mass"
     PARAMS.OBSERVATION.I_PURSUER_MASS = 1
-    PARAMS.OBSERVATION.K_PURSUER_PROP_MASS = "pursuer_propellant_mass" 
+    PARAMS.OBSERVATION.K_PURSUER_PROP_MASS = "pursuer_propellant_mass"
     PARAMS.OBSERVATION.I_PURSUER_PROP_MASS = 2
     PARAMS.OBSERVATION.K_PURSUER_PX = "posx_p_cb__rhcbci"
     PARAMS.OBSERVATION.I_PURSUER_PX = 3
@@ -73,11 +73,11 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
     PARAMS.OBSERVATION.I_PURSUER_VY = 7
     PARAMS.OBSERVATION.K_PURSUER_VZ = "velz_p_cb__rhcbci"
     PARAMS.OBSERVATION.I_PURSUER_VZ = 8
-    PARAMS.OBSERVATION.K_EVADER_PX = "posx_e_cb__rhcbci" 
+    PARAMS.OBSERVATION.K_EVADER_PX = "posx_e_cb__rhcbci"
     PARAMS.OBSERVATION.I_EVADER_PX = 9
-    PARAMS.OBSERVATION.K_EVADER_PY = "posy_e_cb__rhcbci" 
+    PARAMS.OBSERVATION.K_EVADER_PY = "posy_e_cb__rhcbci"
     PARAMS.OBSERVATION.I_EVADER_PY = 10
-    PARAMS.OBSERVATION.K_EVADER_PZ = "posz_e_cb__rhcbci" 
+    PARAMS.OBSERVATION.K_EVADER_PZ = "posz_e_cb__rhcbci"
     PARAMS.OBSERVATION.I_EVADER_PZ = 11
     PARAMS.OBSERVATION.K_EVADER_VX = "velx_e_cb__rhcbci"
     PARAMS.OBSERVATION.I_EVADER_VX = 12
@@ -99,8 +99,8 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
 
     # Specific impulse assumes all RCS thrusters are identical RV-105
     # parts operating in vacuum
-    PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE = 240 # [s]
-    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE = 1000 # [N]
+    PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE = 240  # [s]
+    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE = 1000  # [N]
 
     # Assumed number of thrusters creating thrust in each direction
     PARAMS.PURSUER.RCS.N_THRUSTERS_FORWARD = 8
@@ -111,38 +111,64 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
     PARAMS.PURSUER.RCS.N_THRUSTERS_DOWN = 4
 
     # computed max thrust in each direction [N]
-    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_FORWARD = \
-        PARAMS.PURSUER.RCS.N_THRUSTERS_FORWARD * PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
-    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_REVERSE = \
-        PARAMS.PURSUER.RCS.N_THRUSTERS_REVERSE * PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
-    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_RIGHT = \
-        PARAMS.PURSUER.RCS.N_THRUSTERS_RIGHT * PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
-    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_LEFT = \
-        PARAMS.PURSUER.RCS.N_THRUSTERS_LEFT * PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
-    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_UP = \
-        PARAMS.PURSUER.RCS.N_THRUSTERS_UP * PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
-    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_DOWN = \
-        PARAMS.PURSUER.RCS.N_THRUSTERS_DOWN * PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
+    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_FORWARD = (
+        PARAMS.PURSUER.RCS.N_THRUSTERS_FORWARD
+        * PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
+    )
+    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_REVERSE = (
+        PARAMS.PURSUER.RCS.N_THRUSTERS_REVERSE
+        * PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
+    )
+    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_RIGHT = (
+        PARAMS.PURSUER.RCS.N_THRUSTERS_RIGHT
+        * PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
+    )
+    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_LEFT = (
+        PARAMS.PURSUER.RCS.N_THRUSTERS_LEFT
+        * PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
+    )
+    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_UP = (
+        PARAMS.PURSUER.RCS.N_THRUSTERS_UP
+        * PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
+    )
+    PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_DOWN = (
+        PARAMS.PURSUER.RCS.N_THRUSTERS_DOWN
+        * PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
+    )
 
     # computed maximum fuel consumption rate in each direction [kg/s]
-    PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_FORWARD = \
-        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_FORWARD / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
-    PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_REVERSE = \
-        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_REVERSE / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
-    PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_RIGHT = \
-        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_RIGHT / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
-    PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_LEFT = \
-        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_LEFT / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
-    PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_UP = \
-        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_UP / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
-    PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_DOWN = \
-        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_DOWN / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
+    PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_FORWARD = (
+        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_FORWARD
+        / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
+    )
+    PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_REVERSE = (
+        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_REVERSE
+        / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
+    )
+    PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_RIGHT = (
+        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_RIGHT
+        / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
+    )
+    PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_LEFT = (
+        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_LEFT
+        / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
+    )
+    PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_UP = (
+        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_UP
+        / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
+    )
+    PARAMS.PURSUER.RCS.VACUUM_MAX_FUEL_CONSUMPTION_DOWN = (
+        PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_DOWN
+        / (C.G0 * PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE)
+    )
 
-
-    def __init__(self, loadfile:str, 
-        episode_timeout:float = DEFAULT_EPISODE_TIMEOUT, 
-        capture_dist:float = DEFAULT_CAPTURE_DIST,
-        **kwargs):
+    def __init__(
+        self,
+        loadfile: str,
+        episode_timeout: float = DEFAULT_EPISODE_TIMEOUT,
+        capture_dist: float = DEFAULT_CAPTURE_DIST,
+        **kwargs
+    ):
         """
         Args:
             episode_timeout : float
@@ -164,16 +190,15 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
 
         # establish observation space (see get_observation for mapping)
         self.observation_space = gym.spaces.Box(
-            low = np.concatenate((np.zeros(3), -np.inf*np.ones(12))),
-            high = np.inf * np.ones(15)
+            low=np.concatenate((np.zeros(3), -np.inf * np.ones(12))),
+            high=np.inf * np.ones(15),
         )
 
         # establish action space (forward, right, down, time)
         self.action_space = gym.spaces.Box(
-            low=np.array([-1.0, -1.0, -1.0, 0.0]), 
-            high=np.array([1.0, 1.0, 1.0, 10.0])
+            low=np.array([-1.0, -1.0, -1.0, 0.0]), high=np.array([1.0, 1.0, 1.0, 10.0])
         )
-        
+
         # don't call reset. This allows instantiation and partial testing
         # without connecting to krpc server
 
@@ -187,23 +212,22 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         self.conn.space_center.active_vessel = self.vesPursue
         self.conn.space_center.target_vessel = self.vesEvade
         self.logger.info("Changing active vehicle...")
-        time.sleep(1)   # give time to re-orient
+        time.sleep(1)  # give time to re-orient
 
         # set the evader to stability assist and orient in orbit-normal direction
         # orient pursuer in target-pointing direction
 
         self.logger.info("Activating Pursuer SAS, RCS and orienting to Evader...")
         self.vesPursue.control.sas = True
-        time.sleep(0.1)   # give time to re-orient
+        time.sleep(0.1)  # give time to re-orient
         self.vesPursue.control.sas_mode = self.vesPursue.control.sas_mode.target
-        time.sleep(2)   # give time to re-orient
+        time.sleep(2)  # give time to re-orient
 
         # activate RCS thrusters
         self.vesPursue.control.rcs = True
 
     def _reset_episode_metrics(self) -> None:
-        """ Reset attributes that track proximity, timing, and propellant use metrics
-        """
+        """Reset attributes that track proximity, timing, and propellant use metrics"""
 
         self.min_dist = np.inf
         self.min_dist_time = 0.0
@@ -212,31 +236,32 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         self.evader_init_mass = self.vesEvade.mass
 
     def _start_bot_threads(self) -> None:
-        """ Start parallel thread to execute Evader's evasive maneuvers
-        """
+        """Start parallel thread to execute Evader's evasive maneuvers"""
 
         self.stop_evade_thread = False
 
         # check that thread does not exist or is not running
         if hasattr(self, "evade_thread"):
             if self.evade_thread.is_alive():
-                raise ConnectionError("evade_thread is already running."+ 
-                    " Close and join evade_thread before restarting")
+                raise ConnectionError(
+                    "evade_thread is already running."
+                    + " Close and join evade_thread before restarting"
+                )
 
         self.evade_thread = Thread(target=self.evasive_maneuvers)
         self.evade_thread.start()
 
     def step(self, action):
-        ''' Apply thrust and torque actuation for specified time duration
+        """Apply thrust and torque actuation for specified time duration
         Args:
             action : np.ndarray
                 4-tuple of throttle values in 3D and timestep (forward, right, down, tstep)
 
-        Ref: 
+        Ref:
             Actions are in forward, right, down to align with the right-handed version of the
-            Vessel Surface Reference Frame 
+            Vessel Surface Reference Frame
             https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
-        '''
+        """
 
         # parse and apply action
         self.vesPursue.control.forward = action[0]
@@ -246,7 +271,7 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         # execute maneuver for specified time, checking for end
         # conditions while you do
         timeout = time.time() + action[3]
-        while True: 
+        while True:
             if self.is_episode_done or time.time() > timeout:
                 break
 
@@ -265,9 +290,9 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         info = self.get_info(obs, self.is_episode_done)
 
         return obs, rew, self.is_episode_done, info
-    
+
     def get_reward(self) -> float:
-        """ Compute reward value
+        """Compute reward value
         Returns:
             rew : float
                 reward at current step
@@ -287,29 +312,37 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         info = dict()
 
         # parse pursuer and evader current states
-        p0_p_cb__rhcbci = np.array([
-            obs[self.PARAMS.OBSERVATION.I_PURSUER_PX],
-            obs[self.PARAMS.OBSERVATION.I_PURSUER_PY],
-            obs[self.PARAMS.OBSERVATION.I_PURSUER_PZ],
-        ])
-        v0_p_cb__rhcbci = np.array([
-            obs[self.PARAMS.OBSERVATION.I_PURSUER_VX],
-            obs[self.PARAMS.OBSERVATION.I_PURSUER_VY],
-            obs[self.PARAMS.OBSERVATION.I_PURSUER_VZ],
-        ])
-        p0_e_cb__rhcbci = np.array([
-            obs[self.PARAMS.OBSERVATION.I_EVADER_PX],
-            obs[self.PARAMS.OBSERVATION.I_EVADER_PY],
-            obs[self.PARAMS.OBSERVATION.I_EVADER_PZ],
-        ])
-        v0_e_cb__rhcbci = np.array([
-            obs[self.PARAMS.OBSERVATION.I_EVADER_VX],
-            obs[self.PARAMS.OBSERVATION.I_EVADER_VY],
-            obs[self.PARAMS.OBSERVATION.I_EVADER_VZ],
-        ])
-        
+        p0_p_cb__rhcbci = np.array(
+            [
+                obs[self.PARAMS.OBSERVATION.I_PURSUER_PX],
+                obs[self.PARAMS.OBSERVATION.I_PURSUER_PY],
+                obs[self.PARAMS.OBSERVATION.I_PURSUER_PZ],
+            ]
+        )
+        v0_p_cb__rhcbci = np.array(
+            [
+                obs[self.PARAMS.OBSERVATION.I_PURSUER_VX],
+                obs[self.PARAMS.OBSERVATION.I_PURSUER_VY],
+                obs[self.PARAMS.OBSERVATION.I_PURSUER_VZ],
+            ]
+        )
+        p0_e_cb__rhcbci = np.array(
+            [
+                obs[self.PARAMS.OBSERVATION.I_EVADER_PX],
+                obs[self.PARAMS.OBSERVATION.I_EVADER_PY],
+                obs[self.PARAMS.OBSERVATION.I_EVADER_PZ],
+            ]
+        )
+        v0_e_cb__rhcbci = np.array(
+            [
+                obs[self.PARAMS.OBSERVATION.I_EVADER_VX],
+                obs[self.PARAMS.OBSERVATION.I_EVADER_VY],
+                obs[self.PARAMS.OBSERVATION.I_EVADER_VZ],
+            ]
+        )
+
         # nearest approach metrics
-        d_vesE_vesP = np.linalg.norm(p0_p_cb__rhcbci-p0_e_cb__rhcbci)
+        d_vesE_vesP = np.linalg.norm(p0_p_cb__rhcbci - p0_e_cb__rhcbci)
         if d_vesE_vesP < self.min_dist:
             self.min_dist = d_vesE_vesP
             self.min_dist_time = obs[self.PARAMS.OBSERVATION.I_MET]
@@ -317,27 +350,30 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         info[self.PARAMS.INFO.K_CLOSEST_APPROACH_TIME] = self.min_dist_time
 
         # position-velocity product metric
-        s_vesE_vesP = np.linalg.norm(v0_p_cb__rhcbci-v0_e_cb__rhcbci)
+        s_vesE_vesP = np.linalg.norm(v0_p_cb__rhcbci - v0_e_cb__rhcbci)
         pv_prod = d_vesE_vesP * s_vesE_vesP
         if pv_prod < self.min_posvel_prod:
             self.min_posvel_prod = pv_prod
         info[self.PARAMS.INFO.K_MIN_POSVEL_PRODUCT] = self.min_posvel_prod
 
-        # fuel usage 
-        info[self.PARAMS.INFO.K_PURSUER_FUEL_USAGE] = self.pursuer_init_mass - self.vesPursue.mass
-        info[self.PARAMS.INFO.K_EVADER_FUEL_USAGE] = self.evader_init_mass - self.vesEvade.mass
+        # fuel usage
+        info[self.PARAMS.INFO.K_PURSUER_FUEL_USAGE] = (
+            self.pursuer_init_mass - self.vesPursue.mass
+        )
+        info[self.PARAMS.INFO.K_EVADER_FUEL_USAGE] = (
+            self.evader_init_mass - self.vesEvade.mass
+        )
 
         # compute approximate delta-v need to intercept non-maneuvering
         # evader
         if done:
-
             # call capture dv estimator
             dv0, dvf = U.estimate_capture_dv(
                 p0_prs=p0_p_cb__rhcbci,
                 v0_prs=v0_p_cb__rhcbci,
                 p0_evd=p0_e_cb__rhcbci,
                 v0_evd=v0_e_cb__rhcbci,
-                tof=self.episode_timeout
+                tof=self.episode_timeout,
             )
 
             info[self.PARAMS.INFO.K_DV_AT_TF] = dv0 + dvf
@@ -345,11 +381,10 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         else:
             info[self.PARAMS.INFO.K_DV_AT_TF] = None
 
-
         return info
 
     def get_observation(self):
-        ''' return observation of pursuit and evader vessels from referee ref frame
+        """return observation of pursuit and evader vessels from referee ref frame
 
         Returns:
             obs : list
@@ -361,13 +396,13 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
                 [9:12] : evader position wrt CB in right-hand CBCI coords [m]
                 [12:15] : evader velocity wrt CB in right-hand CBCI coords [m/s]
 
-        Ref: 
+        Ref:
             - CBCI stands for celestial-body-centered inertial which is a coralary to ECI coords
             (see notation: https://github.com/mit-ll/spacegym-kspdg#code-notation)
             - KSP's body-centered inertial reference frame is left-handed
             (see https://krpc.github.io/krpc/python/api/space-center/celestial-body.html#SpaceCenter.CelestialBody.non_rotating_reference_frame)
 
-        '''
+        """
 
         rf = self.vesPursue.orbit.body.non_rotating_reference_frame
 
@@ -376,9 +411,11 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         # get pursuer mass properties
         obs[self.PARAMS.OBSERVATION.I_MET] = self.vesPursue.met
         obs[self.PARAMS.OBSERVATION.I_PURSUER_MASS] = self.vesPursue.mass
-        obs[self.PARAMS.OBSERVATION.I_PURSUER_PROP_MASS] = self.vesPursue.resources.amount('MonoPropellant')
+        obs[
+            self.PARAMS.OBSERVATION.I_PURSUER_PROP_MASS
+        ] = self.vesPursue.resources.amount("MonoPropellant")
 
-        # got pursuer and evader position and velocity in 
+        # got pursuer and evader position and velocity in
         # left-handed celestial-body-centered-inertial frame
         p_p_cb__lhcbci = list(self.vesPursue.position(rf))
         v_p_cb__lhcbci = list(self.vesPursue.velocity(rf))
@@ -392,25 +429,29 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         v_e_cb__rhcbci = U.convert_lhcbci_to_rhcbci(v_e_cb__lhcbci)
 
         # store observation of pursuer and evader position and velocity
-        obs[self.PARAMS.OBSERVATION.I_PURSUER_PX], \
-            obs[self.PARAMS.OBSERVATION.I_PURSUER_PY], \
-            obs[self.PARAMS.OBSERVATION.I_PURSUER_PZ]  = \
-            p_p_cb__rhcbci 
-        
-        obs[self.PARAMS.OBSERVATION.I_PURSUER_VX], \
-            obs[self.PARAMS.OBSERVATION.I_PURSUER_VY], \
-            obs[self.PARAMS.OBSERVATION.I_PURSUER_VZ]  = \
-            v_p_cb__rhcbci
+        (
+            obs[self.PARAMS.OBSERVATION.I_PURSUER_PX],
+            obs[self.PARAMS.OBSERVATION.I_PURSUER_PY],
+            obs[self.PARAMS.OBSERVATION.I_PURSUER_PZ],
+        ) = p_p_cb__rhcbci
 
-        obs[self.PARAMS.OBSERVATION.I_EVADER_PX], \
-            obs[self.PARAMS.OBSERVATION.I_EVADER_PY], \
-            obs[self.PARAMS.OBSERVATION.I_EVADER_PZ]  = \
-            p_e_cb__rhcbci
+        (
+            obs[self.PARAMS.OBSERVATION.I_PURSUER_VX],
+            obs[self.PARAMS.OBSERVATION.I_PURSUER_VY],
+            obs[self.PARAMS.OBSERVATION.I_PURSUER_VZ],
+        ) = v_p_cb__rhcbci
 
-        obs[self.PARAMS.OBSERVATION.I_EVADER_VX], \
-            obs[self.PARAMS.OBSERVATION.I_EVADER_VY], \
-            obs[self.PARAMS.OBSERVATION.I_EVADER_VZ]  = \
-            v_e_cb__rhcbci
+        (
+            obs[self.PARAMS.OBSERVATION.I_EVADER_PX],
+            obs[self.PARAMS.OBSERVATION.I_EVADER_PY],
+            obs[self.PARAMS.OBSERVATION.I_EVADER_PZ],
+        ) = p_e_cb__rhcbci
+
+        (
+            obs[self.PARAMS.OBSERVATION.I_EVADER_VX],
+            obs[self.PARAMS.OBSERVATION.I_EVADER_VY],
+            obs[self.PARAMS.OBSERVATION.I_EVADER_VZ],
+        ) = v_e_cb__rhcbci
 
         return obs
 
@@ -420,20 +461,48 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         assert len(obs_list) == cls.PARAMS.OBSERVATION.LEN
         obs_dict = dict()
         obs_dict[cls.PARAMS.OBSERVATION.K_MET] = obs_list[cls.PARAMS.OBSERVATION.I_MET]
-        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_MASS] = obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_MASS]
-        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_PROP_MASS] = obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_PROP_MASS]
-        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_PX] = obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_PX]
-        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_PY] = obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_PY]
-        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_PZ] = obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_PZ]
-        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_VX] = obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_VX]
-        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_VY] = obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_VY]
-        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_VZ] = obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_VZ]
-        obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_PX] = obs_list[cls.PARAMS.OBSERVATION.I_EVADER_PX]
-        obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_PY] = obs_list[cls.PARAMS.OBSERVATION.I_EVADER_PY]
-        obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_PZ] = obs_list[cls.PARAMS.OBSERVATION.I_EVADER_PZ]
-        obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_VX] = obs_list[cls.PARAMS.OBSERVATION.I_EVADER_VX]
-        obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_VY] = obs_list[cls.PARAMS.OBSERVATION.I_EVADER_VY]
-        obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_VZ] = obs_list[cls.PARAMS.OBSERVATION.I_EVADER_VZ]
+        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_MASS] = obs_list[
+            cls.PARAMS.OBSERVATION.I_PURSUER_MASS
+        ]
+        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_PROP_MASS] = obs_list[
+            cls.PARAMS.OBSERVATION.I_PURSUER_PROP_MASS
+        ]
+        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_PX] = obs_list[
+            cls.PARAMS.OBSERVATION.I_PURSUER_PX
+        ]
+        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_PY] = obs_list[
+            cls.PARAMS.OBSERVATION.I_PURSUER_PY
+        ]
+        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_PZ] = obs_list[
+            cls.PARAMS.OBSERVATION.I_PURSUER_PZ
+        ]
+        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_VX] = obs_list[
+            cls.PARAMS.OBSERVATION.I_PURSUER_VX
+        ]
+        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_VY] = obs_list[
+            cls.PARAMS.OBSERVATION.I_PURSUER_VY
+        ]
+        obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_VZ] = obs_list[
+            cls.PARAMS.OBSERVATION.I_PURSUER_VZ
+        ]
+        obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_PX] = obs_list[
+            cls.PARAMS.OBSERVATION.I_EVADER_PX
+        ]
+        obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_PY] = obs_list[
+            cls.PARAMS.OBSERVATION.I_EVADER_PY
+        ]
+        obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_PZ] = obs_list[
+            cls.PARAMS.OBSERVATION.I_EVADER_PZ
+        ]
+        obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_VX] = obs_list[
+            cls.PARAMS.OBSERVATION.I_EVADER_VX
+        ]
+        obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_VY] = obs_list[
+            cls.PARAMS.OBSERVATION.I_EVADER_VY
+        ]
+        obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_VZ] = obs_list[
+            cls.PARAMS.OBSERVATION.I_EVADER_VZ
+        ]
 
         return obs_dict
 
@@ -442,42 +511,68 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         """convert observation from list to dict"""
         obs_list = cls.PARAMS.OBSERVATION.LEN * [None]
         obs_list[cls.PARAMS.OBSERVATION.I_MET] = obs_dict[cls.PARAMS.OBSERVATION.K_MET]
-        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_MASS] = obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_MASS]
-        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_PROP_MASS] = obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_PROP_MASS]
-        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_PX] = obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_PX]
-        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_PY] = obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_PY]
-        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_PZ] = obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_PZ]
-        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_VX] = obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_VX]
-        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_VY] = obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_VY]
-        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_VZ] = obs_dict[cls.PARAMS.OBSERVATION.K_PURSUER_VZ]
-        obs_list[cls.PARAMS.OBSERVATION.I_EVADER_PX] = obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_PX]
-        obs_list[cls.PARAMS.OBSERVATION.I_EVADER_PY] = obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_PY]
-        obs_list[cls.PARAMS.OBSERVATION.I_EVADER_PZ] = obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_PZ]
-        obs_list[cls.PARAMS.OBSERVATION.I_EVADER_VX] = obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_VX]
-        obs_list[cls.PARAMS.OBSERVATION.I_EVADER_VY] = obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_VY]
-        obs_list[cls.PARAMS.OBSERVATION.I_EVADER_VZ] = obs_dict[cls.PARAMS.OBSERVATION.K_EVADER_VZ]
+        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_MASS] = obs_dict[
+            cls.PARAMS.OBSERVATION.K_PURSUER_MASS
+        ]
+        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_PROP_MASS] = obs_dict[
+            cls.PARAMS.OBSERVATION.K_PURSUER_PROP_MASS
+        ]
+        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_PX] = obs_dict[
+            cls.PARAMS.OBSERVATION.K_PURSUER_PX
+        ]
+        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_PY] = obs_dict[
+            cls.PARAMS.OBSERVATION.K_PURSUER_PY
+        ]
+        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_PZ] = obs_dict[
+            cls.PARAMS.OBSERVATION.K_PURSUER_PZ
+        ]
+        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_VX] = obs_dict[
+            cls.PARAMS.OBSERVATION.K_PURSUER_VX
+        ]
+        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_VY] = obs_dict[
+            cls.PARAMS.OBSERVATION.K_PURSUER_VY
+        ]
+        obs_list[cls.PARAMS.OBSERVATION.I_PURSUER_VZ] = obs_dict[
+            cls.PARAMS.OBSERVATION.K_PURSUER_VZ
+        ]
+        obs_list[cls.PARAMS.OBSERVATION.I_EVADER_PX] = obs_dict[
+            cls.PARAMS.OBSERVATION.K_EVADER_PX
+        ]
+        obs_list[cls.PARAMS.OBSERVATION.I_EVADER_PY] = obs_dict[
+            cls.PARAMS.OBSERVATION.K_EVADER_PY
+        ]
+        obs_list[cls.PARAMS.OBSERVATION.I_EVADER_PZ] = obs_dict[
+            cls.PARAMS.OBSERVATION.K_EVADER_PZ
+        ]
+        obs_list[cls.PARAMS.OBSERVATION.I_EVADER_VX] = obs_dict[
+            cls.PARAMS.OBSERVATION.K_EVADER_VX
+        ]
+        obs_list[cls.PARAMS.OBSERVATION.I_EVADER_VY] = obs_dict[
+            cls.PARAMS.OBSERVATION.K_EVADER_VY
+        ]
+        obs_list[cls.PARAMS.OBSERVATION.I_EVADER_VZ] = obs_dict[
+            cls.PARAMS.OBSERVATION.K_EVADER_VZ
+        ]
 
         return obs_list
-        
+
     def get_pe_relative_distance(self):
-        '''compute relative distance between pursuer and evader'''
+        """compute relative distance between pursuer and evader"""
         p_vesE_vesP__lhpbody = self.vesEvade.position(self.vesPursue.reference_frame)
         return np.linalg.norm(p_vesE_vesP__lhpbody)
 
     def get_pe_relative_speed(self):
-        '''compute relative speed between pursuer and evader'''
+        """compute relative speed between pursuer and evader"""
         v_vesE_vesP__lhpbody = self.vesEvade.velocity(self.vesPursue.reference_frame)
         return np.linalg.norm(v_vesE_vesP__lhpbody)
 
     def evasive_maneuvers(self):
-        ''' evasive maneuvers algorithm
-        '''
+        """evasive maneuvers algorithm"""
         raise NotImplementedError("Must be implemented by child class")
 
     def enforce_episode_termination(self):
-        '''determine if distance or timeout episode termination conditions are met
-        '''
-        
+        """determine if distance or timeout episode termination conditions are met"""
+
         while not self.stop_episode_termination_thread:
             # get distance to pursuer
             d_vesE_vesP = self.get_pe_relative_distance()
@@ -498,7 +593,6 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
                 self.stop_episode_termination_thread = True
 
     def close(self):
-
         # handle evasive maneuvering thread
         self.stop_evade_thread = True
         self.evade_thread.join()
@@ -511,20 +605,20 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         self.conn.close()
 
     def convert_rhntw_to_rhpbody(self, v__rhntw: List[float]) -> List[float]:
-        '''Converts vector in right-handed NTW frame to pursuer vessel right-oriented body frame
+        """Converts vector in right-handed NTW frame to pursuer vessel right-oriented body frame
         Args:
             v__ntw : List[float]
                 3-vector represented in orbital NTW coords
-        
+
         Returns
             v__rhpbody : List[float]
                 3-vector vector represented in pursuer's right-hadded body coords (forward, right, down)
-        
+
         Ref:
-            Left-handed vessel body system: 
+            Left-handed vessel body system:
                 https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
             Right-handed NTW system: Vallado, 3rd Edition Sec 3.3.3
-        '''
+        """
 
         # convert right-handed NTW coords to left-handed NTW
         v__lhntw = U.convert_rhntw_to_lhntw(v__rhntw=v__rhntw)
@@ -532,11 +626,13 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         # convert left-handed NTW to left-handed vessel body coords
         # ref: https://krpc.github.io/krpc/python/api/space-center/space-center.html#SpaceCenter.transform_direction
         # ref: https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
-        v__lhpbody = list(self.conn.space_center.transform_direction(
-            direction = tuple(v__lhntw),
-            from_ = self.vesPursue.orbital_reference_frame,
-            to = self.vesPursue.reference_frame
-        ))
+        v__lhpbody = list(
+            self.conn.space_center.transform_direction(
+                direction=tuple(v__lhntw),
+                from_=self.vesPursue.orbital_reference_frame,
+                to=self.vesPursue.reference_frame,
+            )
+        )
 
         # convert left-handed body coords (right, forward, down) to right-handed body coords (forward, right, down)
         v__rhpbody = U.convert_lhbody_to_rhbody(v__lhbody=v__lhpbody)
@@ -544,25 +640,25 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         return v__rhpbody
 
     def convert_rhcbci_to_rhpbody(self, v__rhcbci: List[float]) -> List[float]:
-        '''Converts vector in right-handed celestial-body-centered-inertial frame to 
+        """Converts vector in right-handed celestial-body-centered-inertial frame to
         pursuer vessel right-oriented body frame
 
         Args:
             v__rhcbci : List[float]
-                3-vector represented in celestial-body-centered-inertial fram 
+                3-vector represented in celestial-body-centered-inertial fram
                 (similar to ECI coords, but we aren't necessarily orbitiing Earth)
-        
+
         Returns
             v__rhpbody : List[float]
                 3-vector vector represented in pursuer's right-hadded body coords (forward, right, down)
-        
+
         Ref:
-            Left-handed vessel body system: 
+            Left-handed vessel body system:
                 https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
             KSP's body-centered inertial reference frame is left-handed
             (see https://krpc.github.io/krpc/python/api/space-center/celestial-body.html#SpaceCenter.CelestialBody.non_rotating_reference_frame)
             Right-handed ECI system: Vallado, 3rd Edition Sec 3.3
-        '''
+        """
 
         # convert right-handed CBCI coords to left-handed CBCI
         v__lhcbci = U.convert_rhcbci_to_lhcbci(v__rhcbci=v__rhcbci)
@@ -570,11 +666,13 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         # convert left-handed CBCI to left-handed vessel body coords
         # ref: https://krpc.github.io/krpc/python/api/space-center/space-center.html#SpaceCenter.transform_direction
         # ref: https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
-        v__lhpbody = list(self.conn.space_center.transform_direction(
-            direction = tuple(v__lhcbci),
-            from_ = self.vesPursue.orbit.body.non_rotating_reference_frame,
-            to = self.vesPursue.reference_frame
-        ))
+        v__lhpbody = list(
+            self.conn.space_center.transform_direction(
+                direction=tuple(v__lhcbci),
+                from_=self.vesPursue.orbit.body.non_rotating_reference_frame,
+                to=self.vesPursue.reference_frame,
+            )
+        )
 
         # convert left-handed body coords (right, forward, down) to right-handed body coords (forward, right, down)
         v__rhpbody = U.convert_lhbody_to_rhbody(v__lhbody=v__lhpbody)

@@ -23,7 +23,7 @@ env.reset()
 # Environment automatically orients pursuer toward target
 # therefore a niave pusuit policy to to simply burn at full
 # thrust in pursuer's body-forward direction.
-# Do this until the episode 
+# Do this until the episode
 # (Do you think it can intercept even a non-maneuvering evader??)
 is_done = False
 act = [1.0, 0, 0, 1.0]  # forward throttle, right throttle, down throttle, duration [s]

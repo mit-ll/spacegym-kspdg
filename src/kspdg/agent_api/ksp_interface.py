@@ -6,20 +6,22 @@ import logging
 
 from kspdg.utils.loggers import create_logger
 
+
 def ksp_interface_loop(
-        env_cls, 
-        env_kwargs, 
-        obs_conn_send, 
-        act_conn_recv, 
-        termination_event, 
-        observation_query_event, 
-        return_dict,
-        debug):
-    """ Parallel process for running and interacting with environment
-    
+    env_cls,
+    env_kwargs,
+    obs_conn_send,
+    act_conn_recv,
+    termination_event,
+    observation_query_event,
+    return_dict,
+    debug,
+):
+    """Parallel process for running and interacting with environment
+
     This loop creates a separate process so that environment and agent (policy) can be run concurrently
-    It handles KSPDG environment instantiation, 
-    querying observations from the environment, 
+    It handles KSPDG environment instantiation,
+    querying observations from the environment,
     sending actions to KSPDG environment,
     and cleanup of connections and environment at termination
 
@@ -52,7 +54,6 @@ def ksp_interface_loop(
     # execute accel schedule until agent termination
     agent_act = None
     while not termination_event.is_set():
-        
         # check for environment observation request from solver
         observation_handshake()
 
@@ -79,7 +80,7 @@ def ksp_interface_loop(
 
     # return procedure for mp.Process
     logger.info("\nsaving environment info...")
-    return_dict["env_info"] =  env_info
+    return_dict["env_info"] = env_info
 
     # cleanup
     logger.info("\n~~~Closing KSPDG envrionment~~~\n")

@@ -4,49 +4,49 @@
 
 # Base class for Lady-Bandit-Guard Group 1 environments
 
-import time
-import gymnasium as gym
-import numpy as np
-
-from types import SimpleNamespace
-from typing import List, Dict
 from threading import Thread
-from numpy.typing import ArrayLike
+import time
+from types import SimpleNamespace
+from typing import Dict, List
 
+import gymnasium as gym
+from kspdg.base_envs import KSPDGBaseEnv
 import kspdg.utils.constants as C
 import kspdg.utils.utils as U
-from kspdg.base_envs import KSPDGBaseEnv
+import numpy as np
+from numpy.typing import ArrayLike
 
-DEFAULT_EPISODE_TIMEOUT = 240.0 # [sec]
-DEFAULT_CAPTURE_DIST = 5.0      # [m]
+DEFAULT_EPISODE_TIMEOUT = 240.0  # [sec]
+DEFAULT_CAPTURE_DIST = 5.0  # [m]
+
 
 class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
-    '''
+    """
     Base environment for Lady-Bandit-Guard (LBG) Group 1 environments
 
-    Nomenclature comes from paper: 
+    Nomenclature comes from paper:
 
-    > Rusnak, Ilan. "The lady, the bandits and the body guards–a two team dynamic game." 
+    > Rusnak, Ilan. "The lady, the bandits and the body guards–a two team dynamic game."
     > IFAC Proceedings Volumes 38, no. 1 (2005): 441-446.
-    
+
     All inherited classes share the following
         + There is 1 "Bandit", 1 "Guard", and 1 "Lady" spacecraft
-        + Agent controls the Bandit spacecraft, a scripted bot(s) controls the 
+        + Agent controls the Bandit spacecraft, a scripted bot(s) controls the
         Lady and the Guard (but the bot's policy varies between environments within the group)
-        + Bandit and Guard have identical vehicle capabilities in each 
+        + Bandit and Guard have identical vehicle capabilities in each
         scenario, Lady vehicle may have the same or different vehicle capabilities
-        + Lady initial orbit constant across all sencarios/envs; Bandit and Guard 
+        + Lady initial orbit constant across all sencarios/envs; Bandit and Guard
         initial orbits are varied across environments in the group
         + Observation and Action spaces are constant across all scenarios/envs
-    '''
+    """
 
     # hard-coded, static parameters for lady, bandit, and guard vessels
     # that are accessible yet constant (so shouldn't be
     # in observation which should really only be variable values)
-    # Need for hard-coding rsc properties comes from the errors in 
+    # Need for hard-coding rsc properties comes from the errors in
     # krpc's handling of thruster objects.
     PARAMS = SimpleNamespace()
-    PARAMS.LADY= SimpleNamespace()
+    PARAMS.LADY = SimpleNamespace()
     PARAMS.BANDIT = SimpleNamespace()
     PARAMS.GUARD = SimpleNamespace()
     PARAMS.BANDIT.RCS = SimpleNamespace()
@@ -89,22 +89,22 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
     # # keys for observation fields
     # PARAMS.OBSERVATION.K_MET = "mission_elapsed_time"
     # PARAMS.OBSERVATION.K_BANDIT_MASS = "bandit_mass"
-    # PARAMS.OBSERVATION.K_BANDIT_PROP_MASS = "bandit_propellant_mass" 
+    # PARAMS.OBSERVATION.K_BANDIT_PROP_MASS = "bandit_propellant_mass"
     # PARAMS.OBSERVATION.K_BANDIT_PX = "posx_bandit_cb__rhcbci"
     # PARAMS.OBSERVATION.K_BANDIT_PY = "posy_bandit_cb__rhcbci"
     # PARAMS.OBSERVATION.K_BANDIT_PZ = "posz_bandit_cb__rhcbci"
     # PARAMS.OBSERVATION.K_BANDIT_VX = "velx_bandit_cb__rhcbci"
     # PARAMS.OBSERVATION.K_BANDIT_VY = "vely_bandit_cb__rhcbci"
     # PARAMS.OBSERVATION.K_BANDIT_VZ = "velz_bandit_cb__rhcbci"
-    # PARAMS.OBSERVATION.K_LADY_PX = "posx_lady_cb__rhcbci" 
-    # PARAMS.OBSERVATION.K_LADY_PY = "posy_lady_cb__rhcbci" 
-    # PARAMS.OBSERVATION.K_LADY_PZ = "posz_lady_cb__rhcbci" 
+    # PARAMS.OBSERVATION.K_LADY_PX = "posx_lady_cb__rhcbci"
+    # PARAMS.OBSERVATION.K_LADY_PY = "posy_lady_cb__rhcbci"
+    # PARAMS.OBSERVATION.K_LADY_PZ = "posz_lady_cb__rhcbci"
     # PARAMS.OBSERVATION.K_LADY_VX = "velx_lady_cb__rhcbci"
     # PARAMS.OBSERVATION.K_LADY_VY = "vely_lady_cb__rhcbci"
     # PARAMS.OBSERVATION.K_LADY_VZ = "velz_lady_cb__rhcbci"
-    # PARAMS.OBSERVATION.K_GUARD_PX = "posx_guard_cb__rhcbci" 
-    # PARAMS.OBSERVATION.K_GUARD_PY = "posy_guard_cb__rhcbci" 
-    # PARAMS.OBSERVATION.K_GUARD_PZ = "posz_guard_cb__rhcbci" 
+    # PARAMS.OBSERVATION.K_GUARD_PX = "posx_guard_cb__rhcbci"
+    # PARAMS.OBSERVATION.K_GUARD_PY = "posy_guard_cb__rhcbci"
+    # PARAMS.OBSERVATION.K_GUARD_PZ = "posz_guard_cb__rhcbci"
     # PARAMS.OBSERVATION.K_GUARD_VX = "velx_guard_cb__rhcbci"
     # PARAMS.OBSERVATION.K_GUARD_VY = "vely_guard_cb__rhcbci"
     # PARAMS.OBSERVATION.K_GUARD_VZ = "velz_guard_cb__rhcbci"
@@ -113,7 +113,9 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
     PARAMS.INFO.K_CLOSEST_LB_APPROACH = "closest_lady_bandit_approach"
     PARAMS.INFO.K_CLOSEST_LB_APPROACH_TIME = "closest_lady_bandit_approach_time"
     PARAMS.INFO.K_CLOSEST_BG_APPROACH = "closest_bandit_guard_approach"
-    PARAMS.INFO.K_MIN_LB_DISTSPEED_PRODUCT = "minimum_lady_bandit_distance_speed_product"
+    PARAMS.INFO.K_MIN_LB_DISTSPEED_PRODUCT = (
+        "minimum_lady_bandit_distance_speed_product"
+    )
     PARAMS.INFO.K_BANDIT_FUEL_USAGE = "bandit_fuel_usage"
     PARAMS.INFO.K_LADY_FUEL_USAGE = "lady_fuel_usage"
     PARAMS.INFO.K_GUARD_FUEL_USAGE = "guard_fuel_usage"
@@ -121,8 +123,8 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
 
     # Specific impulse assumes all RCS thrusters are identical RV-105
     # parts operating in vacuum
-    PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE = 240 # [s]
-    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE = 1000 # [N]
+    PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE = 240  # [s]
+    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE = 1000  # [N]
 
     # Assumed number of thrusters creating thrust in each direction
     PARAMS.BANDIT.RCS.N_THRUSTERS_FORWARD = 8
@@ -133,38 +135,65 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
     PARAMS.BANDIT.RCS.N_THRUSTERS_DOWN = 4
 
     # computed max thrust in each direction [N]
-    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_FORWARD = \
-        PARAMS.BANDIT.RCS.N_THRUSTERS_FORWARD * PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
-    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_REVERSE = \
-        PARAMS.BANDIT.RCS.N_THRUSTERS_REVERSE * PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
-    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_RIGHT = \
-        PARAMS.BANDIT.RCS.N_THRUSTERS_RIGHT * PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
-    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_LEFT = \
-        PARAMS.BANDIT.RCS.N_THRUSTERS_LEFT * PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
-    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_UP = \
-        PARAMS.BANDIT.RCS.N_THRUSTERS_UP * PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
-    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_DOWN = \
-        PARAMS.BANDIT.RCS.N_THRUSTERS_DOWN * PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
+    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_FORWARD = (
+        PARAMS.BANDIT.RCS.N_THRUSTERS_FORWARD
+        * PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
+    )
+    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_REVERSE = (
+        PARAMS.BANDIT.RCS.N_THRUSTERS_REVERSE
+        * PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
+    )
+    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_RIGHT = (
+        PARAMS.BANDIT.RCS.N_THRUSTERS_RIGHT
+        * PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
+    )
+    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_LEFT = (
+        PARAMS.BANDIT.RCS.N_THRUSTERS_LEFT
+        * PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
+    )
+    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_UP = (
+        PARAMS.BANDIT.RCS.N_THRUSTERS_UP
+        * PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
+    )
+    PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_DOWN = (
+        PARAMS.BANDIT.RCS.N_THRUSTERS_DOWN
+        * PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_PER_NOZZLE
+    )
 
     # computed maximum fuel consumption rate in each direction [kg/s]
-    PARAMS.BANDIT.RCS.VACUUM_MAX_FUEL_CONSUMPTION_FORWARD = \
-        PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_FORWARD / (C.G0 * PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE)
-    PARAMS.BANDIT.RCS.VACUUM_MAX_FUEL_CONSUMPTION_REVERSE = \
-        PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_REVERSE / (C.G0 * PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE)
-    PARAMS.BANDIT.RCS.VACUUM_MAX_FUEL_CONSUMPTION_RIGHT = \
-        PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_RIGHT / (C.G0 * PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE)
-    PARAMS.BANDIT.RCS.VACUUM_MAX_FUEL_CONSUMPTION_LEFT = \
-        PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_LEFT / (C.G0 * PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE)
-    PARAMS.BANDIT.RCS.VACUUM_MAX_FUEL_CONSUMPTION_UP = \
-        PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_UP / (C.G0 * PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE)
-    PARAMS.BANDIT.RCS.VACUUM_MAX_FUEL_CONSUMPTION_DOWN = \
-        PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_DOWN / (C.G0 * PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE)
+    PARAMS.BANDIT.RCS.VACUUM_MAX_FUEL_CONSUMPTION_FORWARD = (
+        PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_FORWARD
+        / (C.G0 * PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE)
+    )
+    PARAMS.BANDIT.RCS.VACUUM_MAX_FUEL_CONSUMPTION_REVERSE = (
+        PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_REVERSE
+        / (C.G0 * PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE)
+    )
+    PARAMS.BANDIT.RCS.VACUUM_MAX_FUEL_CONSUMPTION_RIGHT = (
+        PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_RIGHT
+        / (C.G0 * PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE)
+    )
+    PARAMS.BANDIT.RCS.VACUUM_MAX_FUEL_CONSUMPTION_LEFT = (
+        PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_LEFT
+        / (C.G0 * PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE)
+    )
+    PARAMS.BANDIT.RCS.VACUUM_MAX_FUEL_CONSUMPTION_UP = (
+        PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_UP
+        / (C.G0 * PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE)
+    )
+    PARAMS.BANDIT.RCS.VACUUM_MAX_FUEL_CONSUMPTION_DOWN = (
+        PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_DOWN
+        / (C.G0 * PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE)
+    )
 
-    def __init__(self, loadfile:str, 
-        episode_timeout:float = DEFAULT_EPISODE_TIMEOUT, 
-        lady_capture_dist:float = DEFAULT_CAPTURE_DIST,
-        bandit_capture_dist:float = DEFAULT_CAPTURE_DIST,
-        **kwargs):
+    def __init__(
+        self,
+        loadfile: str,
+        episode_timeout: float = DEFAULT_EPISODE_TIMEOUT,
+        lady_capture_dist: float = DEFAULT_CAPTURE_DIST,
+        bandit_capture_dist: float = DEFAULT_CAPTURE_DIST,
+        **kwargs
+    ):
         """
         Args:
             episode_timeout : float
@@ -189,17 +218,16 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
 
         # establish observation space (see get_observation for mapping)
         self.observation_space = gym.spaces.Box(
-            low = np.concatenate((np.zeros(3), -np.inf*np.ones(18))),
-            high = np.inf * np.ones(21)
+            low=np.concatenate((np.zeros(3), -np.inf * np.ones(18))),
+            high=np.inf * np.ones(21),
         )
         assert self.observation_space.shape == (self.PARAMS.OBSERVATION.LEN,)
 
         # establish action space (forward, right, down, time) thrust of bandit
         self.action_space = gym.spaces.Box(
-            low=np.array([-1.0, -1.0, -1.0, 0.0]), 
-            high=np.array([1.0, 1.0, 1.0, 10.0])
+            low=np.array([-1.0, -1.0, -1.0, 0.0]), high=np.array([1.0, 1.0, 1.0, 10.0])
         )
-        
+
         # don't call reset. This allows instantiation and partial testing
         # without connecting to krpc server
 
@@ -214,61 +242,62 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         print("Changing active vehicle to Bandit and setting target to Lady...")
         self.conn.space_center.active_vessel = self.vesBandit
         self.conn.space_center.target_vessel = self.vesLady
-        time.sleep(0.5)   # give time to re-orient
+        time.sleep(0.5)  # give time to re-orient
 
         # orient bandit in target-pointing direction
         print("Activating Bandit SAS, RCS and orienting to Lady...")
         self.vesBandit.control.sas = True
-        time.sleep(0.1)   # give time to re-orient
+        time.sleep(0.1)  # give time to re-orient
         self.vesBandit.control.sas_mode = self.vesBandit.control.sas_mode.target
-        time.sleep(0.5)   # give time to re-orient
+        time.sleep(0.5)  # give time to re-orient
 
         # activate RCS thrusters
         self.vesBandit.control.rcs = True
 
     def _reset_episode_metrics(self) -> None:
-        """ Reset attributes that track proximity, timing, and propellant use metrics
-        """
+        """Reset attributes that track proximity, timing, and propellant use metrics"""
 
-        self.min_lb_dist = np.inf   # minimum distance between lady and bandit
-        self.min_lb_dist_time = 0.0 # time of min dist between lady and bandit
-        self.min_bg_dist = np.inf   # minimum distance between bandit and guard
-        self.min_lb_distspeed_prod = np.inf    # minimum of distance-speed product between lady and bandit
+        self.min_lb_dist = np.inf  # minimum distance between lady and bandit
+        self.min_lb_dist_time = 0.0  # time of min dist between lady and bandit
+        self.min_bg_dist = np.inf  # minimum distance between bandit and guard
+        self.min_lb_distspeed_prod = (
+            np.inf
+        )  # minimum of distance-speed product between lady and bandit
         self.lady_init_mass = self.vesLady.mass
         self.bandit_init_mass = self.vesBandit.mass
         self.guard_init_mass = self.vesGuard.mass
 
     def _start_bot_threads(self) -> None:
-        """ Start parallel thread to continuously execute lady-guard policy
-        """
+        """Start parallel thread to continuously execute lady-guard policy"""
 
         self.stop_bot_thread = False
 
         # check that thread does not exist or is not running
         if hasattr(self, "bot_thread"):
             if self.bot_thread.is_alive():
-                raise ConnectionError("bot_thread is already running."+ 
-                    " Close and join bot_thread before restarting")
+                raise ConnectionError(
+                    "bot_thread is already running."
+                    + " Close and join bot_thread before restarting"
+                )
 
         self.bot_thread = Thread(target=self.lady_guard_policy)
         self.bot_thread.start()
 
     def lady_guard_policy(self):
-        """ Behvaior policy to be continuously run by lady and guard vessels
-        """
+        """Behvaior policy to be continuously run by lady and guard vessels"""
         raise NotImplementedError("Must be implemented by child class")
 
     def step(self, action):
-        ''' Apply thrust and torque actuation for specified time duration
+        """Apply thrust and torque actuation for specified time duration
         Args:
             action : np.ndarray
                 4-tuple of throttle values in 3D and timestep (forward, right, down, tstep)
 
-        Ref: 
+        Ref:
             Actions are in forward, right, down to align with the right-handed version of the
-            Vessel Surface Reference Frame 
+            Vessel Surface Reference Frame
             https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
-        '''
+        """
 
         # parse and apply action
         self.vesBandit.control.forward = action[0]
@@ -278,7 +307,7 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         # execute maneuver for specified time, checking for end
         # conditions while you do
         timeout = time.time() + action[3]
-        while True: 
+        while True:
             if self.is_episode_done or time.time() > timeout:
                 break
 
@@ -311,26 +340,34 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         info = dict()
 
         # parse banding and lady current states
-        p0_b_cb__rhcbci = np.array([
-            obs[self.PARAMS.OBSERVATION.I_BANDIT_PX],
-            obs[self.PARAMS.OBSERVATION.I_BANDIT_PY],
-            obs[self.PARAMS.OBSERVATION.I_BANDIT_PZ],
-        ])
-        v0_b_cb__rhcbci = np.array([
-            obs[self.PARAMS.OBSERVATION.I_BANDIT_VX],
-            obs[self.PARAMS.OBSERVATION.I_BANDIT_VY],
-            obs[self.PARAMS.OBSERVATION.I_BANDIT_VZ],
-        ])
-        p0_l_cb__rhcbci = np.array([
-            obs[self.PARAMS.OBSERVATION.I_LADY_PX],
-            obs[self.PARAMS.OBSERVATION.I_LADY_PY],
-            obs[self.PARAMS.OBSERVATION.I_LADY_PZ],
-        ])
-        v0_l_cb__rhcbci = np.array([
-            obs[self.PARAMS.OBSERVATION.I_LADY_VX],
-            obs[self.PARAMS.OBSERVATION.I_LADY_VY],
-            obs[self.PARAMS.OBSERVATION.I_LADY_VZ],
-        ])
+        p0_b_cb__rhcbci = np.array(
+            [
+                obs[self.PARAMS.OBSERVATION.I_BANDIT_PX],
+                obs[self.PARAMS.OBSERVATION.I_BANDIT_PY],
+                obs[self.PARAMS.OBSERVATION.I_BANDIT_PZ],
+            ]
+        )
+        v0_b_cb__rhcbci = np.array(
+            [
+                obs[self.PARAMS.OBSERVATION.I_BANDIT_VX],
+                obs[self.PARAMS.OBSERVATION.I_BANDIT_VY],
+                obs[self.PARAMS.OBSERVATION.I_BANDIT_VZ],
+            ]
+        )
+        p0_l_cb__rhcbci = np.array(
+            [
+                obs[self.PARAMS.OBSERVATION.I_LADY_PX],
+                obs[self.PARAMS.OBSERVATION.I_LADY_PY],
+                obs[self.PARAMS.OBSERVATION.I_LADY_PZ],
+            ]
+        )
+        v0_l_cb__rhcbci = np.array(
+            [
+                obs[self.PARAMS.OBSERVATION.I_LADY_VX],
+                obs[self.PARAMS.OBSERVATION.I_LADY_VY],
+                obs[self.PARAMS.OBSERVATION.I_LADY_VZ],
+            ]
+        )
         # p0_g_cb__rhcbci = np.array([
         #     obs[self.PARAMS.OBSERVATION.I_GUARD_PX],
         #     obs[self.PARAMS.OBSERVATION.I_GUARD_PY],
@@ -341,7 +378,7 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         #     obs[self.PARAMS.OBSERVATION.I_GUARD_VY],
         #     obs[self.PARAMS.OBSERVATION.I_GUARD_VZ],
         # ])
-        
+
         # nearest approach between lady and bandit
         # d_vesL_vesB = np.linalg.norm(p0_b_cb__rhcbci-p0_l_cb__rhcbci)
         d_vesL_vesB = self.get_lb_relative_distance()
@@ -359,27 +396,32 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         info[self.PARAMS.INFO.K_CLOSEST_BG_APPROACH] = self.min_bg_dist
 
         # distance-speed product metric
-        s_vesL_vesB = np.linalg.norm(v0_b_cb__rhcbci-v0_l_cb__rhcbci)
+        s_vesL_vesB = np.linalg.norm(v0_b_cb__rhcbci - v0_l_cb__rhcbci)
         lb_ds_prod = d_vesL_vesB * s_vesL_vesB
         if lb_ds_prod < self.min_lb_distspeed_prod:
             self.min_lb_distspeed_prod = lb_ds_prod
         info[self.PARAMS.INFO.K_MIN_LB_DISTSPEED_PRODUCT] = self.min_lb_distspeed_prod
 
-        # fuel usage 
-        info[self.PARAMS.INFO.K_BANDIT_FUEL_USAGE] = self.bandit_init_mass - self.vesBandit.mass
-        info[self.PARAMS.INFO.K_LADY_FUEL_USAGE] = self.lady_init_mass - self.vesLady.mass
-        info[self.PARAMS.INFO.K_GUARD_FUEL_USAGE] = self.guard_init_mass - self.vesGuard.mass
+        # fuel usage
+        info[self.PARAMS.INFO.K_BANDIT_FUEL_USAGE] = (
+            self.bandit_init_mass - self.vesBandit.mass
+        )
+        info[self.PARAMS.INFO.K_LADY_FUEL_USAGE] = (
+            self.lady_init_mass - self.vesLady.mass
+        )
+        info[self.PARAMS.INFO.K_GUARD_FUEL_USAGE] = (
+            self.guard_init_mass - self.vesGuard.mass
+        )
 
         # compute approximate delta-v need to intercept non-maneuvering lady
         if done:
-
             # call capture dv estimator
             dv0, dvf = U.estimate_capture_dv(
                 p0_prs=p0_b_cb__rhcbci,
                 v0_prs=v0_b_cb__rhcbci,
                 p0_evd=p0_l_cb__rhcbci,
                 v0_evd=v0_l_cb__rhcbci,
-                tof=self.episode_timeout
+                tof=self.episode_timeout,
             )
 
             info[self.PARAMS.INFO.K_LB_DV_AT_TF] = dv0 + dvf
@@ -390,7 +432,7 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         return info
 
     def get_observation(self) -> ArrayLike:
-        ''' return observation of bandit, lady, and guard pos-vel state
+        """return observation of bandit, lady, and guard pos-vel state
 
         Returns:
             obs : ArrayLike
@@ -404,13 +446,13 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
                 [15:18] : guard position wrt CB in right-hand CBCI coords [m]
                 [18:21] : guard velocity wrt CB in right-hand CBCI coords [m/s]
 
-        Ref: 
+        Ref:
             - CBCI stands for celestial-body-centered inertial which is a coralary to ECI coords
             (see notation: https://github.com/mit-ll/spacegym-kspdg#code-notation)
             - KSP's body-centered inertial reference frame is left-handed
             (see https://krpc.github.io/krpc/python/api/space-center/celestial-body.html#SpaceCenter.CelestialBody.non_rotating_reference_frame)
 
-        '''
+        """
 
         rf = self.vesBandit.orbit.body.non_rotating_reference_frame
 
@@ -419,9 +461,11 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         # get bandit (i.e. vehicle under control) mass properties
         obs[self.PARAMS.OBSERVATION.I_MET] = self.vesBandit.met
         obs[self.PARAMS.OBSERVATION.I_BANDIT_MASS] = self.vesBandit.mass
-        obs[self.PARAMS.OBSERVATION.I_BANDIT_PROP_MASS] = self.vesBandit.resources.amount('MonoPropellant')
+        obs[
+            self.PARAMS.OBSERVATION.I_BANDIT_PROP_MASS
+        ] = self.vesBandit.resources.amount("MonoPropellant")
 
-        # get bandit, lady, and guard position and velocity in 
+        # get bandit, lady, and guard position and velocity in
         # left-handed celestial-body-centered-inertial frame
         p_b_cb__lhcbci = list(self.vesBandit.position(rf))
         v_b_cb__lhcbci = list(self.vesBandit.velocity(rf))
@@ -439,52 +483,57 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         v_g_cb__rhcbci = U.convert_lhcbci_to_rhcbci(v_g_cb__lhcbci)
 
         # store observation of bandit, lady, and guard position and velocity
-        obs[self.PARAMS.OBSERVATION.I_BANDIT_PX], \
-            obs[self.PARAMS.OBSERVATION.I_BANDIT_PY], \
-            obs[self.PARAMS.OBSERVATION.I_BANDIT_PZ]  = \
-            p_b_cb__rhcbci 
-        
-        obs[self.PARAMS.OBSERVATION.I_BANDIT_VX], \
-            obs[self.PARAMS.OBSERVATION.I_BANDIT_VY], \
-            obs[self.PARAMS.OBSERVATION.I_BANDIT_VZ]  = \
-            v_b_cb__rhcbci
+        (
+            obs[self.PARAMS.OBSERVATION.I_BANDIT_PX],
+            obs[self.PARAMS.OBSERVATION.I_BANDIT_PY],
+            obs[self.PARAMS.OBSERVATION.I_BANDIT_PZ],
+        ) = p_b_cb__rhcbci
 
-        obs[self.PARAMS.OBSERVATION.I_LADY_PX], \
-            obs[self.PARAMS.OBSERVATION.I_LADY_PY], \
-            obs[self.PARAMS.OBSERVATION.I_LADY_PZ]  = \
-            p_l_cb__rhcbci
+        (
+            obs[self.PARAMS.OBSERVATION.I_BANDIT_VX],
+            obs[self.PARAMS.OBSERVATION.I_BANDIT_VY],
+            obs[self.PARAMS.OBSERVATION.I_BANDIT_VZ],
+        ) = v_b_cb__rhcbci
 
-        obs[self.PARAMS.OBSERVATION.I_LADY_VX], \
-            obs[self.PARAMS.OBSERVATION.I_LADY_VY], \
-            obs[self.PARAMS.OBSERVATION.I_LADY_VZ]  = \
-            v_l_cb__rhcbci
+        (
+            obs[self.PARAMS.OBSERVATION.I_LADY_PX],
+            obs[self.PARAMS.OBSERVATION.I_LADY_PY],
+            obs[self.PARAMS.OBSERVATION.I_LADY_PZ],
+        ) = p_l_cb__rhcbci
 
-        obs[self.PARAMS.OBSERVATION.I_GUARD_PX], \
-            obs[self.PARAMS.OBSERVATION.I_GUARD_PY], \
-            obs[self.PARAMS.OBSERVATION.I_GUARD_PZ]  = \
-            p_g_cb__rhcbci
+        (
+            obs[self.PARAMS.OBSERVATION.I_LADY_VX],
+            obs[self.PARAMS.OBSERVATION.I_LADY_VY],
+            obs[self.PARAMS.OBSERVATION.I_LADY_VZ],
+        ) = v_l_cb__rhcbci
 
-        obs[self.PARAMS.OBSERVATION.I_GUARD_VX], \
-            obs[self.PARAMS.OBSERVATION.I_GUARD_VY], \
-            obs[self.PARAMS.OBSERVATION.I_GUARD_VZ]  = \
-            v_g_cb__rhcbci
+        (
+            obs[self.PARAMS.OBSERVATION.I_GUARD_PX],
+            obs[self.PARAMS.OBSERVATION.I_GUARD_PY],
+            obs[self.PARAMS.OBSERVATION.I_GUARD_PZ],
+        ) = p_g_cb__rhcbci
+
+        (
+            obs[self.PARAMS.OBSERVATION.I_GUARD_VX],
+            obs[self.PARAMS.OBSERVATION.I_GUARD_VY],
+            obs[self.PARAMS.OBSERVATION.I_GUARD_VZ],
+        ) = v_g_cb__rhcbci
 
         return np.array(obs)
-        
+
     def get_lb_relative_distance(self):
-        '''compute relative distance between lady and bandit'''
+        """compute relative distance between lady and bandit"""
         p_vesL_vesB__lhpbody = self.vesLady.position(self.vesBandit.reference_frame)
         return np.linalg.norm(p_vesL_vesB__lhpbody)
 
     def get_bg_relative_distance(self):
-        '''compute relative distance between bandit and guard'''
+        """compute relative distance between bandit and guard"""
         p_vesB_vesG__lhpbody = self.vesBandit.position(self.vesGuard.reference_frame)
         return np.linalg.norm(p_vesB_vesG__lhpbody)
 
     def enforce_episode_termination(self):
-        '''determine if distance or timeout episode termination conditions are met
-        '''
-        
+        """determine if distance or timeout episode termination conditions are met"""
+
         while not self.stop_episode_termination_thread:
             # check termination condition: lady-bandit proximity
             d_vesL_vesB = self.get_lb_relative_distance()
@@ -510,7 +559,6 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
                 self.stop_episode_termination_thread = True
 
     def close(self):
-
         # handle evasive maneuvering thread
         self.stop_bot_thread = True
         self.bot_thread.join()

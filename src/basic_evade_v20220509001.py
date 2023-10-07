@@ -4,18 +4,19 @@
 # while this script controls the evader
 #
 # The evasion algorithm is very simplistic:
-# if the pursuer comes within a specified radius, the 
+# if the pursuer comes within a specified radius, the
 # evader simply burns orbit-normal direction to evade
 
-import krpc
 import time
+
+import krpc
 import numpy as np
 
 # set parameters for evasion
 DIST_THRESHOLD = 50.0
 
 # establish krpc connect to send remote commands
-conn = krpc.connect(name='basic_evader')
+conn = krpc.connect(name="basic_evader")
 print("Connected to kRPC server")
 
 # get vessel objects
@@ -30,7 +31,7 @@ conn.space_center.target_vessel = vesE
 vesE.control.sas = True
 vesE.control.sas_mode = vesE.control.sas_mode.anti_normal
 print("Re-orienting Evader...")
-time.sleep(10)   # give time to re-orient
+time.sleep(10)  # give time to re-orient
 
 # actuate RCS thrusters
 vesE.control.rcs = True
@@ -39,7 +40,6 @@ vesE.control.rcs = True
 print("Executing evasion loop")
 was_evading = False
 while True:
-
     # get distance to pursuer
     p_vesE_vesP__vesP = vesE.position(vesP.reference_frame)
     d_vesE_vesP = np.linalg.norm(p_vesE_vesP__vesP)
@@ -55,5 +55,3 @@ while True:
         if was_evading:
             print("No pursuer in range. Zeroing thrust")
         was_evading = False
-
-

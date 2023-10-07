@@ -2,30 +2,30 @@
 # Subject to FAR 52.227-11 – Patent Rights – Ownership by the Contractor (May 2014).
 # SPDX-License-Identifier: MIT
 
+from copy import deepcopy
+from typing import Dict, List
+
 import gymnasium as gym
+from kspdg.pe1.pe1_base import PursuitEvadeGroup1Env
+import kspdg.utils.utils as U
 import numpy as np
 
-from typing import List, Dict
-from copy import deepcopy
+DEFAULT_EPISODE_TIMEOUT = 240.0  # [sec]
+DEFAULT_TARGET_VIEWING_DISTANCE = 100.0  # [m]
+DEFAULT_REWARD_DECAY_COEF = 1e-5  # [1/m^2]
 
-import kspdg.utils.utils as U
-from kspdg.pe1.pe1_base import PursuitEvadeGroup1Env
-
-DEFAULT_EPISODE_TIMEOUT = 240.0 # [sec]
-DEFAULT_TARGET_VIEWING_DISTANCE = 100.0 # [m]
-DEFAULT_REWARD_DECAY_COEF = 1e-5 # [1/m^2] 
 
 class SunBlockingGroup1Env(PursuitEvadeGroup1Env):
-    '''
+    """
     Base environment for 1v1 sun-blocking orbital scenarios, which
     are direct variants of the pursuit-evasion environments
-    
+
     All inherited classes share the following
         - Agent controls the pursuer and evader has a scripted policy (although specific policy varies)
         - Pursuer and evader vehicles are identical and are meant to be the same through all
         inherited scenarios (although there is not a current enforcement of this)
         - Observation and Action spaces shared between all child envs
-    '''
+    """
 
     # mission loadfile names for variou initial condition
     LOADFILE_I1 = "sb1_i1_init"
@@ -41,11 +41,14 @@ class SunBlockingGroup1Env(PursuitEvadeGroup1Env):
     PARAMS.INFO.K_MAX_REWARD = "max_reward"
     PARAMS.INFO.K_MIN_REWARD = "min_reward"
 
-    def __init__(self, loadfile:str, 
-        episode_timeout:float = DEFAULT_EPISODE_TIMEOUT, 
-        target_viewing_distance:float = DEFAULT_TARGET_VIEWING_DISTANCE,
-        reward_decay_coef:float = DEFAULT_REWARD_DECAY_COEF,
-        **kwargs):
+    def __init__(
+        self,
+        loadfile: str,
+        episode_timeout: float = DEFAULT_EPISODE_TIMEOUT,
+        target_viewing_distance: float = DEFAULT_TARGET_VIEWING_DISTANCE,
+        reward_decay_coef: float = DEFAULT_REWARD_DECAY_COEF,
+        **kwargs
+    ):
         """
         Args:
             episode_timeout : float
@@ -66,31 +69,30 @@ class SunBlockingGroup1Env(PursuitEvadeGroup1Env):
         self.target_viewing_distance = target_viewing_distance
         self.reward_decay_coef = reward_decay_coef
 
-        # overwrite the pe1 observation space 
+        # overwrite the pe1 observation space
         # to include sun position information
         # (see get_observation for mapping)
         self.observation_space = gym.spaces.Box(
-            low = np.concatenate((np.zeros(3), -np.inf*np.ones(15))),
-            high = np.inf * np.ones(18)
+            low=np.concatenate((np.zeros(3), -np.inf * np.ones(15))),
+            high=np.inf * np.ones(18),
         )
-        
+
         # don't call reset. This allows instantiation and partial testing
         # without connecting to krpc server
 
     def _reset_episode_metrics(self) -> None:
-        """ Reset attributes that track proximity, timing, and propellant use metrics
-        """
+        """Reset attributes that track proximity, timing, and propellant use metrics"""
         super()._reset_episode_metrics()
 
         self.cum_reward = 0.0
         self.min_reward = np.inf
         self.max_reward = -np.inf
-    
+
     def get_reward(self) -> float:
-        """ Compute reward value
+        """Compute reward value
 
         Reward is a function of evader-pursuer-sun angle and pursuer-evader distance
-        
+
         Returns:
             rew : float
                 reward at current step
@@ -99,18 +101,21 @@ class SunBlockingGroup1Env(PursuitEvadeGroup1Env):
         # get evader position, distance, and unit vector relative to pursuer
         p_vesE_vesP__lhpbody = self.vesEvade.position(self.vesPursue.reference_frame)
         d_vesE_vesP = np.linalg.norm(p_vesE_vesP__lhpbody)
-        u_vesE_vesP__lhpbody = p_vesE_vesP__lhpbody/d_vesE_vesP
+        u_vesE_vesP__lhpbody = p_vesE_vesP__lhpbody / d_vesE_vesP
 
         # get sun unit vector relative to pursuer
-        p_sun_vesP__lhpbody = self.conn.space_center.bodies['Sun'].position(
-            self.vesPursue.reference_frame)
+        p_sun_vesP__lhpbody = self.conn.space_center.bodies["Sun"].position(
+            self.vesPursue.reference_frame
+        )
         d_sun_vesP = np.linalg.norm(p_sun_vesP__lhpbody)
-        u_sun_vesP__lhpbody = p_sun_vesP__lhpbody/d_sun_vesP
+        u_sun_vesP__lhpbody = p_sun_vesP__lhpbody / d_sun_vesP
 
         # compute reward. See sb_objective_plot.py for intuition
         # about reward surface shape
         rew = -np.dot(u_vesE_vesP__lhpbody, u_sun_vesP__lhpbody)
-        rew *= np.exp(-self.reward_decay_coef * (d_vesE_vesP - self.target_viewing_distance)**2)
+        rew *= np.exp(
+            -self.reward_decay_coef * (d_vesE_vesP - self.target_viewing_distance) ** 2
+        )
 
         return rew
 
@@ -136,14 +141,18 @@ class SunBlockingGroup1Env(PursuitEvadeGroup1Env):
         info[self.PARAMS.INFO.K_MIN_REWARD] = self.min_reward
         info[self.PARAMS.INFO.K_MAX_REWARD] = self.max_reward
 
-        # fuel usage 
-        info[self.PARAMS.INFO.K_PURSUER_FUEL_USAGE] = self.pursuer_init_mass - self.vesPursue.mass
-        info[self.PARAMS.INFO.K_EVADER_FUEL_USAGE] = self.evader_init_mass - self.vesEvade.mass
+        # fuel usage
+        info[self.PARAMS.INFO.K_PURSUER_FUEL_USAGE] = (
+            self.pursuer_init_mass - self.vesPursue.mass
+        )
+        info[self.PARAMS.INFO.K_EVADER_FUEL_USAGE] = (
+            self.evader_init_mass - self.vesEvade.mass
+        )
 
         return info
 
     def get_observation(self):
-        """ return observation of pursuit and evader vessels from referee ref frame
+        """return observation of pursuit and evader vessels from referee ref frame
 
         Returns:
             obs : list
@@ -156,7 +165,7 @@ class SunBlockingGroup1Env(PursuitEvadeGroup1Env):
                 [12:15] : evader velocity wrt CB in right-hand CBCI coords [m/s]
                 [15:18] : pursuer's sun-pointing unit vector in right-hand CBCI coords [-]
 
-        Ref: 
+        Ref:
             - CBCI stands for celestial-body-centered inertial which is a coralary to ECI coords
             (see notation: https://github.com/mit-ll/spacegym-kspdg#code-notation)
             - KSP's body-centered inertial reference frame is left-handed
@@ -167,27 +176,28 @@ class SunBlockingGroup1Env(PursuitEvadeGroup1Env):
         obs = super().get_observation()
 
         # get sun position relative to pursuer
-        p_sun_vesP__lhcbci = np.array(self.conn.space_center.bodies['Sun'].position(
-            self.vesPursue.orbit.body.non_rotating_reference_frame))
-        
+        p_sun_vesP__lhcbci = np.array(
+            self.conn.space_center.bodies["Sun"].position(
+                self.vesPursue.orbit.body.non_rotating_reference_frame
+            )
+        )
+
         # convert to right-handed CBCI coords
         p_sun_vesP__rhcbci = U.convert_lhcbci_to_rhcbci(p_sun_vesP__lhcbci)
         d_sun_vesP = np.linalg.norm(p_sun_vesP__rhcbci)
-        u_sun_vesP__rhcbci = p_sun_vesP__rhcbci/d_sun_vesP
+        u_sun_vesP__rhcbci = p_sun_vesP__rhcbci / d_sun_vesP
 
         # encode into observation
         obs.extend(u_sun_vesP__rhcbci)
 
         return obs
-    
+
     @classmethod
     def observation_list_to_dict(cls, obs_list):
         """convert observation from list to dict"""
         raise NotImplementedError
-    
+
     @classmethod
     def observation_dict_to_list(cls, obs_dict):
         """convert observation from list to dict"""
         raise NotImplementedError
-
-
