@@ -1,16 +1,13 @@
-import krpc
-import time
-from src.ksp_env.ksp_env import GameEnv
 import math
+import time
+
+from env.ksp_env import GameEnv
+import krpc
 import numpy as np
+from stable_baselines3 import DQN
 
-conn = krpc.connect(name="Tracker")
-# env = GameEnv(conn)
-# vessel = env.vessel
+env = GameEnv(krpc.connect(name="Tracker"))
 
-# frame = vessel.orbit.body.reference_frame
-# vert_speed = conn.add_stream(getattr, vessel.flight(frame), "vertical_speed")
-
-# while True:
-#     print(vert_speed)
-#     time.sleep(1 / 10)
+model = DQN("MlpPolicy", env, verbose=1)
+# pip install stable-baselines3[extra]
+model.learn(total_timesteps=10000, log_interval=4, progress_bar=True)

@@ -36,6 +36,8 @@ else
         docker run --rm -it \
             $cmp_volumes \
             --ipc host \
+            --pid host \
+            --network host \
             $FULL_IMAGE_NAME \
             /bin/bash
     else
@@ -44,6 +46,7 @@ else
             $cmp_volumes \
             --gpus all \
             --ipc host \
+            --network host \
             $FULL_IMAGE_NAME \
             /bin/bash
     fi
