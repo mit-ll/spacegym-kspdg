@@ -143,7 +143,7 @@ class GameEnv(gym.Env):
         """
         self.altitude_max = 0
 
-        quick_save = "sat1"
+        quick_save = "cubesat_undeployed_tumbling"
 
         try:
             self.conn.space_center.load(quick_save)
@@ -177,4 +177,4 @@ class GameEnv(gym.Env):
         return state
 
     def compute_reward(self):
-        return 0
+        return -abs(self.roll())
