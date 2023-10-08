@@ -177,4 +177,4 @@ class GameEnv(gym.Env):
         return state
 
     def compute_reward(self):
-        return -abs(self.roll())
+        return -abs(self.roll()) / 180
