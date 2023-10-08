@@ -108,7 +108,7 @@ class GameEnv(gym.Env):
 
         self.conn.ui.message("Reward: " + str(round(reward, 2)), duration=0.5)
 
-        return state, reward, done, done, {}
+        return state, reward, done, done, {"mean_reward": reward}
 
     def choose_action(self, action):
         action_group = list(self.available_actions.keys())[action // 3]
@@ -143,7 +143,7 @@ class GameEnv(gym.Env):
         """
         self.altitude_max = 0
 
-        quick_save = "cubesat_undeployed_tumbling"
+        quick_save = "sat1"
 
         try:
             self.conn.space_center.load(quick_save)
