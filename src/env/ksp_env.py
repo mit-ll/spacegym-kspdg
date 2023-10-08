@@ -17,9 +17,10 @@ CONTINUOUS = False
 
 
 class GameEnv(gym.Env):
-    def __init__(self, conn):
+    def __init__(self, conn, wandb_logger):
         self.set_telemetry(conn)
         self.pre_launch_setup()
+        self.wandb_logger = wandb_logger
 
         self.action_space = spaces.Discrete(9)  # -1, 0, 1 for all axis
         self.observation_space = spaces.Box(
@@ -96,8 +97,7 @@ class GameEnv(gym.Env):
 
             self.choose_action(action)
 
-        # 10 actions in one second in game time
-        while self.ut() - start_act <= 0.1:
+        while self.ut() - start_act <= 1 / 5:
             continue
 
         state = self.get_state()
@@ -107,6 +107,7 @@ class GameEnv(gym.Env):
         reward, done = self.epoch_ending(reward, done)
 
         self.conn.ui.message("Reward: " + str(round(reward, 2)), duration=0.5)
+        self.wandb_logger.log({"reward": reward})
 
         return state, reward, done, done, {"mean_reward": reward}
 

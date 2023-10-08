@@ -21,12 +21,13 @@ log_dir = list(glob.glob(f"./wandb/*-{run.id}"))
 assert len(log_dir) == 1
 log_dir = Path(log_dir[0])
 
-env = GameEnv(krpc.connect(name="Tracker"))
+env = GameEnv(krpc.connect(name="Tracker"), run)
 
 model = PPO(
     "MlpPolicy",
     env,
     tensorboard_log=log_dir / "logs",
+    learning_rate=0.01,
     n_steps=128,
     stats_window_size=2,
     device="cpu",
