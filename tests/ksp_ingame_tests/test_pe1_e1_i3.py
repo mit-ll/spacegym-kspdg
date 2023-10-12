@@ -63,21 +63,43 @@ def test_get_info_0(pe1_e1_i3_env):
 
     # ~~ ASSERT ~~
     # check that all observations are equal
-    assert info1[env.PARAMS.INFO.K_CLOSEST_APPROACH] > 2500
-    assert info1[env.PARAMS.INFO.K_CLOSEST_APPROACH] < 2800
-    assert info1[env.PARAMS.INFO.K_CLOSEST_APPROACH_TIME] > 0.0
-    assert info1[env.PARAMS.INFO.K_CLOSEST_APPROACH_TIME] < 10.0
+    min_closest_approach = 2500
+    max_closest_approach = 2800
+    assert info1[env.PARAMS.INFO.K_CLOSEST_APPROACH] > min_closest_approach
+    assert info1[env.PARAMS.INFO.K_CLOSEST_APPROACH] < max_closest_approach
+    min_closest_approach_speed = 7.0
+    max_closest_approach_speed = 10.0
+    assert info1[env.PARAMS.INFO.K_CLOSEST_APPROACH_SPEED] > min_closest_approach_speed
+    assert info1[env.PARAMS.INFO.K_CLOSEST_APPROACH_SPEED] < max_closest_approach_speed
+    pursuer_fuel_usage = 0.0
+    evader_fuel_usage = 0.0
+    assert np.isclose(info1[env.PARAMS.INFO.K_PURSUER_FUEL_USAGE], pursuer_fuel_usage, atol=1.0)
+    assert np.isclose(info1[env.PARAMS.INFO.K_EVADER_FUEL_USAGE], evader_fuel_usage, atol=1.0)
+    min_closest_approach_time = 0.0
+    max_closest_approach_time = 10.0
+    assert info1[env.PARAMS.INFO.K_CLOSEST_APPROACH_TIME] > min_closest_approach_time
+    assert info1[env.PARAMS.INFO.K_CLOSEST_APPROACH_TIME] < max_closest_approach_time
     # assert info1[env.PARAMS.INFO.K_MIN_POSVEL_PRODUCT] > 7*2500
     # assert info1[env.PARAMS.INFO.K_MIN_POSVEL_PRODUCT] < 8*2800
-    assert np.isclose(info1[env.PARAMS.INFO.K_PURSUER_FUEL_USAGE], 0.0, atol=1.0)
-    assert np.isclose(info1[env.PARAMS.INFO.K_EVADER_FUEL_USAGE], 0.0, atol=1.0)
+    assert info1[env.PARAMS.INFO.K_WEIGHTED_SCORE] > (
+        (0.1 * min_closest_approach)**2 + 
+        (0.5 * min_closest_approach_speed)**1.5 + 
+        (0.1 * pursuer_fuel_usage)**1.25 + 
+        (0.01 * min_closest_approach_time)**1.0
+    )
+    assert info1[env.PARAMS.INFO.K_WEIGHTED_SCORE] < (
+        (0.1 * max_closest_approach)**2 + 
+        (0.5 * max_closest_approach_speed)**1.5 + 
+        (0.1 * pursuer_fuel_usage)**1.25 + 
+        (0.01 * max_closest_approach_time)**1.0
+    )
     assert info1[env.PARAMS.INFO.K_DV_AT_TF] is None
     assert not np.isclose(info2[env.PARAMS.INFO.K_DV_AT_TF], 0.0)
 
     env.close()
 
 def test_get_combined_rcs_properties_0(pe1_e1_i3_env):
-    '''check thrust maneuvers results in expected deltaV and fuel depletion'''
+    '''check thrust maneuvers results in expected deltaV, fuel depletion, and score improvement'''
     # ~~ ARRANGE ~~
     env = pe1_e1_i3_env
 
@@ -98,6 +120,9 @@ def test_get_combined_rcs_properties_0(pe1_e1_i3_env):
     # ~~ ACT ~~ 
     # get initial mass and speed of pursuer with respect to inertial (non-rotating) 
     # celestial body frame (not expressed in any coords because not a vector)
+    # get initial score
+    obs0 = env.get_observation()
+    info0 = env.get_info(obs0, False)
     m0_pur = env.vesPursue.mass
     s0_pur_cbci = env.vesPursue.flight(cb.non_rotating_reference_frame).speed
 
@@ -113,6 +138,8 @@ def test_get_combined_rcs_properties_0(pe1_e1_i3_env):
     env.vesPursue.control.up = 0.0
 
     # measure new mass and speed of pursuer 
+    obs1 = env.get_observation()
+    info1 = env.get_info(obs1, False)
     m1_pur = env.vesPursue.mass
     s1_pur_cbci = env.vesPursue.flight(cb.non_rotating_reference_frame).speed
 
@@ -127,6 +154,9 @@ def test_get_combined_rcs_properties_0(pe1_e1_i3_env):
     delta_v = s1_pur_cbci - s0_pur_cbci
     delta_v_exp = env.PARAMS.PURSUER.RCS.VACUUM_SPECIFIC_IMPULSE * C.G0 * np.log(m0_pur/m1_pur)
     assert np.isclose(delta_v, delta_v_exp, rtol=1e-2)
+
+    # check that weighted score has improved by approaching the other agent
+    assert info1[env.PARAMS.INFO.K_WEIGHTED_SCORE] < info0[env.PARAMS.INFO.K_WEIGHTED_SCORE] 
 
 def test_convert_rhntw_to_rhpbody_0(pe1_e1_i3_env):
     '''check along-track vec in right-hand NTW frame transforms to forward in right-hand pursuer body coords'''
