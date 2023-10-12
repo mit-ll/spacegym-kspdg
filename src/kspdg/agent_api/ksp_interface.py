@@ -65,17 +65,19 @@ def ksp_interface_loop(
         if agent_act is None:
             continue
 
-        # execute DG solution in KSP environment
+        # execute agent's action in KSP environment
         _, _, env_done, env_info = env.step(action=agent_act)
 
-        # terminate loops if successful capture
+        # terminate agent runner loops if environment flags a done episode
         if env_done:
-            logger.info("Environment Done")
+            logger.info("Environment episode done. Terminating runner...")
             termination_event.set()
             break
 
-        if termination_event.is_set():
+        elif not env_done and termination_event.is_set():
+            logger.info("Runner terminated before episode done")
             break
+
 
     # return procedure for mp.Process
     logger.info("\nsaving environment info...")

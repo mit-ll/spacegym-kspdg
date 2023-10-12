@@ -18,7 +18,7 @@ class PE1_E2_ParentEnv(PursuitEvadeGroup1Env):
         # variable to set sas on once
         is_control_set = False
 
-        while not self.stop_evade_thread:
+        while not self.stop_bot_thread:
 
             # check for control range
             if self.get_pe_relative_distance() < self.PARAMS.EVADER.CONTROL_RANGE:

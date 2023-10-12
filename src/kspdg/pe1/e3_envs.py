@@ -32,7 +32,7 @@ class PE1_E3_ParentEnv(PursuitEvadeGroup1Env):
         '''
         was_evading = False
         is_control_set = False
-        while not self.stop_evade_thread:
+        while not self.stop_bot_thread:
 
 
             # get distance to pursuer

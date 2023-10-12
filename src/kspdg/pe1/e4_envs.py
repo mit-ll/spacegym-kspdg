@@ -30,7 +30,7 @@ class PE1_E4_ParentEnv(PursuitEvadeGroup1Env):
         self.vesEvade.control.rcs = True
         self.vesEvade.control.forward = _PROGRADE_EVASION_THROTTLE
 
-        while not self.stop_evade_thread:
+        while not self.stop_bot_thread:
 
             # throttle is set at startup, just wait for stop thread flag
             time.sleep(0.1)

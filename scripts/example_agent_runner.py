@@ -40,5 +40,5 @@ if __name__ == "__main__":
         env_kwargs=None,
         runner_timeout=100,     # agent runner that will timeout after 100 seconds
         debug=True)
-    runner.run()
+    print(runner.run())
 

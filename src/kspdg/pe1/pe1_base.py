@@ -88,11 +88,23 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
 
     # info metric parameters
     PARAMS.INFO.K_CLOSEST_APPROACH = "closest_approach"
+    PARAMS.INFO.K_CLOSEST_APPROACH_SPEED = "closest_approach_speed"
     PARAMS.INFO.K_CLOSEST_APPROACH_TIME = "closest_approach_time"
-    PARAMS.INFO.K_MIN_POSVEL_PRODUCT = "minimum_position_velocity_product"
+    PARAMS.INFO.K_CLOSEST_APPROACH_PURSUER_FUEL_USAGE = "closest_approach_pursuer_fuel_usage"
+    # PARAMS.INFO.K_MIN_POSVEL_PRODUCT = "minimum_position_velocity_product"
     PARAMS.INFO.K_PURSUER_FUEL_USAGE = "pursuer_fuel_usage"
     PARAMS.INFO.K_EVADER_FUEL_USAGE = "evader_fuel_usage"
     PARAMS.INFO.K_DV_AT_TF = "expected_deltav_at_final_time"
+
+    PARAMS.INFO.K_WEIGHTED_SCORE = "weighted_score"
+    PARAMS.INFO.V_SCORE_DIST_SCALE = 0.1
+    PARAMS.INFO.V_SCORE_DIST_WEIGHT = 2.0
+    PARAMS.INFO.V_SCORE_SPEED_SCALE = 0.5
+    PARAMS.INFO.V_SCORE_SPEED_WEIGHT = 1.5
+    PARAMS.INFO.V_SCORE_PURSUER_FUEL_USAGE_SCALE = 0.1
+    PARAMS.INFO.V_SCORE_PURSUER_FUEL_USAGE_WEIGHT = 1.25
+    PARAMS.INFO.V_SCORE_TIME_SCALE = 0.01
+    PARAMS.INFO.V_SCORE_TIME_WEIGHT = 1.0
 
     # Relative range at which evader should be controllable
     PARAMS.EVADER.CONTROL_RANGE = 2200  # [m]
@@ -207,7 +219,9 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
 
         self.min_dist = np.inf
         self.min_dist_time = 0.0
-        self.min_posvel_prod = np.inf
+        self.min_dist_speed = np.inf
+        self.min_dist_pursuer_fuel_usage = np.inf
+        # self.min_posvel_prod = np.inf
         self.pursuer_init_mass = self.vesPursue.mass
         self.evader_init_mass = self.vesEvade.mass
 
@@ -215,7 +229,7 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         """ Start parallel thread to execute Evader's evasive maneuvers
         """
 
-        self.stop_evade_thread = False
+        self.stop_bot_thread = False
 
         # check that thread does not exist or is not running
         if hasattr(self, "evade_thread"):
@@ -258,21 +272,54 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         # get observation
         obs = self.get_observation()
 
-        # compute reward
-        rew = self.get_reward()
-
         # compute performance metrics
         info = self.get_info(obs, self.is_episode_done)
 
+        # compute reward
+        rew = self.get_reward(info, self.is_episode_done)
+
         return obs, rew, self.is_episode_done, info
     
-    def get_reward(self) -> float:
-        """ Compute reward value
+    def get_weighted_score(self, dist: float, speed: float, time: float, fuel: float):
+        """ Compute a scaled, weighted sum of scoring metrics
+        Args:
+            dist : float
+                relative distance between pursuer and evader [m]
+            speed : float
+                relative speed between pursuer and evader [m/s]
+            time : float
+                elapsed time [s]
+            fuel : kg
+                fuel used by pursuer spacecraft [kg]
+        Returns:
+            score : float
+                weighted score
+        """
+
+        score = (
+            (self.PARAMS.INFO.V_SCORE_DIST_SCALE * dist) ** self.PARAMS.INFO.V_SCORE_DIST_WEIGHT + 
+            (self.PARAMS.INFO.V_SCORE_SPEED_SCALE * speed) ** self.PARAMS.INFO.V_SCORE_SPEED_WEIGHT + 
+            (self.PARAMS.INFO.V_SCORE_PURSUER_FUEL_USAGE_SCALE * fuel) ** self.PARAMS.INFO.V_SCORE_PURSUER_FUEL_USAGE_WEIGHT + 
+            (self.PARAMS.INFO.V_SCORE_TIME_SCALE * time) ** self.PARAMS.INFO.V_SCORE_TIME_WEIGHT 
+        )
+
+        return score
+    
+    def get_reward(self, info: Dict, done: bool) -> float:
+        """ Compute reward value as negative of weighted score
+        Args:
+            info : Dict
+                information dictionary of performance metrics
+            done : bool
+                True if last step of episode
         Returns:
             rew : float
                 reward at current step
         """
-        return -self.get_pe_relative_distance()
+        if done:
+            return -info[self.PARAMS.INFO.K_WEIGHTED_SCORE]
+        else:
+            return 0.0
 
     def get_info(self, observation: List, done: bool) -> Dict:
         """compute performance metrics
@@ -311,24 +358,40 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         # nearest approach metrics
         d_vesE_vesP = np.linalg.norm(p0_p_cb__rhcbci-p0_e_cb__rhcbci)
         if d_vesE_vesP < self.min_dist:
+
+            # update records of closest approach, time, relative speed, and fuel
             self.min_dist = d_vesE_vesP
             self.min_dist_time = obs[self.PARAMS.OBSERVATION.I_MET]
+            self.min_dist_speed = np.linalg.norm(v0_p_cb__rhcbci-v0_e_cb__rhcbci)
+            self.min_dist_pursuer_fuel_usage = self.pursuer_init_mass - self.vesPursue.mass
+
         info[self.PARAMS.INFO.K_CLOSEST_APPROACH] = self.min_dist
         info[self.PARAMS.INFO.K_CLOSEST_APPROACH_TIME] = self.min_dist_time
+        info[self.PARAMS.INFO.K_CLOSEST_APPROACH_SPEED] = self.min_dist_speed
+        info[self.PARAMS.INFO.K_CLOSEST_APPROACH_PURSUER_FUEL_USAGE] = self.min_dist_pursuer_fuel_usage
 
         # position-velocity product metric
-        s_vesE_vesP = np.linalg.norm(v0_p_cb__rhcbci-v0_e_cb__rhcbci)
-        pv_prod = d_vesE_vesP * s_vesE_vesP
-        if pv_prod < self.min_posvel_prod:
-            self.min_posvel_prod = pv_prod
-        info[self.PARAMS.INFO.K_MIN_POSVEL_PRODUCT] = self.min_posvel_prod
+        # s_vesE_vesP = np.linalg.norm(v0_p_cb__rhcbci-v0_e_cb__rhcbci)
+        # pv_prod = d_vesE_vesP * s_vesE_vesP
+        # if pv_prod < self.min_posvel_prod:
+        #     self.min_posvel_prod = pv_prod
+        # info[self.PARAMS.INFO.K_MIN_POSVEL_PRODUCT] = self.min_posvel_prod
 
         # fuel usage 
         info[self.PARAMS.INFO.K_PURSUER_FUEL_USAGE] = self.pursuer_init_mass - self.vesPursue.mass
         info[self.PARAMS.INFO.K_EVADER_FUEL_USAGE] = self.evader_init_mass - self.vesEvade.mass
 
-        # compute approximate delta-v need to intercept non-maneuvering
-        # evader
+        # weighted score
+        info[self.PARAMS.INFO.K_WEIGHTED_SCORE] = self.get_weighted_score(
+            dist=self.min_dist,
+            speed=self.min_dist_speed,
+            time=self.min_dist_time,
+            fuel=self.min_dist_pursuer_fuel_usage
+        )
+
+        # Apprx dv of capture should only be computed at end due to compute time required
+        # NOTE: apprx dv might be unnecessary and might be removed, 
+        # superseded by weighted score
         if done:
 
             # call capture dv estimator
@@ -339,7 +402,6 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
                 v0_evd=v0_e_cb__rhcbci,
                 tof=self.episode_timeout
             )
-
             info[self.PARAMS.INFO.K_DV_AT_TF] = dv0 + dvf
 
         else:
@@ -495,12 +557,13 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
             if is_captured or is_timeout:
                 self.logger.info("Terminating episode...\n")
                 self.is_episode_done = True
+                self.stop_bot_thread = True
                 self.stop_episode_termination_thread = True
 
     def close(self):
 
         # handle evasive maneuvering thread
-        self.stop_evade_thread = True
+        self.stop_bot_thread = True
         self.evade_thread.join()
 
         # handle episode termination thread
