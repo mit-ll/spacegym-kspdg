@@ -332,7 +332,7 @@ Here is a basic example for running an agent-environment evaluation. As with oth
 ```bash
 conda activate kspdg # while it is not strictly necessary to use conda environments, it is encouraged for development and debugging purpose
 cd scripts # working directory is important due to relative path in cfg.yaml
-python evaluate.cpython-39.pyc example_agent_cfg.yaml pe1.e1_envs PE1_E1_I3_Env
+python evaluate.pyc example_eval_cfg.yaml
 ```
 
 This should output something like the following (exact numbers will differe)
