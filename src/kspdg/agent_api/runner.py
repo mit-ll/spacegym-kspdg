@@ -69,7 +69,6 @@ class AgentEnvRunner():
         """start environment-interface process and agent policy loop"""
 
         # create ways for processes to talk to each other
-        self.environment_active_event = mp.Event()
         self.termination_event = mp.Event()
         self.observation_query_event = mp.Event()
         self.obs_conn_recv, obs_conn_send = mp.Pipe(duplex=False)
@@ -85,7 +84,6 @@ class AgentEnvRunner():
                 self.env_kwargs,
                 obs_conn_send, 
                 act_conn_recv,
-                self.environment_active_event, 
                 self.termination_event, 
                 self.observation_query_event,
                 return_dict,
@@ -93,18 +91,6 @@ class AgentEnvRunner():
                 )
         )
         self.env_interface_process.start()
-
-        # wait for environment to become active before
-        # starting policy loop. This way we don't have
-        # to have really long observation receive 
-        # timeouts just to get passed the initialization
-        # phase
-        if self.environment_active_event.wait(timeout=self.ENVIRONMENT_ACTIVATION_TIMEOUT):
-            pass
-        else:
-            self.logger.info("Environment failed to activate, terminating agent...")
-            self.termination_event.set()
-            return dict(return_dict)
 
         # start agent policy loop that computes actions
         # given observations from environment

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Single-value scoring function for pursuit-evade (pe1) scenarios
 - Agent instance name in agent_cfg for evaluation script
+- Individual scenario environments are made accessible at top-level of package and version numbers added. e.g. `from kspdg import PE1_E1_I3_V1`
 
 ### Fixed
 

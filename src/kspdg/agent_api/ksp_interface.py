@@ -11,7 +11,6 @@ def ksp_interface_loop(
         env_kwargs, 
         obs_conn_send, 
         act_conn_recv, 
-        environment_active_event,
         termination_event, 
         observation_query_event, 
         return_dict,
@@ -29,8 +28,10 @@ def ksp_interface_loop(
             class of (not instance of) KSPDG environment to run agent within
         env_kwargs : dict
             keyword args to be passed when instantiating environment class
-        environment_active_event : multiprocessing.Event
-            flags when the environment has been instantiated and is active
+        termination_event : multiprocessing.Event
+            flags all process to terminate (e.g. agent and environment)
+        observation_query_event : multiprocessing.Event
+            when set, runner is requesting an observation from environment
     """
 
     # create a separate logger becasue this is a separate process
@@ -51,9 +52,6 @@ def ksp_interface_loop(
     else:
         env = env_cls(debug=debug)
     _, env_info = env.reset()
-
-    # flag to runner than environment is up and running
-    environment_active_event.set()
 
     # execute accel schedule until agent termination
     agent_act = None
@@ -98,4 +96,3 @@ def ksp_interface_loop(
     # cleanup
     logger.info("\n~~~Closing KSPDG envrionment~~~\n")
     env.close()
-    environment_active_event.clear()
