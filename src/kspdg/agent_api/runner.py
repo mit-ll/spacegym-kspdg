@@ -13,15 +13,17 @@ from kspdg.agent_api.base_agent import KSPDGBaseAgent
 from kspdg.utils.loggers import create_logger
 from kspdg.agent_api.ksp_interface import ksp_interface_loop
 
-# DEFAULT_RUNNER_TIMEOUT = 600 #[s]
-DEFAULT_RUNNER_TIMEOUT = None
 
 class AgentEnvRunner():
+
+    OBSERVATION_POLL_TIMEOUT = 20.0  #[s]
+    ENVIRONMENT_ACTIVATION_TIMEOUT = 20.0  #[s]
+
     def __init__(self, 
         agent:KSPDGBaseAgent,
         env_cls:type[KSPDGBaseEnv], 
         env_kwargs:Dict, 
-        runner_timeout:float=DEFAULT_RUNNER_TIMEOUT, 
+        runner_timeout:float=None, 
         debug:bool=False):
         """ instantiates agent-environment pair and brokers communication between processes
 
@@ -67,6 +69,7 @@ class AgentEnvRunner():
         """start environment-interface process and agent policy loop"""
 
         # create ways for processes to talk to each other
+        self.environment_active_event = mp.Event()
         self.termination_event = mp.Event()
         self.observation_query_event = mp.Event()
         self.obs_conn_recv, obs_conn_send = mp.Pipe(duplex=False)
@@ -81,7 +84,8 @@ class AgentEnvRunner():
                 self.env_cls, 
                 self.env_kwargs,
                 obs_conn_send, 
-                act_conn_recv, 
+                act_conn_recv,
+                self.environment_active_event, 
                 self.termination_event, 
                 self.observation_query_event,
                 return_dict,
@@ -89,6 +93,18 @@ class AgentEnvRunner():
                 )
         )
         self.env_interface_process.start()
+
+        # wait for environment to become active before
+        # starting policy loop. This way we don't have
+        # to have really long observation receive 
+        # timeouts just to get passed the initialization
+        # phase
+        if self.environment_active_event.wait(timeout=self.ENVIRONMENT_ACTIVATION_TIMEOUT):
+            pass
+        else:
+            self.logger.info("Environment failed to activate, terminating agent...")
+            self.termination_event.set()
+            return dict(return_dict)
 
         # start agent policy loop that computes actions
         # given observations from environment
@@ -119,17 +135,20 @@ class AgentEnvRunner():
         while not self.termination_event.is_set():
 
             # request/receive observation from environment
-            self.logger.debug("requesting new environment observation")
+            self.logger.debug("Requesting new environment observation")
             self.observation_query_event.set()
-            if self.obs_conn_recv.poll(timeout=20.0):
+            if self.obs_conn_recv.poll(timeout=self.OBSERVATION_POLL_TIMEOUT):
                 try:
                     observation = self.obs_conn_recv.recv()
+                    if observation is None and self.termination_event.is_set():
+                        self.logger.info("Termination event set during observation request, terminating agent...")
+                        break
                 except EOFError:
-                    self.logger.info("environment closed, terminating agent...")
+                    self.logger.info("Environment closed, terminating agent...")
                     self.termination_event.set()
                     break
             else:
-                self.logger.info("non-responsive executor, terminating agent...")
+                self.logger.info("Non-responsive environment, terminating agent...")
                 self.termination_event.set()
                 break
 

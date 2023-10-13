@@ -11,6 +11,7 @@ def ksp_interface_loop(
         env_kwargs, 
         obs_conn_send, 
         act_conn_recv, 
+        environment_active_event,
         termination_event, 
         observation_query_event, 
         return_dict,
@@ -28,6 +29,8 @@ def ksp_interface_loop(
             class of (not instance of) KSPDG environment to run agent within
         env_kwargs : dict
             keyword args to be passed when instantiating environment class
+        environment_active_event : multiprocessing.Event
+            flags when the environment has been instantiated and is active
     """
 
     # create a separate logger becasue this is a separate process
@@ -36,7 +39,7 @@ def ksp_interface_loop(
     def observation_handshake():
         # check for environment observation request from solver
         if observation_query_event.is_set():
-            logger.debug("env observation request received. Transmitting...")
+            logger.debug("Env observation request received. Transmitting...")
             obs_conn_send.send(env.get_observation())
             observation_query_event.clear()
 
@@ -48,6 +51,9 @@ def ksp_interface_loop(
     else:
         env = env_cls(debug=debug)
     _, env_info = env.reset()
+
+    # flag to runner than environment is up and running
+    environment_active_event.set()
 
     # execute accel schedule until agent termination
     agent_act = None
@@ -78,11 +84,18 @@ def ksp_interface_loop(
             logger.info("Runner terminated before episode done")
             break
 
+    # check to see if runner is waiting for an observation,
+    # if so, send None so that runner can keep moving and 
+    # identify the termination flag
+    if observation_query_event.is_set():
+        logger.info("Runner termination event has been set. Sending None observation...")
+        obs_conn_send.send(None)
 
     # return procedure for mp.Process
-    logger.info("\nsaving environment info...")
+    logger.info("saving environment info...")
     return_dict["agent_env_results"] =  env_info
 
     # cleanup
     logger.info("\n~~~Closing KSPDG envrionment~~~\n")
     env.close()
+    environment_active_event.clear()

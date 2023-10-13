@@ -19,7 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Upgrading kRPC dependency from v0.4.8 to v0.5.2 which fixed several issues that had required hard-pinning some dependencies (setuptools, protobuf). By un-pinning these, the library is more flexible / less brittle
 - AgentEnvRunner timeout allowed to be None, will wait for environment episode to return done if runner timeout is None
 - Expanding evaluation results string to log additional information about agent, environment, and kspdg version
+- Improving termination of AgentEnvRunner so as not to wait for observation timeout on runner.py
 - pe1 scenario reward function is now negative of scoring function and only assessed at termination (zero all other times)
+- 
 
 ### Removed
 
