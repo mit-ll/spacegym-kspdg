@@ -13,7 +13,8 @@ from kspdg.agent_api.base_agent import KSPDGBaseAgent
 from kspdg.utils.loggers import create_logger
 from kspdg.agent_api.ksp_interface import ksp_interface_loop
 
-DEFAULT_RUNNER_TIMEOUT = 600 #[s]
+# DEFAULT_RUNNER_TIMEOUT = 600 #[s]
+DEFAULT_RUNNER_TIMEOUT = None
 
 class AgentEnvRunner():
     def __init__(self, 
@@ -41,7 +42,8 @@ class AgentEnvRunner():
             env_kwargs : dict
                 keyword args to be passed when instantiating environment class
             runner_timeout : float
-                total time to run agent-environment pair
+                total time to run agent-environment pair,
+                if None, wait for environment done
             action_rollout_time_horizon : float
                 amount of time to allocate for an action to rollout in the environment
                 before a new action is queried from the agent
@@ -143,10 +145,11 @@ class AgentEnvRunner():
 
 
             # check for agent timeout
-            if time.time() - policy_loop_start > self.runner_timeout:
-                self.termination_event.set()
-                self.logger.info("\n~~~AGENT TIMEOUT REACHED~~~\n")
-                break
+            if self.runner_timeout is not None:
+                if time.time() - policy_loop_start > self.runner_timeout:
+                    self.termination_event.set()
+                    self.logger.info("\n~~~AGENT TIMEOUT REACHED~~~\n")
+                    break
 
         # cleanup agent
         self.stop_agent()

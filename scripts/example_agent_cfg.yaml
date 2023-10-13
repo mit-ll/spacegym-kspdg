@@ -6,6 +6,9 @@
 
 agent_module_path: "../src/kspdg/agent_api/example_agent.py"  # this must be relative to working directory when script is called
 agent_cls: NaivePursuitAgent
+agent_name: "Naive-Ned" # identifier name for logging purposes. 
+                        # The same agent class with different inputs can lead to different behaviors,
+                        # so you should give each instantiation their own name
 kwargs:
   arg1: value1
   arg2: value2

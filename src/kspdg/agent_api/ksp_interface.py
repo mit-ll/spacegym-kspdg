@@ -81,7 +81,7 @@ def ksp_interface_loop(
 
     # return procedure for mp.Process
     logger.info("\nsaving environment info...")
-    return_dict["env_info"] =  env_info
+    return_dict["agent_env_results"] =  env_info
 
     # cleanup
     logger.info("\n~~~Closing KSPDG envrionment~~~\n")
