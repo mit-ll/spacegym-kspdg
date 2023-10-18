@@ -4,6 +4,8 @@
 
 # Example agent-environment configuration YAML for evaluation
 
+user_id: "Team Baselines"
+user_key:  "b1bb536a-fe95-4dea-8564-4c8305ac963a"
 scenario_environment: PE1_E1_I3_V1
 agent_module_path: "../src/kspdg/agent_api/example_agent.py"  # this must be relative to working directory when script is called
 agent_cls: NaivePursuitAgent

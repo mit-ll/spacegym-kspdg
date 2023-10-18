@@ -1,3 +1,6 @@
+# KSPDG-specific stuff
+kspdg_results*.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

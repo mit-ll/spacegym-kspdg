@@ -7,4 +7,19 @@
 # If the underlying environment changes, then the version number should be
 # incremented
 
+from kspdg.pe1.e1_envs import PE1_E1_I1_Env as PE1_E1_I1_V1
+from kspdg.pe1.e1_envs import PE1_E1_I2_Env as PE1_E1_I2_V1
 from kspdg.pe1.e1_envs import PE1_E1_I3_Env as PE1_E1_I3_V1
+from kspdg.pe1.e1_envs import PE1_E1_I4_Env as PE1_E1_I4_V1
+from kspdg.pe1.e2_envs import PE1_E2_I1_Env as PE1_E2_I1_V1
+from kspdg.pe1.e2_envs import PE1_E2_I2_Env as PE1_E2_I2_V1
+from kspdg.pe1.e2_envs import PE1_E2_I3_Env as PE1_E2_I3_V1
+from kspdg.pe1.e2_envs import PE1_E2_I4_Env as PE1_E2_I4_V1
+from kspdg.pe1.e3_envs import PE1_E3_I1_Env as PE1_E3_I1_V1
+from kspdg.pe1.e3_envs import PE1_E3_I2_Env as PE1_E3_I2_V1
+from kspdg.pe1.e3_envs import PE1_E3_I3_Env as PE1_E3_I3_V1
+from kspdg.pe1.e3_envs import PE1_E3_I4_Env as PE1_E3_I4_V1
+from kspdg.pe1.e4_envs import PE1_E4_I1_Env as PE1_E4_I1_V1
+from kspdg.pe1.e4_envs import PE1_E4_I2_Env as PE1_E4_I2_V1
+from kspdg.pe1.e4_envs import PE1_E4_I3_Env as PE1_E4_I3_V1
+from kspdg.pe1.e4_envs import PE1_E4_I4_Env as PE1_E4_I4_V1
