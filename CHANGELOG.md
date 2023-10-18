@@ -12,7 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Single-value scoring function for pursuit-evade (pe1) scenarios
 - User id and passkey in evaluation process
 - Agent instance name in agent_cfg for evaluation script
+- Logs if episode is done in info
 - Individual scenario environments are made accessible at top-level of package and version numbers added. e.g. `from kspdg import PE1_E1_I3_V1`
+- New example baseline agents: random and passive
 
 ### Fixed
 
@@ -25,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improving termination of AgentEnvRunner so as not to wait for observation timeout on runner.py
 - pe1 scenario reward function is now negative of scoring function and only assessed at termination (zero all other times)
 - Renamed compiled evaluation script to evaluate.pyc
+- Restructured where evaluation scripts, inputs (configs), and outputs (results) are housed in the repo
 
 ### Removed
 

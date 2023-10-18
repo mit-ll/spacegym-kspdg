@@ -365,6 +365,15 @@ _DETAILS ON THIS PROCESS ARE FORTHCOMING_
 
 ------------
 
+## Cautionary Notes
+
+Here are some things you should NOT do as they will break/invalidate the proper functioning of the KSPDG environments
+
++ Do not manually switch focus between different spacecraft in the KSP game engine while evaluating an agent. This can cause silent errors with the scipted agent's policies
++ Do not save-over the mission save files. If you do so inadvertantly, you will need to re-download the orignal from this repo and copy these back into your local KSP game directory
+
+------------
+
 ## References
 
 Throughout the documentation and code comments we refer to aerospace literature such as "Vallado Chp 3" for brevity. However this assumes anyone reading this code knows that "Vallado" is short hand for David Vallado's "Fundamentals of Astrodynamics and Applications", which is an unfair assumption to make. Here we list some of our short-hand references
