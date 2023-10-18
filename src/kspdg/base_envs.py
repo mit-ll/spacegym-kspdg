@@ -136,7 +136,6 @@ class KSPDGBaseEnv(ABC, gym.Env):
         """
         raise NotImplementedError
 
-    @abstractmethod
     def get_info(self, observation: ArrayLike, done: bool) -> Dict:
         """ general info about environment state not directly intended for action selection 
         
@@ -148,4 +147,4 @@ class KSPDGBaseEnv(ABC, gym.Env):
             done : bool
                 True if last step of episode
         """
-        raise NotImplementedError()
+        return {"is_episode_done": done}

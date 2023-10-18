@@ -308,7 +308,7 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         """
 
         obs = observation
-        info = dict()
+        info = super().get_info(observation=obs, done=done)
 
         # parse banding and lady current states
         p0_b_cb__rhcbci = np.array([

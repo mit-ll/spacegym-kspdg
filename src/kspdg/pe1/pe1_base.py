@@ -331,7 +331,7 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         """
 
         obs = observation
-        info = dict()
+        info = super().get_info(observation=obs, done=done)
 
         # parse pursuer and evader current states
         p0_p_cb__rhcbci = np.array([

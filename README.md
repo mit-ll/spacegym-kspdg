@@ -331,18 +331,35 @@ Here is a basic example for running an agent-environment evaluation. As with oth
 
 ```bash
 conda activate kspdg # while it is not strictly necessary to use conda environments, it is encouraged for development and debugging purpose
-cd scripts # working directory is important due to relative path in cfg.yaml
-python evaluate.pyc example_eval_cfg.yaml
+cd evaluation # working directory is important due to relative path in cfg.yaml
+python evaluate.pyc configs/example_eval_cfg.yaml
 ```
 
-This should output something like the following (exact numbers will differe)
+This should output to a file in the `results/` subdirectory with a name like `kspdg_results_20231018_125336.txt`. That file has JSON-formatted results that look like
 
 ```
-{'env_info': {'closest_approach': 2306.931807059705, 'closest_approach_time': 28.61999999999948, 'minimum_position_velocity_product': 20074.546353044923, 'pursuer_fuel_usage': 76.3798828125, 'evader_fuel_usage': 0.0, 'expected_deltav_at_final_time': None}}
-2578683058
+{
+    "agent_env_results": {
+        "is_episode_done": true,
+        "closest_approach": 235.2028250841451,
+        "closest_approach_time": 200.80000000002892,
+        "closest_approach_speed": 77.87944143686991,
+        "closest_approach_pursuer_fuel_usage": 651.595703125,
+        "pursuer_fuel_usage": 782.56884765625,
+        "evader_fuel_usage": 0.0,
+        "weighted_score": 983.3304428262093,
+        "expected_deltav_at_final_time": 47.97165399572631
+    },
+    "user_id": "Team Baselines",
+    "user_key": "b1bb536a-fe95-4dea-8564-4c8305ac963a",
+    "kspdg_version": "0.0.23",
+    "agent_name": "Naive-Ned",
+    "scenario_environment": "PE1_E1_I3_V1"
+}
+1313515906
 ```
 
-This output string will then be sent verbatim to the authentication and scoreboard server. 
+This results file will then be sent to the authentication and scoreboard server for official ranking in the KSPDG Challenge
 
 _DETAILS ON THIS PROCESS ARE FORTHCOMING_
 

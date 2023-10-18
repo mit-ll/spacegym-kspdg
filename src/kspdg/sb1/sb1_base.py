@@ -123,7 +123,7 @@ class SunBlockingGroup1Env(PursuitEvadeGroup1Env):
                 True if last step of episode
         """
 
-        info = dict()
+        info = super().get_info(observation=observation, done=done)
 
         # sun-blocking reward metrics
         cur_reward = self.get_reward()
