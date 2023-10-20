@@ -23,3 +23,9 @@ from kspdg.pe1.e4_envs import PE1_E4_I1_Env as PE1_E4_I1_V1
 from kspdg.pe1.e4_envs import PE1_E4_I2_Env as PE1_E4_I2_V1
 from kspdg.pe1.e4_envs import PE1_E4_I3_Env as PE1_E4_I3_V1
 from kspdg.pe1.e4_envs import PE1_E4_I4_Env as PE1_E4_I4_V1
+
+from kspdg.sb1.e1_envs import SB1_E1_I1_Env as SB1_E1_I1_V1
+from kspdg.sb1.e1_envs import SB1_E1_I2_Env as SB1_E1_I2_V1
+from kspdg.sb1.e1_envs import SB1_E1_I3_Env as SB1_E1_I3_V1
+from kspdg.sb1.e1_envs import SB1_E1_I4_Env as SB1_E1_I4_V1
+from kspdg.sb1.e1_envs import SB1_E1_I5_Env as SB1_E1_I_V1

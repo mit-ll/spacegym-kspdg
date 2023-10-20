@@ -33,16 +33,27 @@ def test_get_reward_and_info_0(sb1_e1_i5_env):
     else:
         env = sb1_e1_i5_env
 
+    t0 = env.vesPursue.met
+
 
     # ~~ ACT ~~ 
+    obs = env.get_observation()
+    info = env.get_info(obs, False)
     rew = env.get_reward()
-    info = env.get_info(None, False)
 
     # ~~ ASSERT ~~
+    exp_rew = 1.0
     assert np.isclose(rew, 1.0, atol=1e-3)
-    assert np.isclose(info[env.PARAMS.INFO.K_CUM_REWARD], 2.0, atol=1e-3)   # get info is called twice
-    assert np.isclose(info[env.PARAMS.INFO.K_MAX_REWARD], 1.0, atol=1e-3)
-    assert np.isclose(info[env.PARAMS.INFO.K_MIN_REWARD], 1.0, atol=1e-3)
+    assert np.isclose(info[env.PARAMS.INFO.K_MAX_REWARD], exp_rew, atol=1e-3)
+    assert np.isclose(info[env.PARAMS.INFO.K_MIN_REWARD], exp_rew, atol=1e-3)
+
+    # ~~ ACT & ASSERT ~~ 
+    # time.sleep(tstep) # fixed sleep time to establish expected score
+    time.sleep(2.0)
+    obs = env.get_observation()
+    info = env.get_info(obs, False)
+    dt = env.vesPursue.met - t0
+    assert np.isclose(info[env.PARAMS.INFO.K_WEIGHTED_SCORE], dt*exp_rew, rtol=1e-1)   # get info is called twice
 
     env.close()
 

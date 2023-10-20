@@ -37,7 +37,7 @@ class SunBlockingGroup1Env(PursuitEvadeGroup1Env):
     PARAMS = deepcopy(PursuitEvadeGroup1Env.PARAMS)
 
     # info metric parameters
-    PARAMS.INFO.K_CUM_REWARD = "cumulative_reward"
+    # PARAMS.INFO.K_CUM_REWARD = "cumulative_reward"
     PARAMS.INFO.K_MAX_REWARD = "max_reward"
     PARAMS.INFO.K_MIN_REWARD = "min_reward"
 
@@ -83,6 +83,8 @@ class SunBlockingGroup1Env(PursuitEvadeGroup1Env):
         super()._reset_episode_metrics()
 
         self.cum_reward = 0.0
+        self.prev_reward = 0.0
+        self.prev_time = self.vesPursue.met
         self.min_reward = np.inf
         self.max_reward = -np.inf
     
@@ -123,22 +125,32 @@ class SunBlockingGroup1Env(PursuitEvadeGroup1Env):
                 True if last step of episode
         """
 
-        info = super().get_info(observation=observation, done=done)
+        # call the "grandparent" info method, skipping the 
+        # parent info in PursuitEvadeGroup1Env because
+        # there is a lot of bloat in the parent method that is not needed
+        info = super(PursuitEvadeGroup1Env, self).get_info(observation=observation, done=done)
 
         # sun-blocking reward metrics
         cur_reward = self.get_reward()
-        self.cum_reward += cur_reward
+        cur_time = observation[self.PARAMS.OBSERVATION.I_MET]
         if cur_reward < self.min_reward:
             self.min_reward = cur_reward
         if cur_reward > self.max_reward:
             self.max_reward = cur_reward
-        info[self.PARAMS.INFO.K_CUM_REWARD] = self.cum_reward
         info[self.PARAMS.INFO.K_MIN_REWARD] = self.min_reward
         info[self.PARAMS.INFO.K_MAX_REWARD] = self.max_reward
 
         # fuel usage 
         info[self.PARAMS.INFO.K_PURSUER_FUEL_USAGE] = self.pursuer_init_mass - self.vesPursue.mass
         info[self.PARAMS.INFO.K_EVADER_FUEL_USAGE] = self.evader_init_mass - self.vesEvade.mass
+
+        # weighted score is trapezoid approximation of integral of reward function
+        self.cum_reward += 0.5*(cur_reward + self.prev_reward)*(cur_time - self.prev_time)
+        info[self.PARAMS.INFO.K_WEIGHTED_SCORE] = self.cum_reward
+
+        # store reward and time value for trapezoid approx in next step
+        self.prev_reward = cur_reward
+        self.prev_time = cur_time
 
         return info
 
