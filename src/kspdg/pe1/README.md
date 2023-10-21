@@ -56,9 +56,12 @@ The performance of each solution technique in each environment/scenario can meas
 + Evader fuel usage
 + Approximate delta-V needed for Pursuer to rendezvous with Evader based on a single Lambert Targeting solution at final time step assuming no further maneuvering by Evader.
 
-### Single-Value Scoring Function (v1) 
+## Single-Value Scoring Function (v1) 
 
-In order to rank the performance of a different control algorithms, we provide a single-value scoring function that is an exponential polynomial of the above evaluation metrics. 
+> :warning: **Attention**
+> __Lower-valued__ scores indicate higher performance
+
+In order to rank the performance of a different control algorithms, we provide a single-value scoring function that is an exponential polynomial of the above evaluation metrics.
 Each component is scaled (s) and then given an importance exponent (w)
 
 + `d`: Closest approach distance [m]:                s = 0.1     w = 2.0

@@ -58,7 +58,10 @@ The performance of each solution technique in each environment/scenario can meas
 + Pursuer (Blocker) fuel usage
 + Evader fuel usage
 
-### Single-Value Scoring Function (v1) 
+## Single-Value Scoring Function (v1) 
+
+> :warning: **Attention**
+> __Higher-valued__ scores indicate higher performance
 
 In order to rank the performance of a different control algorithms, we provide a single-value scoring function that is the time-integrated cumulative reward function, integrated using a trapezoid approximation
 

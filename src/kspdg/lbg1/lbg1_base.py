@@ -119,6 +119,10 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
     PARAMS.INFO.K_GUARD_FUEL_USAGE = "guard_fuel_usage"
     PARAMS.INFO.K_LB_DV_AT_TF = "expected_lady_bandit_deltav_at_final_time"
 
+    PARAMS.INFO.K_WEIGHTED_SCORE = "weighted_score"
+    PARAMS.INFO.V_SCORE_BG_DIST_SCALE = 1e6
+    PARAMS.INFO.V_SCORE_BG_DIST_OFFSET = 0.1
+
     # Specific impulse assumes all RCS thrusters are identical RV-105
     # parts operating in vacuum
     PARAMS.BANDIT.RCS.VACUUM_SPECIFIC_IMPULSE = 240 # [s]
@@ -290,13 +294,48 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         # get observation
         obs = self.get_observation()
 
-        # compute reward
-        rew = -self.get_lb_relative_distance()
-
         # compute performance metrics
         info = self.get_info(obs, self.is_episode_done)
 
+        # compute reward
+        rew = self.get_reward(info, self.is_episode_done)
+
         return obs, rew, self.is_episode_done, info
+    
+    def get_weighted_score(self, lb_dist: float, bg_dist: float):
+        """ Compute a scaled, weighted sum of scoring metrics
+        Args:
+            lb_dist : float
+                relative distance between lady and bandit [m]
+            bg_dist : float
+                relative distance between bandit and guard [m]
+        Returns:
+            score : float
+                weighted score
+        """
+
+        score = (
+            lb_dist**2 +
+            self.PARAMS.INFO.V_SCORE_BG_DIST_SCALE/(bg_dist + self.PARAMS.INFO.V_SCORE_BG_DIST_OFFSET)
+        )
+
+        return score
+    
+    def get_reward(self, info: Dict, done: bool) -> float:
+        """ Compute reward value as negative of weighted score
+        Args:
+            info : Dict
+                information dictionary of performance metrics
+            done : bool
+                True if last step of episode
+        Returns:
+            rew : float
+                reward at current step
+        """
+        if done:
+            return -info[self.PARAMS.INFO.K_WEIGHTED_SCORE]
+        else:
+            return 0.0
 
     def get_info(self, observation: List, done: bool) -> Dict:
         """compute performance metrics
@@ -369,6 +408,12 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         info[self.PARAMS.INFO.K_BANDIT_FUEL_USAGE] = self.bandit_init_mass - self.vesBandit.mass
         info[self.PARAMS.INFO.K_LADY_FUEL_USAGE] = self.lady_init_mass - self.vesLady.mass
         info[self.PARAMS.INFO.K_GUARD_FUEL_USAGE] = self.guard_init_mass - self.vesGuard.mass
+
+        # weighted score
+        info[self.PARAMS.INFO.K_WEIGHTED_SCORE] = self.get_weighted_score(
+            lb_dist=self.min_lb_dist, 
+            bg_dist=self.min_bg_dist
+        )
 
         # compute approximate delta-v need to intercept non-maneuvering lady
         if done:

@@ -63,6 +63,20 @@ The performance of each solution technique in each environment/scenario can meas
 + Guard fuel usage
 + Approximate delta-V needed for Bandit to rendezvous with Lady based on a single Lambert Targeting solution at final time step assuming no further maneuvering by Lady.
 
+## Single-Value Scoring Function (v1) 
+
+> :warning: **Attention**
+> __Lower-valued__ scores indicate higher performance
+
+In order to rank the performance of a different control algorithms, we provide a single-value scoring function that is a sum of the closest lady-bandit approach distance squared and the inverse of the closest bandit-guard approach (plus a positive offset to avoid divide by zero). Therfore high-values of dm_lb are dispro
+
+dm_lb: closest approach distance between lady and bandit [m]
+dm_bg: closest approach distance between bandit and guard [m]
+a = 1e6, scaling factor such that apprx 100m of dm_lb is as good as 100m of dm_bg is bad
+b = 0.1, positive offset that makes the highest possible dm_bg penalty roughly equal to the highest possible dm_lb penalty
+
+score = dm_lb^2 + a/(dm_bg+b)
+
 ## Environment Termination Conditions 
 
 Each scenario/environment may have it's own unique termination conditions which will be some combination of:
