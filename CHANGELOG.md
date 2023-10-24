@@ -5,11 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v0.1.0] - 2023-10-23
 
 ### Added
 
-- Single-value scoring function for pursuit-evade (pe1), sun-blocking (sb1), scenarios
+- Single-value scoring function for pursuit-evade (pe1), sun-blocking (sb1), and lady-bandit-guard (lbg1) scenarios
 - User id and passkey in evaluation process
 - Agent instance name in agent_cfg for evaluation script
 - Logs if episode is done in info
