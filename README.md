@@ -198,7 +198,7 @@ conda activate kspdg
 ``` 
 
 > :warning: **Troubleshooting**
-> + Note that the `kspdg` library depends upon [poliastro](https://docs.poliastro.space/en/stable/), which in turn depends upon [astropy](https://www.astropy.org/), which in turn depends upon [pyerfa](https://github.com/liberfa/pyerfa)
+> + Note that the `kspdg` library depends upon [astropy](https://www.astropy.org/), which in turn depends upon [pyerfa](https://github.com/liberfa/pyerfa)
 > + __FOR MAC USERS with M1 chipsets:__ as of this writing, [pyerfa has not fully supported M1's arm64 architecture](https://github.com/liberfa/pyerfa/issues/83)
 > + This can lead to errors running `kspdg` such as
 > ```

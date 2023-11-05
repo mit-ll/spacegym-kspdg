@@ -117,7 +117,6 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
     PARAMS.INFO.K_BANDIT_FUEL_USAGE = "bandit_fuel_usage"
     PARAMS.INFO.K_LADY_FUEL_USAGE = "lady_fuel_usage"
     PARAMS.INFO.K_GUARD_FUEL_USAGE = "guard_fuel_usage"
-    PARAMS.INFO.K_LB_DV_AT_TF = "expected_lady_bandit_deltav_at_final_time"
 
     PARAMS.INFO.K_WEIGHTED_SCORE = "weighted_score"
     PARAMS.INFO.V_SCORE_BG_DIST_SCALE = 1e6
@@ -414,23 +413,6 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
             lb_dist=self.min_lb_dist, 
             bg_dist=self.min_bg_dist
         )
-
-        # compute approximate delta-v need to intercept non-maneuvering lady
-        if done:
-
-            # call capture dv estimator
-            dv0, dvf = U.estimate_capture_dv(
-                p0_prs=p0_b_cb__rhcbci,
-                v0_prs=v0_b_cb__rhcbci,
-                p0_evd=p0_l_cb__rhcbci,
-                v0_evd=v0_l_cb__rhcbci,
-                tof=self.episode_timeout
-            )
-
-            info[self.PARAMS.INFO.K_LB_DV_AT_TF] = dv0 + dvf
-
-        else:
-            info[self.PARAMS.INFO.K_LB_DV_AT_TF] = None
 
         return info
 

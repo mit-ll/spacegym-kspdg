@@ -93,8 +93,6 @@ def test_get_info_0(pe1_e1_i3_env):
         (0.1 * pursuer_fuel_usage)**1.25 + 
         (0.01 * max_closest_approach_time)**1.0
     )
-    assert info1[env.PARAMS.INFO.K_DV_AT_TF] is None
-    assert not np.isclose(info2[env.PARAMS.INFO.K_DV_AT_TF], 0.0)
 
     env.close()
 

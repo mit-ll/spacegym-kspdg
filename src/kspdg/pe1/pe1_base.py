@@ -94,7 +94,6 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
     # PARAMS.INFO.K_MIN_POSVEL_PRODUCT = "minimum_position_velocity_product"
     PARAMS.INFO.K_PURSUER_FUEL_USAGE = "pursuer_fuel_usage"
     PARAMS.INFO.K_EVADER_FUEL_USAGE = "evader_fuel_usage"
-    PARAMS.INFO.K_DV_AT_TF = "expected_deltav_at_final_time"
 
     PARAMS.INFO.K_WEIGHTED_SCORE = "weighted_score"
     PARAMS.INFO.V_SCORE_DIST_SCALE = 0.1
@@ -388,25 +387,6 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
             time=self.min_dist_time,
             fuel=self.min_dist_pursuer_fuel_usage
         )
-
-        # Apprx dv of capture should only be computed at end due to compute time required
-        # NOTE: apprx dv might be unnecessary and might be removed, 
-        # superseded by weighted score
-        if done:
-
-            # call capture dv estimator
-            dv0, dvf = U.estimate_capture_dv(
-                p0_prs=p0_p_cb__rhcbci,
-                v0_prs=v0_p_cb__rhcbci,
-                p0_evd=p0_e_cb__rhcbci,
-                v0_evd=v0_e_cb__rhcbci,
-                tof=self.episode_timeout
-            )
-            info[self.PARAMS.INFO.K_DV_AT_TF] = dv0 + dvf
-
-        else:
-            info[self.PARAMS.INFO.K_DV_AT_TF] = None
-
 
         return info
 

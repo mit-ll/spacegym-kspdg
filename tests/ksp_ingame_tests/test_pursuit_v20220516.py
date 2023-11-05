@@ -23,10 +23,6 @@ def pursuit_v20220516_env():
     yield env
     env.close()
 
-def test_poliastro_import():
-    """check that poliastro can be imported which checks pyerfa install issues"""
-    from poliastro.iod import izzo
-
 def test_convert_rhntw_to_rhpbody_0(pursuit_v20220516_env):
     '''check along-track vec in right-hand NTW frame transforms to forward in right-hand pursuer body coords'''
 

@@ -20,6 +20,6 @@ setup(name="kspdg",
         "krpc",
         "numpy",
         "gymnasium",
-        "poliastro",
+        "astropy"
       ]
       )

@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+### Fixed
+
+### Changed
+
+- Conda environment is no longer pinned to python 3.9 due to removal of poliastro dependency
+
+### Removed
+
+- poliastro dependency and related functions in `utils.py`. This removes functions for propagating orbits which were used for non-essential metric evals. For further justification, see [this issue](https://github.com/mit-ll/spacegym-kspdg/issues/8)
+
 ## [v0.1.0] - 2023-10-23
 
 ### Added
