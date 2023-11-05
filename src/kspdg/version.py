@@ -5,4 +5,4 @@
 # Single-sourcing package version
 # https://packaging.python.org/guides/single-sourcing-package-version/
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
