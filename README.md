@@ -317,11 +317,12 @@ This example walks through how to evaluate agents for scoring purpose in the AIA
 > 
 > __We reserve the right to disqualify teams for unsporting behavior__
 
-The agent evaluation process uses a compiled python script located in `scripts/evaluate.cpython-39.pyc` with input arguments in the ordering: `<agent-config-file> <environment-module> <environment-class>`. 
+The agent evaluation process uses a compiled python script located in `evaluation/evaluate.cpython-312.pyc` which takes a command-line argument pointing to a Agent-Env runner configuration file. The configuration file contains several pieces of information, inlcuding:
+- user name and pass key for authentication on the public leaderboard
+- The kspdg environment that is too be evaluated. 
+- path to the user-defined agent to be evaluated, the agent's class name, any input arguments needed to instantiate the agent, and an agent nickname to distinguish it from other agents on the leaderboard that may be instantiated from the agent class (e.g. if the user runs the same agent multiple times or with different input arguements)
 
-The `<agent-config-file>` points to a `.yaml` file that configures the user-defined agent to be evaluated; including a path to the agent module, the name of the agent class to be instantiated, and any arguments to be passed to the agent during instantiation.
-
-The `<environment-module>` and `<environment-class>` define the environment in which the agent will be evaluated. `<environment-module>` points to the module within the `kspdg` library to be imported (using dot-separated notation with the root package `kspdg` omitted as it is assumed) and `<environment-class>` defines the specific environment (aka scenario or challenge problem) to be instantiated.
+See [`evaluation/configs/example_eval_cfg.yaml``](evaluation/configs/example_eval_cfg.yaml) for an example of the config file
 
 Here is a basic example for running an agent-environment evaluation. As with other examples, you begin by:
 
@@ -332,7 +333,8 @@ Here is a basic example for running an agent-environment evaluation. As with oth
 ```bash
 conda activate kspdg # while it is not strictly necessary to use conda environments, it is encouraged for development and debugging purpose
 cd evaluation # working directory is important due to relative path in cfg.yaml
-python evaluate.pyc configs/example_eval_cfg.yaml
+python evaluate.cpython-312.pyc configs/example_eval_cfg.yaml   # assuming your conda env has python 3.12
+                                                                # ohterwise call evaluate.cpython-39.pyc for python 3.9
 ```
 
 This should output to a file in the `results/` subdirectory with a name like `kspdg_results_20231018_125336.txt`. That file has JSON-formatted results that look like
