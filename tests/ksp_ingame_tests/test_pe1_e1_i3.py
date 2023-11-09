@@ -17,7 +17,7 @@ from kspdg.pe1.e1_envs import PE1_E1_I3_Env
 
 @pytest.fixture
 def pe1_e1_i3_env():
-    '''setup and teardown of the PursuitEnvV20220516 object connected to kRPC server'''
+    '''setup and teardown of the pursuit-evade env object connected to kRPC server'''
     env = PE1_E1_I3_Env()
     env.reset()
     yield env

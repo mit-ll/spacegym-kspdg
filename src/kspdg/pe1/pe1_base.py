@@ -44,6 +44,7 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
     PARAMS.EVADER = SimpleNamespace()
     PARAMS.PURSUER.RCS = SimpleNamespace()
     PARAMS.OBSERVATION = SimpleNamespace()
+    PARAMS.ACTION = SimpleNamespace()
     PARAMS.INFO = SimpleNamespace()
 
     # observation space paramterization
@@ -85,6 +86,10 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
     PARAMS.OBSERVATION.I_EVADER_VY = 13
     PARAMS.OBSERVATION.K_EVADER_VZ = "velz_e_cb__rhcbci"
     PARAMS.OBSERVATION.I_EVADER_VZ = 14
+
+    # action space params
+    PARAMS.ACTION.K_BURN_VEC = "burn_vec"
+    PARAMS.ACTION.K_REF_FRAME = "ref_frame"
 
     # info metric parameters
     PARAMS.INFO.K_CLOSEST_APPROACH = "closest_approach"
@@ -173,16 +178,21 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         # establish load file for environment resets
         self.loadfile = loadfile
 
-        # establish observation space (see get_observation for mapping)
+        # establish observation space (see get_observation() for mapping)
         self.observation_space = gym.spaces.Box(
             low = np.concatenate((np.zeros(3), -np.inf*np.ones(12))),
             high = np.inf * np.ones(15)
         )
 
-        # establish action space (forward, right, down, time)
-        self.action_space = gym.spaces.Box(
-            low=np.array([-1.0, -1.0, -1.0, 0.0]), 
-            high=np.array([1.0, 1.0, 1.0, 10.0])
+        # establish action space (see step() for mapping)
+        self.action_space = gym.spaces.Dict(
+            {
+                self.PARAMS.ACTION.K_BURN_VEC: gym.spaces.Box(
+                    low=np.array([-1.0, -1.0, -1.0, 0.0]), 
+                    high=np.array([1.0, 1.0, 1.0, 10.0])
+                ),
+                self.PARAMS.ACTION.K_BURN_VEC: gym.spaces.Discrete(2)
+            }
         )
         
         # don't call reset. This allows instantiation and partial testing
@@ -242,23 +252,69 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
     def step(self, action):
         ''' Apply thrust and torque actuation for specified time duration
         Args:
-            action : np.ndarray
-                4-tuple of throttle values in 3D and timestep (forward, right, down, tstep)
-
-        Ref: 
-            Actions are in forward, right, down to align with the right-handed version of the
-            Vessel Surface Reference Frame 
-            https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
+            action : dict
+                "burn_vec" :
+                    4-tuple of throttle values in 3D and timestep
+                    [0:3] - throttle vector expressed in ref_frame coords. range -1.0 to 1.0
+                    [3] - time duration to execute burn in seconds
+                "ref_frame" : int
+                    designates the reference frame the burn vector is expressed in
+                    0: rhpbody - right-handed pursuer body frame (forward, right, down)
+                        see https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
+                    1: rhcbci - right-handed celestial-body-centered inertial frame 
+                        see https://github.com/mit-ll/spacegym-kspdg/tree/main#code-notation
+        
         '''
 
-        # parse and apply action
-        self.vesPursue.control.forward = action[0]
-        self.vesPursue.control.right = action[1]
-        self.vesPursue.control.up = -action[2]
+        if isinstance(action, dict):
+
+            # Dict is the intended action object type
+            k_burn_vec = self.PARAMS.ACTION.K_BURN_VEC
+            k_ref_frame = self.PARAMS.ACTION.K_REF_FRAM
+
+            assert len(action[k_burn_vec]) == 4
+            thr_dur = action[k_burn_vec][3]
+
+            if action[k_ref_frame] == 0:
+                # burn vector given in pursuer body coords
+                # parse and apply action
+                thr__rhpbody = [
+                    action[k_burn_vec][0],
+                    action[k_burn_vec][1],
+                    -action[k_burn_vec][2]
+                ]
+
+            elif action[k_ref_frame] == 1:
+                # burn vector given in inertial celestial body centered coords
+                thr__rhcbci = action[k_burn_vec][0:3]
+
+                # convert to pursuer body frame
+                thr__rhpbody = self.convert_rhcbci_to_rhpbody(thr__rhcbci)
+
+            else:
+                raise ValueError(f"Unrecognized burn reference frame: {action[k_ref_frame]}")
+
+        elif len(action) == 4:
+
+            # Action as list is for backward compatability
+            thr__rhpbody = [
+                action[0],
+                action[1],
+                -action[2]
+            ]
+            thr_dur = action[3]
+
+        else:
+            raise TypeError(f"Unrecognized action format: {action}")
+        
+        # set throttle values for pursuit vehicle
+        self.vesPursue.control.forward = thr__rhpbody[0]
+        self.vesPursue.control.right = thr__rhpbody[1]
+        self.vesPursue.control.up = thr__rhpbody[2]
 
         # execute maneuver for specified time, checking for end
         # conditions while you do
-        timeout = time.time() + action[3]
+        timeout = time.time() + thr_dur
         while True: 
             if self.is_episode_done or time.time() > timeout:
                 break
