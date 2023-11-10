@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [UNRELEASED]
+
+### Added
+
+- New composite action space for `pe1` environments that allows you to define the reference frame in which the burn is to be interpretted. The composite action space uses dictionaries as actions with two fields "burn_vec" and "ref_frame". burn_vec is the same format as the old action space (Box action space). ref_frame is an integer (Discrete action space). Backward compatibility with old action space has been maintained. If a list-like object is passed in, it will treat it as the old action space, otherwise a dict with appropriate fields must be passed
+- Addtional `test_pe1_e1_i3.py` tests for reference frames
+
+### Fixed
+
+### Changed
+
+### Removed
+
 ## [v0.2.0] - 2023-11-05
 
 ### Added

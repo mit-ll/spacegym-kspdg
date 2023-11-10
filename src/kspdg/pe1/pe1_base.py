@@ -270,7 +270,7 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
 
             # Dict is the intended action object type
             k_burn_vec = self.PARAMS.ACTION.K_BURN_VEC
-            k_ref_frame = self.PARAMS.ACTION.K_REF_FRAM
+            k_ref_frame = self.PARAMS.ACTION.K_REF_FRAME
 
             assert len(action[k_burn_vec]) == 4
             thr_dur = action[k_burn_vec][3]
