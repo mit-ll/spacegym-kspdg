@@ -251,12 +251,17 @@ def test_step_action_space_0(pe1_e1_i3_env):
         "ref_frame":1
     })
     env.step({
-        "burn_vec":[0, 1.0, 0, 1.0],
-        "ref_frame":1
+        "burn_vec":[1.0, 0, 0, 1.0],
+        "ref_frame":2
     })
 
+    with pytest.raises(ValueError):
+        env.step({
+            "burn_vec":[1.0, 0, 0, 1.0],
+            "ref_frame":3
+        })
 
-def test_step_action_space_1(pe1_e1_i3_env):
+def test_step_action_ref_frame_1(pe1_e1_i3_env):
     '''check that inclination only burn does not affect speed or radius'''
     # ~~ ARRANGE ~~
 
@@ -280,10 +285,7 @@ def test_step_action_space_1(pe1_e1_i3_env):
         "burn_vec":[0, 0, 1.0, 1.0],
         "ref_frame":1
     })
-    env.step({
-        "burn_vec":[0.0, 0, 0, 5.0],
-        "ref_frame":0
-    })
+    time.sleep(1.0)
 
     obs1 = env.get_observation()
     r1 = np.linalg.norm(obs1[3:6])
@@ -292,6 +294,54 @@ def test_step_action_space_1(pe1_e1_i3_env):
     # ~~ ASSERT ~~
     assert np.isclose(r0, r1)
     assert np.isclose(v0, v1)
+
+def test_step_action_ref_frame_2(pe1_e1_i3_env):
+    '''action in ref frame 2 produces expected delta-vs
+
+    Works by pointing the vehicle in various directions but then 
+    calling a orbit normal burn which should keep radial distance
+    and speed the same
+    '''
+    # ~~ ARRANGE ~~
+
+    if pe1_e1_i3_env is None:
+        env = PE1_E1_I3_Env()
+        env.reset()
+    else:
+        env = pe1_e1_i3_env
+
+    env.conn.space_center.target_vessel = None
+    time.sleep(0.1)
+
+    # ~~ ACT and ASSERT ~~
+
+    for point_dir in [
+        env.vesPursue.control.sas_mode.prograde, 
+        env.vesPursue.control.sas_mode.normal,
+        env.vesPursue.control.sas_mode.radial]:
+
+        env.vesPursue.control.rcs = False
+        env.vesPursue.control.sas_mode = point_dir
+        time.sleep(2.0)   # give time to re-orient
+        env.vesPursue.control.rcs = True
+
+        obs0 = env.get_observation()
+        r0 = np.linalg.norm(obs0[3:6])
+        v0 = np.linalg.norm(obs0[6:9])
+
+        env.step({
+            "burn_vec":[0, 0, 1.0, 1.0],
+            "ref_frame":2
+        })
+        time.sleep(1.0)
+
+        obs1 = env.get_observation()
+        r1 = np.linalg.norm(obs1[3:6])
+        v1 = np.linalg.norm(obs1[6:9])
+
+        # ~~ ASSERT ~~
+        assert np.isclose(r0, r1)
+        assert np.isclose(v0, v1)
 
 if __name__ == "__main__":
     test_get_info_0(None)

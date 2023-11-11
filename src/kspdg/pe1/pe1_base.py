@@ -276,20 +276,27 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
             thr_dur = action[k_burn_vec][3]
 
             if action[k_ref_frame] == 0:
+                # rhpbody coords
                 # burn vector given in pursuer body coords
                 # parse and apply action
                 thr__rhpbody = [
                     action[k_burn_vec][0],
                     action[k_burn_vec][1],
-                    -action[k_burn_vec][2]
+                    action[k_burn_vec][2]
                 ]
 
             elif action[k_ref_frame] == 1:
+                # rhcbci coords
                 # burn vector given in inertial celestial body centered coords
                 thr__rhcbci = action[k_burn_vec][0:3]
 
                 # convert to pursuer body frame
                 thr__rhpbody = self.convert_rhcbci_to_rhpbody(thr__rhcbci)
+
+            elif action[k_ref_frame] == 2:
+                # rhntw coords
+                thr__rhntw =  action[k_burn_vec][0:3]
+                thr__rhpbody = self.convert_rhntw_to_rhpbody(thr__rhntw)
 
             else:
                 raise ValueError(f"Unrecognized burn reference frame: {action[k_ref_frame]}")
@@ -300,7 +307,7 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
             thr__rhpbody = [
                 action[0],
                 action[1],
-                -action[2]
+                action[2]
             ]
             thr_dur = action[3]
 
@@ -310,7 +317,7 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         # set throttle values for pursuit vehicle
         self.vesPursue.control.forward = thr__rhpbody[0]
         self.vesPursue.control.right = thr__rhpbody[1]
-        self.vesPursue.control.up = thr__rhpbody[2]
+        self.vesPursue.control.up = -thr__rhpbody[2]
 
         # execute maneuver for specified time, checking for end
         # conditions while you do
