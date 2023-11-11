@@ -263,6 +263,9 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
                         see https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
                     1: rhcbci - right-handed celestial-body-centered inertial frame 
                         see https://github.com/mit-ll/spacegym-kspdg/tree/main#code-notation
+                    2: rhntw - right-handed NTW frame (y-axis velocity aligned, z-axis is orbit normal, x-axis completes
+                                right-handed system)
+                        see https://github.com/mit-ll/spacegym-kspdg/tree/main#code-notation
         
         '''
 

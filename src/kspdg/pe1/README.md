@@ -29,6 +29,13 @@ This README documents/decodes the somewhat cryptic naming scheme used to uniquel
 + Evader initial orbit constant across all sencarios/envs; Pursuer initial orbit is varied
 + Observation and Action spaces are constant across all scenarios/envs
 
+## Observation and Action Space:
+
+    See [`get_observation()`](https://github.com/mit-ll/spacegym-kspdg/blob/main/src/kspdg/pe1/pe1_base.py) for detailed description of observation vector.
+
+    See [`step()`](https://github.com/mit-ll/spacegym-kspdg/blob/main/src/kspdg/pe1/pe1_base.py) for detailed description of action vector 
+
+
 ## Evader Policy Identifiers
 
 + ID `e1`: Passive, no maneuvering (pure rendezous)
