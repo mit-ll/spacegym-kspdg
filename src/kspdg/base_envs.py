@@ -159,7 +159,7 @@ class KSPDGBaseEnv(ABC, gym.Env):
         
         Returns
             v__rhvbody : List[float]
-                3-vector vector represented in pursuer's right-hadded body coords (forward, right, down)
+                3-vector vector represented in agent vessel's right-hadded body coords (forward, right, down)
         
         Ref:
             Left-handed vessel body system: 
@@ -187,14 +187,14 @@ class KSPDGBaseEnv(ABC, gym.Env):
         return v__rhvbody
     
     def convert_rhntw_to_rhvbody(self, v__rhntw: List[float], vessel) -> List[float]:
-        '''Converts vector in right-handed NTW frame to pursuer vessel right-oriented body frame
+        '''Converts vector in right-handed NTW frame to agent vessel right-oriented body frame
         Args:
             v__ntw : List[float]
                 3-vector represented in orbital NTW coords
         
         Returns
-            v__rhpbody : List[float]
-                3-vector vector represented in pursuer's right-hadded body coords (forward, right, down)
+            v__rhvbody : List[float]
+                3-vector vector represented in agent vessel's right-hadded body coords (forward, right, down)
             vessel : kRPC.Vessel
                 kRPC Vessel object for which conversion to right-hand body frame is to be done
         
@@ -235,7 +235,7 @@ class KSPDGBaseEnv(ABC, gym.Env):
                     [3] - time duration to execute burn in seconds
                 "ref_frame" : int
                     designates the reference frame the burn vector is expressed in
-                    0: rhpbody - right-handed pursuer body frame (forward, right, down)
+                    0: rhvbody - right-handed body frame of agent vessel (forward, right, down)
                         see https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
                     1: rhcbci - right-handed celestial-body-centered inertial frame 
                         see https://github.com/mit-ll/spacegym-kspdg/tree/main#code-notation
@@ -259,7 +259,7 @@ class KSPDGBaseEnv(ABC, gym.Env):
 
             if action[k_ref_frame] == 0:
                 # rh-vessel-body coords
-                # burn vector given in pursuer body coords
+                # burn vector given in agent vessel's body coords
                 # parse and apply action
                 thr__rhvbody = [
                     action[k_burn_vec][0],
@@ -272,7 +272,7 @@ class KSPDGBaseEnv(ABC, gym.Env):
                 # burn vector given in inertial celestial body centered coords
                 thr__rhcbci = action[k_burn_vec][0:3]
 
-                # convert to pursuer body frame
+                # convert to agent vessel body frame
                 thr__rhvbody = self.convert_rhcbci_to_rhvbody(thr__rhcbci, vessel=vesAgent)
 
             elif action[k_ref_frame] == 2:
@@ -296,7 +296,7 @@ class KSPDGBaseEnv(ABC, gym.Env):
         else:
             raise TypeError(f"Unrecognized action format: {action}")
         
-        # set throttle values for pursuit vehicle
+        # set throttle values for agent vehicle
         vesAgent.control.forward = thr__rhvbody[0]
         vesAgent.control.right = thr__rhvbody[1]
         vesAgent.control.up = -thr__rhvbody[2]

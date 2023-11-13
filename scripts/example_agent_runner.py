@@ -30,7 +30,12 @@ class NaivePursuitAgent(KSPDGBaseAgent):
         an abstract method
         """
 
-        return [1.0, 0, 0, 1.0]  # forward throttle, right throttle, down throttle, duration [s]
+        return {
+            "burn_vec": [1.0, 0, 0, 1.0], # throttle in x-axis, throttle in y-axis, throttle in z-axis, duration [s]
+            "ref_frame": 0  # burn_vec expressed in agent vessel's right-handed body frame. 
+                            # i.e. forward throttle, right throttle, down throttle, 
+                            # Can also use rhcbci (1) and rhntw (2) ref frames
+        }
 
 if __name__ == "__main__":
     naive_agent = NaivePursuitAgent()    

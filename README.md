@@ -274,8 +274,18 @@ from kspdg.pe1.e1_envs import PE1_E1_I3_Env
 env = PE1_E1_I3_Env()
 env.reset()
 
+# Environment automatically orients pursuer toward target
+# therefore a niave pusuit policy to to simply burn at full
+# thrust in pursuer's body-forward direction.
+# Do this until the episode 
+# (Do you think it can intercept even a non-maneuvering evader??)
 is_done = False
-act = [1.0, 0, 0, 1.0]  # forward throttle, right throttle, down throttle, duration [s]
+act = {
+    "burn_vec": [1.0, 0, 0, 1.0], # throttle in x-axis, throttle in y-axis, throttle in z-axis, duration [s]
+    "ref_frame": 0  # burn_vec expressed in agent vessel's right-handed body frame. 
+                    # i.e. forward throttle, right throttle, down throttle, 
+                    # Can also use rhcbci (1) and rhntw (2) ref frames
+}
 while not is_done:
     obs, rew, is_done, info = env.step(act)
 

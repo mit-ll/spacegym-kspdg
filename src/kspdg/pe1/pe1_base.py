@@ -235,7 +235,7 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
 
     def step(self, action):
         """Apply thrust and torque actuation for specified time duration"""
-        self.step_v1(action=action, vesAgent=self.vesPursue)
+        return self.step_v1(action=action, vesAgent=self.vesPursue)
     
     def get_weighted_score(self, dist: float, speed: float, time: float, fuel: float):
         """ Compute a scaled, weighted sum of scoring metrics

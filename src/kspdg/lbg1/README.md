@@ -33,6 +33,12 @@ This README documents/decodes the somewhat cryptic naming scheme used to uniquel
 + Lady initial orbit constant across all sencarios/envs; Bandit and Guard initial orbits are varied across environments in the group
 + Observation and Action spaces are constant across all scenarios/envs
 
+## Observation and Action Space:
+
+    See [`get_observation()`](https://github.com/mit-ll/spacegym-kspdg/blob/main/src/kspdg/lbg1/lbg1_base.py) for detailed description of observation vector.
+
+    See [`step_v1()`](https://github.com/mit-ll/spacegym-kspdg/blob/main/src/kspdg/base_envs.py) for detailed description of action vector 
+
 ## Lady-Guard Policy Environment Identifiers
 
 + ID `lg0`: Lady and Guard are passive, no maneuvering

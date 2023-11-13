@@ -26,7 +26,12 @@ env.reset()
 # Do this until the episode 
 # (Do you think it can intercept even a non-maneuvering evader??)
 is_done = False
-act = [1.0, 0, 0, 1.0]  # forward throttle, right throttle, down throttle, duration [s]
+act = {
+    "burn_vec": [1.0, 0, 0, 1.0], # throttle in x-axis, throttle in y-axis, throttle in z-axis, duration [s]
+    "ref_frame": 0  # burn_vec expressed in agent vessel's right-handed body frame. 
+                    # i.e. forward throttle, right throttle, down throttle, 
+                    # Can also use rhcbci (1) and rhntw (2) ref frames
+}
 while not is_done:
     obs, rew, is_done, info = env.step(act)
 

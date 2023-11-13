@@ -37,7 +37,7 @@ This README documents/decodes the somewhat cryptic naming scheme used to uniquel
 
     See [`get_observation()`](https://github.com/mit-ll/spacegym-kspdg/blob/main/src/kspdg/sb1/sb1_base.py) for detailed description of observation vector.
 
-    See [`step()`](https://github.com/mit-ll/spacegym-kspdg/blob/main/src/kspdg/pe1/pe1_base.py) in `pe1_base.py` for detailed description of action vector 
+    See [`step_v1()`](https://github.com/mit-ll/spacegym-kspdg/blob/main/src/kspdg/base_envs.py) for detailed description of action vector 
 
 ## Evader Policy Identifiers
 

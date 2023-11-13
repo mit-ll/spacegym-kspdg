@@ -257,7 +257,7 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
 
     def step(self, action):
         """Apply thrust and torque actuation for specified time duration"""
-        self.step_v1(action=action, vesAgent=self.vesBandit)
+        return self.step_v1(action=action, vesAgent=self.vesBandit)
     
     def get_weighted_score(self, lb_dist: float, bg_dist: float):
         """ Compute a scaled, weighted sum of scoring metrics
