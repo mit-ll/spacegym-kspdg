@@ -88,7 +88,7 @@ class SunBlockingGroup1Env(PursuitEvadeGroup1Env):
         self.min_reward = np.inf
         self.max_reward = -np.inf
     
-    def get_reward(self) -> float:
+    def get_reward(self, *args) -> float:
         """ Compute reward value
 
         Reward is a function of evader-pursuer-sun angle and pursuer-evader distance
@@ -96,6 +96,8 @@ class SunBlockingGroup1Env(PursuitEvadeGroup1Env):
         Returns:
             rew : float
                 reward at current step
+            args
+                unused dummy var included to match signature of calls to get_reward in parent class
         """
 
         # get evader position, distance, and unit vector relative to pursuer

@@ -113,4 +113,35 @@ def test_observation_0(lbg1_lg0_i2_env):
     assert mes_spd_g_cb > exp_spd_g_cb - spd_g_cb_eps
     assert mes_spd_g_cb < exp_spd_g_cb + spd_g_cb_eps
 
+def test_step_action_space_0(lbg1_lg0_i2_env):
+    '''check that step accepts various action input formats without error'''
+    # ~~~ ARRANGE ~~~
+
+    if lbg1_lg0_i2_env is None:
+        env = LBG1_LG0_I2_Env()
+        env.reset()
+    else:
+        env = lbg1_lg0_i2_env
+
+    # ~~ ACT ~~ 
+    env.step([1.0, 0, 0, 1.0])
+    env.step({
+        "burn_vec":[1.0, 0, 0, 1.0],
+        "ref_frame":0
+    })
+    env.step({
+        "burn_vec":[1.0, 0, 0, 1.0],
+        "ref_frame":1
+    })
+    env.step({
+        "burn_vec":[1.0, 0, 0, 1.0],
+        "ref_frame":2
+    })
+
+    with pytest.raises(ValueError):
+        env.step({
+            "burn_vec":[1.0, 0, 0, 1.0],
+            "ref_frame":3
+        })
+
  

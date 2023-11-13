@@ -10,7 +10,6 @@ import numpy as np
 
 from types import SimpleNamespace
 from typing import List, Dict
-from threading import Thread
 from numpy.typing import ArrayLike
 
 import kspdg.utils.constants as C
@@ -51,6 +50,7 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
     PARAMS.GUARD = SimpleNamespace()
     PARAMS.BANDIT.RCS = SimpleNamespace()
     PARAMS.OBSERVATION = SimpleNamespace()
+    PARAMS.ACTION = SimpleNamespace()
     PARAMS.INFO = SimpleNamespace()
 
     # observation space paramterization
@@ -85,6 +85,10 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
     PARAMS.OBSERVATION.I_GUARD_VX = 18
     PARAMS.OBSERVATION.I_GUARD_VY = 19
     PARAMS.OBSERVATION.I_GUARD_VZ = 20
+
+    # action space params
+    PARAMS.ACTION.K_BURN_VEC = "burn_vec"
+    PARAMS.ACTION.K_REF_FRAME = "ref_frame"
 
     # # keys for observation fields
     # PARAMS.OBSERVATION.K_MET = "mission_elapsed_time"
@@ -241,20 +245,10 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         self.bandit_init_mass = self.vesBandit.mass
         self.guard_init_mass = self.vesGuard.mass
 
-    def _start_bot_threads(self) -> None:
-        """ Start parallel thread to continuously execute lady-guard policy
+    def bot_policy(self):
+        """ Re-direct function to rename generic func to lbg1-specific func
         """
-
-        self.stop_bot_thread = False
-
-        # check that thread does not exist or is not running
-        if hasattr(self, "bot_thread"):
-            if self.bot_thread.is_alive():
-                raise ConnectionError("bot_thread is already running."+ 
-                    " Close and join bot_thread before restarting")
-
-        self.bot_thread = Thread(target=self.lady_guard_policy)
-        self.bot_thread.start()
+        self.lady_guard_policy()
 
     def lady_guard_policy(self):
         """ Behvaior policy to be continuously run by lady and guard vessels
@@ -262,44 +256,8 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         raise NotImplementedError("Must be implemented by child class")
 
     def step(self, action):
-        ''' Apply thrust and torque actuation for specified time duration
-        Args:
-            action : np.ndarray
-                4-tuple of throttle values in 3D and timestep (forward, right, down, tstep)
-
-        Ref: 
-            Actions are in forward, right, down to align with the right-handed version of the
-            Vessel Surface Reference Frame 
-            https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
-        '''
-
-        # parse and apply action
-        self.vesBandit.control.forward = action[0]
-        self.vesBandit.control.right = action[1]
-        self.vesBandit.control.up = -action[2]
-
-        # execute maneuver for specified time, checking for end
-        # conditions while you do
-        timeout = time.time() + action[3]
-        while True: 
-            if self.is_episode_done or time.time() > timeout:
-                break
-
-        # zero out thrusts
-        self.vesBandit.control.forward = 0.0
-        self.vesBandit.control.up = 0.0
-        self.vesBandit.control.right = 0.0
-
-        # get observation
-        obs = self.get_observation()
-
-        # compute performance metrics
-        info = self.get_info(obs, self.is_episode_done)
-
-        # compute reward
-        rew = self.get_reward(info, self.is_episode_done)
-
-        return obs, rew, self.is_episode_done, info
+        """Apply thrust and torque actuation for specified time duration"""
+        self.step_v1(action=action, vesAgent=self.vesBandit)
     
     def get_weighted_score(self, lb_dist: float, bg_dist: float):
         """ Compute a scaled, weighted sum of scoring metrics
@@ -349,36 +307,16 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         info = super().get_info(observation=obs, done=done)
 
         # parse banding and lady current states
-        p0_b_cb__rhcbci = np.array([
-            obs[self.PARAMS.OBSERVATION.I_BANDIT_PX],
-            obs[self.PARAMS.OBSERVATION.I_BANDIT_PY],
-            obs[self.PARAMS.OBSERVATION.I_BANDIT_PZ],
-        ])
         v0_b_cb__rhcbci = np.array([
             obs[self.PARAMS.OBSERVATION.I_BANDIT_VX],
             obs[self.PARAMS.OBSERVATION.I_BANDIT_VY],
             obs[self.PARAMS.OBSERVATION.I_BANDIT_VZ],
-        ])
-        p0_l_cb__rhcbci = np.array([
-            obs[self.PARAMS.OBSERVATION.I_LADY_PX],
-            obs[self.PARAMS.OBSERVATION.I_LADY_PY],
-            obs[self.PARAMS.OBSERVATION.I_LADY_PZ],
         ])
         v0_l_cb__rhcbci = np.array([
             obs[self.PARAMS.OBSERVATION.I_LADY_VX],
             obs[self.PARAMS.OBSERVATION.I_LADY_VY],
             obs[self.PARAMS.OBSERVATION.I_LADY_VZ],
         ])
-        # p0_g_cb__rhcbci = np.array([
-        #     obs[self.PARAMS.OBSERVATION.I_GUARD_PX],
-        #     obs[self.PARAMS.OBSERVATION.I_GUARD_PY],
-        #     obs[self.PARAMS.OBSERVATION.I_GUARD_PZ],
-        # ])
-        # v0_g_cb__rhcbci = np.array([
-        #     obs[self.PARAMS.OBSERVATION.I_GUARD_VX],
-        #     obs[self.PARAMS.OBSERVATION.I_GUARD_VY],
-        #     obs[self.PARAMS.OBSERVATION.I_GUARD_VZ],
-        # ])
         
         # nearest approach between lady and bandit
         # d_vesL_vesB = np.linalg.norm(p0_b_cb__rhcbci-p0_l_cb__rhcbci)
@@ -535,73 +473,3 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
                 self.is_episode_done = True
                 self.stop_bot_thread = True
                 self.stop_episode_termination_thread = True
-
-    def close(self):
-
-        # handle evasive maneuvering thread
-        self.stop_bot_thread = True
-        self.bot_thread.join()
-
-        # handle episode termination thread
-        self.stop_episode_termination_thread = True
-        self.episode_termination_thread.join()
-
-        # close connection to krpc server
-        self.conn.close()
-
-    # @classmethod
-    # def observation_list_to_dict(cls, obs_list):
-    #     """convert observation from list to dict"""
-    #     assert len(obs_list) == cls.PARAMS.OBSERVATION.LEN
-    #     obs_dict = dict()
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_MET] = obs_list[cls.PARAMS.OBSERVATION.I_MET]
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_MASS] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_MASS]
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PROP_MASS] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PROP_MASS]
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PX] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PX]
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PY] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PY]
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PZ] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PZ]
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VX] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VX]
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VY] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VY]
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VZ] = obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VZ]
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PX] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_PX]
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PY] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_PY]
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PZ] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_PZ]
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VX] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_VX]
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VY] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_VY]
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VZ] = obs_list[cls.PARAMS.OBSERVATION.I_LADY_VZ]
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PX] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PX]
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PY] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PY]
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PZ] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PZ]
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VX] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VX]
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VY] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VY]
-    #     obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VZ] = obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VZ]
-
-    #     return obs_dict
-
-    # @classmethod
-    # def observation_dict_to_list(cls, obs_dict):
-    #     """convert observation from list to dict"""
-    #     obs_list = cls.PARAMS.OBSERVATION.LEN * [None]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_MET] = obs_dict[cls.PARAMS.OBSERVATION.K_MET]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_MASS] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_MASS]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PROP_MASS] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PROP_MASS]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PX] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PX]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PY] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PY]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_PZ] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_PZ]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VX] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VX]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VY] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VY]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_BANDIT_VZ] = obs_dict[cls.PARAMS.OBSERVATION.K_BANDIT_VZ]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_LADY_PX] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PX]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_LADY_PY] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PY]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_LADY_PZ] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_PZ]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_LADY_VX] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VX]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_LADY_VY] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VY]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_LADY_VZ] = obs_dict[cls.PARAMS.OBSERVATION.K_LADY_VZ]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PX] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PX]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PY] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PY]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_GUARD_PZ] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_PZ]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VX] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VX]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VY] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VY]
-    #     obs_list[cls.PARAMS.OBSERVATION.I_GUARD_VZ] = obs_dict[cls.PARAMS.OBSERVATION.K_GUARD_VZ]
-
-    #     return obs_list

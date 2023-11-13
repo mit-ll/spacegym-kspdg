@@ -57,6 +57,33 @@ def test_get_reward_and_info_0(sb1_e1_i5_env):
 
     env.close()
 
+def test_step_action_space_0(sb1_e1_i5_env):
+    '''check that step accepts various action input formats without error'''
+    # ~~ ARRANGE ~~
 
-if __name__ == "__main__":
-    test_get_info_0(None)
+    if sb1_e1_i5_env is None:
+        env = SB1_E1_I5_Env()
+        env.reset()
+    else:
+        env = sb1_e1_i5_env
+
+    # ~~ ACT ~~ 
+    env.step([1.0, 0, 0, 1.0])
+    env.step({
+        "burn_vec":[1.0, 0, 0, 1.0],
+        "ref_frame":0
+    })
+    env.step({
+        "burn_vec":[1.0, 0, 0, 1.0],
+        "ref_frame":1
+    })
+    env.step({
+        "burn_vec":[1.0, 0, 0, 1.0],
+        "ref_frame":2
+    })
+
+    with pytest.raises(ValueError):
+        env.step({
+            "burn_vec":[1.0, 0, 0, 1.0],
+            "ref_frame":3
+        })

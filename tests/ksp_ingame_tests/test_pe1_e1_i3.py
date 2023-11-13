@@ -156,7 +156,7 @@ def test_get_combined_rcs_properties_0(pe1_e1_i3_env):
     # check that weighted score has improved by approaching the other agent
     assert info1[env.PARAMS.INFO.K_WEIGHTED_SCORE] < info0[env.PARAMS.INFO.K_WEIGHTED_SCORE] 
 
-def test_convert_rhcbci_to_rhpbody_0(pe1_e1_i3_env):
+def test_convert_rhcbci_to_rhvbody_0(pe1_e1_i3_env):
     '''check z-axis of rhcbci points north'''
     # ~~ ARRANGE ~~
 
@@ -175,10 +175,10 @@ def test_convert_rhcbci_to_rhpbody_0(pe1_e1_i3_env):
     v__rhcbci = [0, 0, 1]
     env.vesPursue.control.sas_mode = env.vesPursue.control.sas_mode.normal
     time.sleep(2.0)   # give time to re-orient
-    v__rhpbody = pe1_e1_i3_env.convert_rhcbci_to_rhpbody(v__rhcbci)
+    v__rhpbody = pe1_e1_i3_env.convert_rhcbci_to_rhvbody(v__rhcbci, vessel=env.vesPursue)
     assert np.allclose(v__rhpbody, v_exp__rhpbody, atol=1e-2)
 
-def test_convert_rhntw_to_rhpbody_0(pe1_e1_i3_env):
+def test_convert_rhntw_to_rhvbody_0(pe1_e1_i3_env):
     '''check along-track vec in right-hand NTW frame transforms to forward in right-hand pursuer body coords'''
 
     # rename for ease of use
@@ -192,42 +192,42 @@ def test_convert_rhntw_to_rhpbody_0(pe1_e1_i3_env):
     v__rhntw = [0, 1, 0]
     env.vesPursue.control.sas_mode = env.vesPursue.control.sas_mode.prograde
     time.sleep(0.5)   # give time to re-orient
-    v__rhpbody = pe1_e1_i3_env.convert_rhntw_to_rhpbody(v__rhntw)
+    v__rhpbody = pe1_e1_i3_env.convert_rhntw_to_rhvbody(v__rhntw, vessel=env.vesPursue)
     assert np.allclose(v__rhpbody, v_exp__rhpbody, atol=1e-2)
 
     # vector pointing radial out
     v__rhntw = [1, 0, 0]
     env.vesPursue.control.sas_mode = env.vesPursue.control.sas_mode.radial
     time.sleep(2.0)   # give time to re-orient
-    v__rhpbody = pe1_e1_i3_env.convert_rhntw_to_rhpbody(v__rhntw)
+    v__rhpbody = pe1_e1_i3_env.convert_rhntw_to_rhvbody(v__rhntw, vessel=env.vesPursue)
     assert np.allclose(v__rhpbody, v_exp__rhpbody, atol=1e-2)
 
     # vector pointing normal
     v__rhntw = [0, 0, 1]
     env.vesPursue.control.sas_mode = env.vesPursue.control.sas_mode.normal
     time.sleep(2.0)   # give time to re-orient
-    v__rhpbody = pe1_e1_i3_env.convert_rhntw_to_rhpbody(v__rhntw)
+    v__rhpbody = pe1_e1_i3_env.convert_rhntw_to_rhvbody(v__rhntw, vessel=env.vesPursue)
     assert np.allclose(v__rhpbody, v_exp__rhpbody, atol=1e-2)
 
     # vector pointing retrograde
     v__rhntw = [0, -1, 0]
     env.vesPursue.control.sas_mode = env.vesPursue.control.sas_mode.retrograde
     time.sleep(2.0)   # give time to re-orient
-    v__rhpbody = pe1_e1_i3_env.convert_rhntw_to_rhpbody(v__rhntw)
+    v__rhpbody = pe1_e1_i3_env.convert_rhntw_to_rhvbody(v__rhntw, vessel=env.vesPursue)
     assert np.allclose(v__rhpbody, v_exp__rhpbody, atol=1e-2)
 
     # vector pointing in-radial
     v__rhntw = [-1, 0, 0]
     env.vesPursue.control.sas_mode = env.vesPursue.control.sas_mode.anti_radial
     time.sleep(2.0)   # give time to re-orient
-    v__rhpbody = pe1_e1_i3_env.convert_rhntw_to_rhpbody(v__rhntw)
+    v__rhpbody = pe1_e1_i3_env.convert_rhntw_to_rhvbody(v__rhntw, vessel=env.vesPursue)
     assert np.allclose(v__rhpbody, v_exp__rhpbody, atol=1e-2)
 
     # vector pointing retrograde
     v__rhntw = [0, 0, -1]
     env.vesPursue.control.sas_mode = env.vesPursue.control.sas_mode.anti_normal
     time.sleep(2.0)   # give time to re-orient
-    v__rhpbody = pe1_e1_i3_env.convert_rhntw_to_rhpbody(v__rhntw)
+    v__rhpbody = pe1_e1_i3_env.convert_rhntw_to_rhvbody(v__rhntw, vessel=env.vesPursue)
     assert np.allclose(v__rhpbody, v_exp__rhpbody, atol=1e-2)
 
 def test_step_action_space_0(pe1_e1_i3_env):

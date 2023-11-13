@@ -8,7 +8,6 @@ import numpy as np
 
 from types import SimpleNamespace
 from typing import List, Dict
-from threading import Thread
 
 import kspdg.utils.constants as C
 import kspdg.utils.utils as U
@@ -234,116 +233,9 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         self.pursuer_init_mass = self.vesPursue.mass
         self.evader_init_mass = self.vesEvade.mass
 
-    def _start_bot_threads(self) -> None:
-        """ Start parallel thread to execute Evader's evasive maneuvers
-        """
-
-        self.stop_bot_thread = False
-
-        # check that thread does not exist or is not running
-        if hasattr(self, "evade_thread"):
-            if self.evade_thread.is_alive():
-                raise ConnectionError("evade_thread is already running."+ 
-                    " Close and join evade_thread before restarting")
-
-        self.evade_thread = Thread(target=self.evasive_maneuvers)
-        self.evade_thread.start()
-
     def step(self, action):
-        ''' Apply thrust and torque actuation for specified time duration
-        Args:
-            action : dict
-                "burn_vec" :
-                    4-tuple of throttle values in 3D and timestep
-                    [0:3] - throttle vector expressed in ref_frame coords. range -1.0 to 1.0
-                    [3] - time duration to execute burn in seconds
-                "ref_frame" : int
-                    designates the reference frame the burn vector is expressed in
-                    0: rhpbody - right-handed pursuer body frame (forward, right, down)
-                        see https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
-                    1: rhcbci - right-handed celestial-body-centered inertial frame 
-                        see https://github.com/mit-ll/spacegym-kspdg/tree/main#code-notation
-                    2: rhntw - right-handed NTW frame (y-axis velocity aligned, z-axis is orbit normal, x-axis completes
-                                right-handed system)
-                        see https://github.com/mit-ll/spacegym-kspdg/tree/main#code-notation
-        
-        '''
-
-        if isinstance(action, dict):
-
-            # Dict is the intended action object type
-            k_burn_vec = self.PARAMS.ACTION.K_BURN_VEC
-            k_ref_frame = self.PARAMS.ACTION.K_REF_FRAME
-
-            assert len(action[k_burn_vec]) == 4
-            thr_dur = action[k_burn_vec][3]
-
-            if action[k_ref_frame] == 0:
-                # rhpbody coords
-                # burn vector given in pursuer body coords
-                # parse and apply action
-                thr__rhpbody = [
-                    action[k_burn_vec][0],
-                    action[k_burn_vec][1],
-                    action[k_burn_vec][2]
-                ]
-
-            elif action[k_ref_frame] == 1:
-                # rhcbci coords
-                # burn vector given in inertial celestial body centered coords
-                thr__rhcbci = action[k_burn_vec][0:3]
-
-                # convert to pursuer body frame
-                thr__rhpbody = self.convert_rhcbci_to_rhpbody(thr__rhcbci)
-
-            elif action[k_ref_frame] == 2:
-                # rhntw coords
-                thr__rhntw =  action[k_burn_vec][0:3]
-                thr__rhpbody = self.convert_rhntw_to_rhpbody(thr__rhntw)
-
-            else:
-                raise ValueError(f"Unrecognized burn reference frame: {action[k_ref_frame]}")
-
-        elif len(action) == 4:
-
-            # Action as list is for backward compatability
-            thr__rhpbody = [
-                action[0],
-                action[1],
-                action[2]
-            ]
-            thr_dur = action[3]
-
-        else:
-            raise TypeError(f"Unrecognized action format: {action}")
-        
-        # set throttle values for pursuit vehicle
-        self.vesPursue.control.forward = thr__rhpbody[0]
-        self.vesPursue.control.right = thr__rhpbody[1]
-        self.vesPursue.control.up = -thr__rhpbody[2]
-
-        # execute maneuver for specified time, checking for end
-        # conditions while you do
-        timeout = time.time() + thr_dur
-        while True: 
-            if self.is_episode_done or time.time() > timeout:
-                break
-
-        # zero out thrusts
-        self.vesPursue.control.forward = 0.0
-        self.vesPursue.control.up = 0.0
-        self.vesPursue.control.right = 0.0
-
-        # get observation
-        obs = self.get_observation()
-
-        # compute performance metrics
-        info = self.get_info(obs, self.is_episode_done)
-
-        # compute reward
-        rew = self.get_reward(info, self.is_episode_done)
-
-        return obs, rew, self.is_episode_done, info
+        """Apply thrust and torque actuation for specified time duration"""
+        self.step_v1(action=action, vesAgent=self.vesPursue)
     
     def get_weighted_score(self, dist: float, speed: float, time: float, fuel: float):
         """ Compute a scaled, weighted sum of scoring metrics
@@ -576,6 +468,11 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         '''compute relative speed between pursuer and evader'''
         v_vesE_vesP__lhpbody = self.vesEvade.velocity(self.vesPursue.reference_frame)
         return np.linalg.norm(v_vesE_vesP__lhpbody)
+    
+    def bot_policy(self):
+        """ Re-direct function to rename generic func to lbg1-specific func
+        """
+        self.evasive_maneuvers()
 
     def evasive_maneuvers(self):
         ''' evasive maneuvers algorithm
@@ -606,86 +503,3 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
                 self.stop_bot_thread = True
                 self.stop_episode_termination_thread = True
 
-    def close(self):
-
-        # handle evasive maneuvering thread
-        self.stop_bot_thread = True
-        self.evade_thread.join()
-
-        # handle episode termination thread
-        self.stop_episode_termination_thread = True
-        self.episode_termination_thread.join()
-
-        # close connection to krpc server
-        self.conn.close()
-
-    def convert_rhntw_to_rhpbody(self, v__rhntw: List[float]) -> List[float]:
-        '''Converts vector in right-handed NTW frame to pursuer vessel right-oriented body frame
-        Args:
-            v__ntw : List[float]
-                3-vector represented in orbital NTW coords
-        
-        Returns
-            v__rhpbody : List[float]
-                3-vector vector represented in pursuer's right-hadded body coords (forward, right, down)
-        
-        Ref:
-            Left-handed vessel body system: 
-                https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
-            Right-handed NTW system: Vallado, 3rd Edition Sec 3.3.3
-        '''
-
-        # convert right-handed NTW coords to left-handed NTW
-        v__lhntw = U.convert_rhntw_to_lhntw(v__rhntw=v__rhntw)
-
-        # convert left-handed NTW to left-handed vessel body coords
-        # ref: https://krpc.github.io/krpc/python/api/space-center/space-center.html#SpaceCenter.transform_direction
-        # ref: https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
-        v__lhpbody = list(self.conn.space_center.transform_direction(
-            direction = tuple(v__lhntw),
-            from_ = self.vesPursue.orbital_reference_frame,
-            to = self.vesPursue.reference_frame
-        ))
-
-        # convert left-handed body coords (right, forward, down) to right-handed body coords (forward, right, down)
-        v__rhpbody = U.convert_lhbody_to_rhbody(v__lhbody=v__lhpbody)
-
-        return v__rhpbody
-
-    def convert_rhcbci_to_rhpbody(self, v__rhcbci: List[float]) -> List[float]:
-        '''Converts vector in right-handed celestial-body-centered-inertial frame to 
-        pursuer vessel right-oriented body frame
-
-        Args:
-            v__rhcbci : List[float]
-                3-vector represented in celestial-body-centered-inertial fram 
-                (similar to ECI coords, but we aren't necessarily orbitiing Earth)
-        
-        Returns
-            v__rhpbody : List[float]
-                3-vector vector represented in pursuer's right-hadded body coords (forward, right, down)
-        
-        Ref:
-            Left-handed vessel body system: 
-                https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
-            KSP's body-centered inertial reference frame is left-handed
-            (see https://krpc.github.io/krpc/python/api/space-center/celestial-body.html#SpaceCenter.CelestialBody.non_rotating_reference_frame)
-            Right-handed ECI system: Vallado, 3rd Edition Sec 3.3
-        '''
-
-        # convert right-handed CBCI coords to left-handed CBCI
-        v__lhcbci = U.convert_rhcbci_to_lhcbci(v__rhcbci=v__rhcbci)
-
-        # convert left-handed CBCI to left-handed vessel body coords
-        # ref: https://krpc.github.io/krpc/python/api/space-center/space-center.html#SpaceCenter.transform_direction
-        # ref: https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
-        v__lhpbody = list(self.conn.space_center.transform_direction(
-            direction = tuple(v__lhcbci),
-            from_ = self.vesPursue.orbit.body.non_rotating_reference_frame,
-            to = self.vesPursue.reference_frame
-        ))
-
-        # convert left-handed body coords (right, forward, down) to right-handed body coords (forward, right, down)
-        v__rhpbody = U.convert_lhbody_to_rhbody(v__lhbody=v__lhpbody)
-
-        return v__rhpbody

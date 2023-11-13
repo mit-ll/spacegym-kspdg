@@ -4,16 +4,18 @@
 
 # Abstract base classes for KSPDG environment classes
 
+import time
 import krpc
 import logging
 import gymnasium as gym
 
 from abc import ABC, abstractmethod
 from threading import Thread
-from typing import Tuple, Dict
+from typing import Tuple, Dict, List
 from numpy.typing import ArrayLike
 
 from kspdg.utils.loggers import create_logger
+import kspdg.utils.utils as U
 
 class KSPDGBaseEnv(ABC, gym.Env):
     """ Abstract base class for all KSPDG gym environments
@@ -87,24 +89,21 @@ class KSPDGBaseEnv(ABC, gym.Env):
 
         # Load save file from start of mission scenario
         self.conn.space_center.load(self.loadfile)
-
-    @abstractmethod
-    def _reset_vessels(self) -> None:
-        """ Define vessel attirbutes and walkthrough initial configuration process
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
-    def _reset_episode_metrics(self) -> None:
-        """ Reset attributes that track performance throughout episode
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
+    
     def _start_bot_threads(self) -> None:
-        """ Start parallel thread(s) that continually run bot agent policies
+        """ Start parallel thread to continuously execute lady-guard policy
         """
-        raise NotImplementedError()
+
+        self.stop_bot_thread = False
+
+        # check that thread does not exist or is not running
+        if hasattr(self, "bot_thread"):
+            if self.bot_thread.is_alive():
+                raise ConnectionError("bot_thread is already running."+ 
+                    " Close and join bot_thread before restarting")
+
+        self.bot_thread = Thread(target=self.bot_policy)
+        self.bot_thread.start()
 
     def _start_episode_termination_thread(self) -> None:
         """ Start thread to continually check episode termination conditions
@@ -119,6 +118,230 @@ class KSPDGBaseEnv(ABC, gym.Env):
 
         self.episode_termination_thread = Thread(target=self.enforce_episode_termination)
         self.episode_termination_thread.start()
+
+    def close(self):
+        """ Gracefully handle thread closure and krpc connection closure"""
+
+        # handle evasive maneuvering thread
+        self.stop_bot_thread = True
+        self.bot_thread.join()
+
+        # handle episode termination thread
+        self.stop_episode_termination_thread = True
+        self.episode_termination_thread.join()
+
+        # close connection to krpc server
+        self.conn.close()
+
+    def get_info(self, observation: ArrayLike, done: bool) -> Dict:
+        """ general info about environment state not directly intended for action selection 
+        
+        Example: cumulative performance metrics for episode other than raw reward signal
+
+        Args:
+            observation : ArrayLike
+                current / most recent observation of environment
+            done : bool
+                True if last step of episode
+        """
+        return {"is_episode_done": done}
+
+    def convert_rhcbci_to_rhvbody(self, v__rhcbci: List[float], vessel) -> List[float]:
+        '''Converts vector in right-handed celestial-body-centered-inertial frame to 
+        right-oriented body frame of specified vessel
+
+        Args:
+            v__rhcbci : List[float]
+                3-vector represented in celestial-body-centered-inertial fram 
+                (similar to ECI coords, but we aren't necessarily orbitiing Earth)
+            vessel : kRPC.Vessel
+                kRPC Vessel object for which conversion to right-hand body frame is to be done
+        
+        Returns
+            v__rhvbody : List[float]
+                3-vector vector represented in pursuer's right-hadded body coords (forward, right, down)
+        
+        Ref:
+            Left-handed vessel body system: 
+                https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
+            KSP's body-centered inertial reference frame is left-handed
+            (see https://krpc.github.io/krpc/python/api/space-center/celestial-body.html#SpaceCenter.CelestialBody.non_rotating_reference_frame)
+            Right-handed ECI system: Vallado, 3rd Edition Sec 3.3
+        '''
+
+        # convert right-handed CBCI coords to left-handed CBCI
+        v__lhcbci = U.convert_rhcbci_to_lhcbci(v__rhcbci=v__rhcbci)
+
+        # convert left-handed CBCI to left-handed vessel body coords
+        # ref: https://krpc.github.io/krpc/python/api/space-center/space-center.html#SpaceCenter.transform_direction
+        # ref: https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
+        v__lhvbody = list(self.conn.space_center.transform_direction(
+            direction = tuple(v__lhcbci),
+            from_ = vessel.orbit.body.non_rotating_reference_frame,
+            to = vessel.reference_frame
+        ))
+
+        # convert left-handed body coords (right, forward, down) to right-handed body coords (forward, right, down)
+        v__rhvbody = U.convert_lhbody_to_rhbody(v__lhbody=v__lhvbody)
+
+        return v__rhvbody
+    
+    def convert_rhntw_to_rhvbody(self, v__rhntw: List[float], vessel) -> List[float]:
+        '''Converts vector in right-handed NTW frame to pursuer vessel right-oriented body frame
+        Args:
+            v__ntw : List[float]
+                3-vector represented in orbital NTW coords
+        
+        Returns
+            v__rhpbody : List[float]
+                3-vector vector represented in pursuer's right-hadded body coords (forward, right, down)
+            vessel : kRPC.Vessel
+                kRPC Vessel object for which conversion to right-hand body frame is to be done
+        
+        Ref:
+            Left-handed vessel body system: 
+                https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
+            Right-handed NTW system: Vallado, 3rd Edition Sec 3.3.3
+        '''
+
+        # convert right-handed NTW coords to left-handed NTW
+        v__lhntw = U.convert_rhntw_to_lhntw(v__rhntw=v__rhntw)
+
+        # convert left-handed NTW to left-handed vessel body coords
+        # ref: https://krpc.github.io/krpc/python/api/space-center/space-center.html#SpaceCenter.transform_direction
+        # ref: https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
+        v__lhvbody = list(self.conn.space_center.transform_direction(
+            direction = tuple(v__lhntw),
+            from_ = vessel.orbital_reference_frame,
+            to = vessel.reference_frame
+        ))
+
+        # convert left-handed body coords (right, forward, down) to right-handed body coords (forward, right, down)
+        v__rhvbody = U.convert_lhbody_to_rhbody(v__lhbody=v__lhvbody)
+
+        return v__rhvbody
+    
+    def step_v1(self, action: Dict, vesAgent):
+        """ Apply thrust and torque actuation for specified time duration
+        
+        This is step function that is common across a subset of environments (e.g. pe1, lbg1, sb1)
+        so abstracting to parent class to reduce redundancy
+
+        Args:
+            action : dict
+                "burn_vec" :
+                    4-tuple of throttle values in 3D and timestep
+                    [0:3] - throttle vector expressed in ref_frame coords. range -1.0 to 1.0
+                    [3] - time duration to execute burn in seconds
+                "ref_frame" : int
+                    designates the reference frame the burn vector is expressed in
+                    0: rhpbody - right-handed pursuer body frame (forward, right, down)
+                        see https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
+                    1: rhcbci - right-handed celestial-body-centered inertial frame 
+                        see https://github.com/mit-ll/spacegym-kspdg/tree/main#code-notation
+                    2: rhntw - right-handed NTW frame (y-axis velocity aligned, z-axis is orbit normal, x-axis completes
+                                right-handed system)
+                        see https://github.com/mit-ll/spacegym-kspdg/tree/main#code-notation
+
+            vesAgent : krpc.Vessel
+                krpc Vessel object for vessel that is acting as the agent (as opposed to pre-scripted bot vessels)
+        
+        """
+
+        if isinstance(action, dict):
+
+            # Dict is the intended action object type
+            k_burn_vec = "burn_vec"
+            k_ref_frame = "ref_frame"
+
+            assert len(action[k_burn_vec]) == 4
+            thr_dur = action[k_burn_vec][3]
+
+            if action[k_ref_frame] == 0:
+                # rh-vessel-body coords
+                # burn vector given in pursuer body coords
+                # parse and apply action
+                thr__rhvbody = [
+                    action[k_burn_vec][0],
+                    action[k_burn_vec][1],
+                    action[k_burn_vec][2]
+                ]
+
+            elif action[k_ref_frame] == 1:
+                # rhcbci coords
+                # burn vector given in inertial celestial body centered coords
+                thr__rhcbci = action[k_burn_vec][0:3]
+
+                # convert to pursuer body frame
+                thr__rhvbody = self.convert_rhcbci_to_rhvbody(thr__rhcbci, vessel=vesAgent)
+
+            elif action[k_ref_frame] == 2:
+                # rhntw coords
+                thr__rhntw =  action[k_burn_vec][0:3]
+                thr__rhvbody = self.convert_rhntw_to_rhvbody(thr__rhntw, vessel=vesAgent)
+
+            else:
+                raise ValueError(f"Unrecognized burn reference frame: {action[k_ref_frame]}")
+
+        elif len(action) == 4:
+
+            # Action as list is for backward compatability
+            thr__rhvbody = [
+                action[0],
+                action[1],
+                action[2]
+            ]
+            thr_dur = action[3]
+
+        else:
+            raise TypeError(f"Unrecognized action format: {action}")
+        
+        # set throttle values for pursuit vehicle
+        vesAgent.control.forward = thr__rhvbody[0]
+        vesAgent.control.right = thr__rhvbody[1]
+        vesAgent.control.up = -thr__rhvbody[2]
+
+        # execute maneuver for specified time, checking for end
+        # conditions while you do
+        timeout = time.time() + thr_dur
+        while True: 
+            if self.is_episode_done or time.time() > timeout:
+                break
+
+        # zero out thrusts
+        vesAgent.control.forward = 0.0
+        vesAgent.control.up = 0.0
+        vesAgent.control.right = 0.0
+
+        # get observation
+        obs = self.get_observation()
+
+        # compute performance metrics
+        info = self.get_info(obs, self.is_episode_done)
+
+        # compute reward
+        rew = self.get_reward(info, self.is_episode_done)
+
+        return obs, rew, self.is_episode_done, info
+
+    @abstractmethod
+    def _reset_vessels(self) -> None:
+        """ Define vessel attirbutes and walkthrough initial configuration process
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _reset_episode_metrics(self) -> None:
+        """ Reset attributes that track performance throughout episode
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def bot_policy(self) -> None:
+        """ Behavioral policy to be continuously run for pre-scripted bots 
+        (e.g. evader in pe1, lady & guard in lbg1)
+        """
+        raise NotImplementedError()
 
     @abstractmethod
     def enforce_episode_termination(self) -> None:
@@ -135,16 +358,3 @@ class KSPDGBaseEnv(ABC, gym.Env):
                 current observation of environment formatted as array-like object
         """
         raise NotImplementedError
-
-    def get_info(self, observation: ArrayLike, done: bool) -> Dict:
-        """ general info about environment state not directly intended for action selection 
-        
-        Example: cumulative performance metrics for episode other than raw reward signal
-
-        Args:
-            observation : ArrayLike
-                current / most recent observation of environment
-            done : bool
-                True if last step of episode
-        """
-        return {"is_episode_done": done}

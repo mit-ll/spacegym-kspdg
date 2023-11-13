@@ -16,7 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Abstracted `_start_bot_threads()` and `close()` to KSPDGBaseEnv to reduce redundancy
+- Abstracted `convert_rhntw_to_rhpbody` and `convert_rhcbci_to_rhpbody` to parent level functions requiring as input the vessel object for which conversion to right-hand body coords is to be performed
+- Abstracted the `step` function from `pe1`, `lbg1`, and `sb1` environments up to KSPDGBaseEnv under the `step_v1` function
+
 ### Removed
+
+- Commented code in lbg1_base.py, `observation_dict_to_list` and `observation_list_to_dict`
 
 ## [v0.2.0] - 2023-11-05
 
