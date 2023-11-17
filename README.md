@@ -281,7 +281,8 @@ env.reset()
 # (Do you think it can intercept even a non-maneuvering evader??)
 is_done = False
 act = {
-    "burn_vec": [1.0, 0, 0, 1.0], # throttle in x-axis, throttle in y-axis, throttle in z-axis, duration [s]
+    "burn_vec": [1.0, 0, 0, 1.0], # burn vector in x, y, z, and duration [s]
+    "vec_type": 0,  # burn vector as throttle values (if =1, burn vector represents thrust in [N])
     "ref_frame": 0  # burn_vec expressed in agent vessel's right-handed body frame. 
                     # i.e. forward throttle, right throttle, down throttle, 
                     # Can also use rhcbci (1) and rhntw (2) ref frames

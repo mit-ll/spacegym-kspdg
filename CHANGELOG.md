@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [UNRELEASED]
+
+### Added
+
+- New field in composite action space "vec_type" which is a discrete variable that can be used to indicate if the action vector represents throttle values (-1, 1 in each axes) or thrust values (in Newtons in each axes)
+
+### Fixed
+
+### Changed
+
+- further abstracted code from `pe1_base.PursuitEvadeGroup1Env` and `lbg1_base.LadyBanditGuardGroup1Env` into `base_envs.Group1BaseEnv` which defines the composite action space shared across the child classes
+
+### Removed
+
 ## [v0.3.0] - 2023-13-05
 
 ### Added

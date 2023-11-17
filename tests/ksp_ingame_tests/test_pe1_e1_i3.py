@@ -241,24 +241,57 @@ def test_step_action_space_0(pe1_e1_i3_env):
         env = pe1_e1_i3_env
 
     # ~~ ACT ~~ 
-    env.step([1.0, 0, 0, 1.0])
+
+    # Backward compatibility to legacy action space
+    env.step([1.0, 0, 0, 0.1])  # throttle in rhpbody
+
+    # Backward compat to v0.3 action space
     env.step({
-        "burn_vec":[1.0, 0, 0, 1.0],
-        "ref_frame":0
+        "burn_vec":[1.0, 0, 0, 0.1],
+        "ref_frame":0   # body coords (rhpbody)
     })
     env.step({
-        "burn_vec":[1.0, 0, 0, 1.0],
-        "ref_frame":1
+        "burn_vec":[1.0, 0, 0, 0.1],
+        "ref_frame":1   # celestial-body-centered inertial (rhcbci)
     })
     env.step({
-        "burn_vec":[1.0, 0, 0, 1.0],
-        "ref_frame":2
+        "burn_vec":[1.0, 0, 0, 0.1],
+        "ref_frame":2   # orbital NTW (rhntw)
     })
 
     with pytest.raises(ValueError):
         env.step({
-            "burn_vec":[1.0, 0, 0, 1.0],
-            "ref_frame":3
+            "burn_vec":[1.0, 0, 0, 0.1],
+            "ref_frame":3   # invalid
+        })
+
+    # v0.4 action space
+    env.step({
+        "burn_vec":[1.0, 0, 0, 0.1],
+        "vec_type":0,   # throttle
+        "ref_frame":0   # rhpbody
+    })
+    env.step({
+        "burn_vec":[1000.0, 0, 0, 0.1],
+        "vec_type":1,    # thrust
+        "ref_frame":0   # rhpbody
+    })
+    env.step({
+        "burn_vec":[1000.0, 0, 0, 0.1],
+        "vec_type":1,    # thrust
+        "ref_frame":1   # rhcbci
+    })
+    env.step({
+        "burn_vec":[1000.0, 0, 0, 0.1],
+        "vec_type":1,    # thrust
+        "ref_frame":2   # rhntw
+    })
+
+    with pytest.raises(ValueError):
+        env.step({
+            "burn_vec":[1.0, 0, 0, 0.1],
+            "vec_type":2,    # invalid
+            "ref_frame":0
         })
 
 def test_step_action_ref_frame_1(pe1_e1_i3_env):
@@ -283,6 +316,7 @@ def test_step_action_ref_frame_1(pe1_e1_i3_env):
     v0 = np.linalg.norm(obs0[6:9])
     env.step({
         "burn_vec":[0, 0, 1.0, 1.0],
+        "vec_type":0,
         "ref_frame":1
     })
     time.sleep(1.0)
@@ -331,6 +365,7 @@ def test_step_action_ref_frame_2(pe1_e1_i3_env):
 
         env.step({
             "burn_vec":[0, 0, 1.0, 1.0],
+            "vec_type":0,
             "ref_frame":2
         })
         time.sleep(1.0)

@@ -11,12 +11,12 @@ from typing import List, Dict
 
 import kspdg.utils.constants as C
 import kspdg.utils.utils as U
-from kspdg.base_envs import KSPDGBaseEnv
+from kspdg.base_envs import Group1BaseEnv
 
 DEFAULT_EPISODE_TIMEOUT = 240.0 # [sec]
 DEFAULT_CAPTURE_DIST = 5.0      # [m]
 
-class PursuitEvadeGroup1Env(KSPDGBaseEnv):
+class PursuitEvadeGroup1Env(Group1BaseEnv):
     '''
     Base environment for 1v1 pursuit-evasion orbital scenarios
     
@@ -38,13 +38,10 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
     # in observation which should really only be variable values)
     # Need for hard-coding rsc properties comes from the errors in 
     # krpc's handling of thruster objects.
-    PARAMS = SimpleNamespace()
+    PARAMS = Group1BaseEnv.PARAMS
     PARAMS.PURSUER = SimpleNamespace()
     PARAMS.EVADER = SimpleNamespace()
     PARAMS.PURSUER.RCS = SimpleNamespace()
-    PARAMS.OBSERVATION = SimpleNamespace()
-    PARAMS.ACTION = SimpleNamespace()
-    PARAMS.INFO = SimpleNamespace()
 
     # observation space paramterization
     # [0] : mission elapsed time [s]
@@ -85,10 +82,6 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
     PARAMS.OBSERVATION.I_EVADER_VY = 13
     PARAMS.OBSERVATION.K_EVADER_VZ = "velz_e_cb__rhcbci"
     PARAMS.OBSERVATION.I_EVADER_VZ = 14
-
-    # action space params
-    PARAMS.ACTION.K_BURN_VEC = "burn_vec"
-    PARAMS.ACTION.K_REF_FRAME = "ref_frame"
 
     # info metric parameters
     PARAMS.INFO.K_CLOSEST_APPROACH = "closest_approach"
@@ -183,16 +176,13 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
             high = np.inf * np.ones(15)
         )
 
-        # establish action space (see step() for mapping)
-        self.action_space = gym.spaces.Dict(
-            {
-                self.PARAMS.ACTION.K_BURN_VEC: gym.spaces.Box(
-                    low=np.array([-1.0, -1.0, -1.0, 0.0]), 
-                    high=np.array([1.0, 1.0, 1.0, 10.0])
-                ),
-                self.PARAMS.ACTION.K_BURN_VEC: gym.spaces.Discrete(2)
-            }
-        )
+        # define max thrust along each axes
+        self.agent_max_thrust_forward = self.PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_FORWARD
+        self.agent_max_thrust_reverse = self.PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_REVERSE
+        self.agent_max_thrust_right = self.PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_RIGHT
+        self.agent_max_thrust_left = self.PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_LEFT
+        self.agent_max_thrust_down = self.PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_DOWN
+        self.agent_max_thrust_up =  self.PARAMS.PURSUER.RCS.VACUUM_MAX_THRUST_UP
         
         # don't call reset. This allows instantiation and partial testing
         # without connecting to krpc server
@@ -234,8 +224,8 @@ class PursuitEvadeGroup1Env(KSPDGBaseEnv):
         self.evader_init_mass = self.vesEvade.mass
 
     def step(self, action):
-        """Apply thrust and torque actuation for specified time duration"""
-        return self.step_v1(action=action, vesAgent=self.vesPursue)
+        """Apply thrust for specified time duration"""
+        return self.vessel_step(action=action, vesAgent=self.vesPursue)
     
     def get_weighted_score(self, dist: float, speed: float, time: float, fuel: float):
         """ Compute a scaled, weighted sum of scoring metrics

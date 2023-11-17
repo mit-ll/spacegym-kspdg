@@ -113,9 +113,61 @@ def test_observation_0(lbg1_lg0_i2_env):
     assert mes_spd_g_cb > exp_spd_g_cb - spd_g_cb_eps
     assert mes_spd_g_cb < exp_spd_g_cb + spd_g_cb_eps
 
+def test_convert_rhntw_to_rhvbody_0(lbg1_lg0_i2_env):
+    '''check along-track vec in right-hand NTW frame transforms to forward in right-hand pursuer body coords'''
+
+    # rename for ease of use
+    env = lbg1_lg0_i2_env
+    env.conn.space_center.target_vessel = None
+    env.vesBandit.control.rcs = False
+    time.sleep(0.5)
+    v_exp__rhpbody = [1, 0, 0]
+
+    # vector pointing along track
+    v__rhntw = [0, 1, 0]
+    env.vesBandit.control.sas_mode = env.vesBandit.control.sas_mode.prograde
+    time.sleep(2.0)   # give time to re-orient
+    v__rhpbody = lbg1_lg0_i2_env.convert_rhntw_to_rhvbody(v__rhntw, vessel=env.vesBandit)
+    assert np.allclose(v__rhpbody, v_exp__rhpbody, atol=1e-2)
+
+    # vector pointing radial out
+    v__rhntw = [1, 0, 0]
+    env.vesBandit.control.sas_mode = env.vesBandit.control.sas_mode.radial
+    time.sleep(2.0)   # give time to re-orient
+    v__rhpbody = lbg1_lg0_i2_env.convert_rhntw_to_rhvbody(v__rhntw, vessel=env.vesBandit)
+    assert np.allclose(v__rhpbody, v_exp__rhpbody, atol=1e-2)
+
+    # vector pointing normal
+    v__rhntw = [0, 0, 1]
+    env.vesBandit.control.sas_mode = env.vesBandit.control.sas_mode.normal
+    time.sleep(2.0)   # give time to re-orient
+    v__rhpbody = lbg1_lg0_i2_env.convert_rhntw_to_rhvbody(v__rhntw, vessel=env.vesBandit)
+    assert np.allclose(v__rhpbody, v_exp__rhpbody, atol=1e-2)
+
+    # vector pointing retrograde
+    v__rhntw = [0, -1, 0]
+    env.vesBandit.control.sas_mode = env.vesBandit.control.sas_mode.retrograde
+    time.sleep(2.0)   # give time to re-orient
+    v__rhpbody = lbg1_lg0_i2_env.convert_rhntw_to_rhvbody(v__rhntw, vessel=env.vesBandit)
+    assert np.allclose(v__rhpbody, v_exp__rhpbody, atol=1e-2)
+
+    # vector pointing in-radial
+    v__rhntw = [-1, 0, 0]
+    env.vesBandit.control.sas_mode = env.vesBandit.control.sas_mode.anti_radial
+    time.sleep(2.0)   # give time to re-orient
+    v__rhpbody = lbg1_lg0_i2_env.convert_rhntw_to_rhvbody(v__rhntw, vessel=env.vesBandit)
+    assert np.allclose(v__rhpbody, v_exp__rhpbody, atol=1e-2)
+
+    # vector pointing retrograde
+    v__rhntw = [0, 0, -1]
+    env.vesBandit.control.sas_mode = env.vesBandit.control.sas_mode.anti_normal
+    time.sleep(2.0)   # give time to re-orient
+    v__rhpbody = lbg1_lg0_i2_env.convert_rhntw_to_rhvbody(v__rhntw, vessel=env.vesBandit)
+    assert np.allclose(v__rhpbody, v_exp__rhpbody, atol=1e-2)
+
 def test_step_action_space_0(lbg1_lg0_i2_env):
     '''check that step accepts various action input formats without error'''
-    # ~~~ ARRANGE ~~~
+    # ~~ ARRANGE ~~
 
     if lbg1_lg0_i2_env is None:
         env = LBG1_LG0_I2_Env()
@@ -124,24 +176,141 @@ def test_step_action_space_0(lbg1_lg0_i2_env):
         env = lbg1_lg0_i2_env
 
     # ~~ ACT ~~ 
-    env.step([1.0, 0, 0, 1.0])
+
+    # Backward compatibility to legacy action space
+    env.step([1.0, 0, 0, 0.1])  # throttle in rhpbody
+
+    # Backward compat to v0.3 action space
     env.step({
-        "burn_vec":[1.0, 0, 0, 1.0],
-        "ref_frame":0
+        "burn_vec":[1.0, 0, 0, 0.1],
+        "ref_frame":0   # body coords (rhpbody)
     })
     env.step({
-        "burn_vec":[1.0, 0, 0, 1.0],
-        "ref_frame":1
+        "burn_vec":[1.0, 0, 0, 0.1],
+        "ref_frame":1   # celestial-body-centered inertial (rhcbci)
     })
     env.step({
-        "burn_vec":[1.0, 0, 0, 1.0],
-        "ref_frame":2
+        "burn_vec":[1.0, 0, 0, 0.1],
+        "ref_frame":2   # orbital NTW (rhntw)
     })
 
     with pytest.raises(ValueError):
         env.step({
-            "burn_vec":[1.0, 0, 0, 1.0],
-            "ref_frame":3
+            "burn_vec":[1.0, 0, 0, 0.1],
+            "ref_frame":3   # invalid
         })
+
+    # v0.4 action space
+    env.step({
+        "burn_vec":[1.0, 0, 0, 0.1],
+        "vec_type":0,   # throttle
+        "ref_frame":0   # rhpbody
+    })
+    env.step({
+        "burn_vec":[1000.0, 0, 0, 0.1],
+        "vec_type":1,    # thrust
+        "ref_frame":0   # rhpbody
+    })
+    env.step({
+        "burn_vec":[1000.0, 0, 0, 0.1],
+        "vec_type":1,    # thrust
+        "ref_frame":1   # rhcbci
+    })
+    env.step({
+        "burn_vec":[1000.0, 0, 0, 0.1],
+        "vec_type":1,    # thrust
+        "ref_frame":2   # rhntw
+    })
+
+    with pytest.raises(ValueError):
+        env.step({
+            "burn_vec":[1.0, 0, 0, 0.1],
+            "vec_type":2,    # invalid
+            "ref_frame":0
+        })
+
+def test_step_action_ref_frame_1(lbg1_lg0_i2_env):
+    '''check that inclination only burn does not affect speed or radius'''
+    # ~~ ARRANGE ~~
+
+    if lbg1_lg0_i2_env is None:
+        env = LBG1_LG0_I2_Env()
+        env.reset()
+    else:
+        env = lbg1_lg0_i2_env
+
+    env.conn.space_center.target_vessel = None
+    env.vesBandit.control.rcs = False
+    env.vesBandit.control.sas_mode = env.vesBandit.control.sas_mode.normal
+    time.sleep(2.0)   # give time to re-orient
+    env.vesBandit.control.rcs = True
+
+    # ~~ ACT ~~ 
+    obs0 = env.get_observation()
+    r0 = np.linalg.norm(obs0[3:6])
+    v0 = np.linalg.norm(obs0[6:9])
+    env.step({
+        "burn_vec":[0, 0, 1.0, 1.0],
+        "vec_type":0,
+        "ref_frame":1
+    })
+    time.sleep(1.0)
+
+    obs1 = env.get_observation()
+    r1 = np.linalg.norm(obs1[3:6])
+    v1 = np.linalg.norm(obs1[6:9])
+
+    # ~~ ASSERT ~~
+    assert np.isclose(r0, r1)
+    assert np.isclose(v0, v1)
+
+def test_step_action_ref_frame_2(lbg1_lg0_i2_env):
+    '''action in ref frame 2 produces expected delta-vs
+
+    Works by pointing the vehicle in various directions but then 
+    calling a orbit normal burn which should keep radial distance
+    and speed the same
+    '''
+    # ~~ ARRANGE ~~
+
+    if lbg1_lg0_i2_env is None:
+        env = LBG1_LG0_I2_Env()
+        env.reset()
+    else:
+        env = lbg1_lg0_i2_env
+
+    env.conn.space_center.target_vessel = None
+    time.sleep(0.1)
+
+    # ~~ ACT and ASSERT ~~
+
+    for point_dir in [
+        env.vesBandit.control.sas_mode.prograde, 
+        env.vesBandit.control.sas_mode.normal,
+        env.vesBandit.control.sas_mode.radial]:
+
+        env.vesBandit.control.rcs = False
+        env.vesBandit.control.sas_mode = point_dir
+        time.sleep(2.0)   # give time to re-orient
+        env.vesBandit.control.rcs = True
+
+        obs0 = env.get_observation()
+        r0 = np.linalg.norm(obs0[3:6])
+        v0 = np.linalg.norm(obs0[6:9])
+
+        env.step({
+            "burn_vec":[0, 0, 1.0, 1.0],
+            "vec_type":0,
+            "ref_frame":2
+        })
+        time.sleep(1.0)
+
+        obs1 = env.get_observation()
+        r1 = np.linalg.norm(obs1[3:6])
+        v1 = np.linalg.norm(obs1[6:9])
+
+        # ~~ ASSERT ~~
+        assert np.isclose(r0, r1)
+        assert np.isclose(v0, v1)
 
  

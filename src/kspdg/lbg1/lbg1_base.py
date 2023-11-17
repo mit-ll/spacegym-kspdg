@@ -14,12 +14,12 @@ from numpy.typing import ArrayLike
 
 import kspdg.utils.constants as C
 import kspdg.utils.utils as U
-from kspdg.base_envs import KSPDGBaseEnv
+from kspdg.base_envs import Group1BaseEnv
 
 DEFAULT_EPISODE_TIMEOUT = 240.0 # [sec]
 DEFAULT_CAPTURE_DIST = 5.0      # [m]
 
-class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
+class LadyBanditGuardGroup1Env(Group1BaseEnv):
     '''
     Base environment for Lady-Bandit-Guard (LBG) Group 1 environments
 
@@ -44,14 +44,11 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
     # in observation which should really only be variable values)
     # Need for hard-coding rsc properties comes from the errors in 
     # krpc's handling of thruster objects.
-    PARAMS = SimpleNamespace()
+    PARAMS = Group1BaseEnv.PARAMS
     PARAMS.LADY= SimpleNamespace()
     PARAMS.BANDIT = SimpleNamespace()
     PARAMS.GUARD = SimpleNamespace()
     PARAMS.BANDIT.RCS = SimpleNamespace()
-    PARAMS.OBSERVATION = SimpleNamespace()
-    PARAMS.ACTION = SimpleNamespace()
-    PARAMS.INFO = SimpleNamespace()
 
     # observation space paramterization
     # [0] : mission elapsed time [s]
@@ -85,10 +82,6 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
     PARAMS.OBSERVATION.I_GUARD_VX = 18
     PARAMS.OBSERVATION.I_GUARD_VY = 19
     PARAMS.OBSERVATION.I_GUARD_VZ = 20
-
-    # action space params
-    PARAMS.ACTION.K_BURN_VEC = "burn_vec"
-    PARAMS.ACTION.K_REF_FRAME = "ref_frame"
 
     # # keys for observation fields
     # PARAMS.OBSERVATION.K_MET = "mission_elapsed_time"
@@ -201,11 +194,13 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         )
         assert self.observation_space.shape == (self.PARAMS.OBSERVATION.LEN,)
 
-        # establish action space (forward, right, down, time) thrust of bandit
-        self.action_space = gym.spaces.Box(
-            low=np.array([-1.0, -1.0, -1.0, 0.0]), 
-            high=np.array([1.0, 1.0, 1.0, 10.0])
-        )
+        # define max thrust along each axes
+        self.agent_max_thrust_forward = self.PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_FORWARD
+        self.agent_max_thrust_reverse = self.PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_REVERSE
+        self.agent_max_thrust_right = self.PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_RIGHT
+        self.agent_max_thrust_left = self.PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_LEFT
+        self.agent_max_thrust_down = self.PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_DOWN
+        self.agent_max_thrust_up =  self.PARAMS.BANDIT.RCS.VACUUM_MAX_THRUST_UP
         
         # don't call reset. This allows instantiation and partial testing
         # without connecting to krpc server
@@ -256,8 +251,8 @@ class LadyBanditGuardGroup1Env(KSPDGBaseEnv):
         raise NotImplementedError("Must be implemented by child class")
 
     def step(self, action):
-        """Apply thrust and torque actuation for specified time duration"""
-        return self.step_v1(action=action, vesAgent=self.vesBandit)
+        """Apply thrust for specified time duration"""
+        return self.vessel_step(action=action, vesAgent=self.vesBandit)
     
     def get_weighted_score(self, lb_dist: float, bg_dist: float):
         """ Compute a scaled, weighted sum of scoring metrics

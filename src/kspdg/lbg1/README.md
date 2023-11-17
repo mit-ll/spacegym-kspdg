@@ -35,9 +35,9 @@ This README documents/decodes the somewhat cryptic naming scheme used to uniquel
 
 ## Observation and Action Space:
 
-    See [`get_observation()`](https://github.com/mit-ll/spacegym-kspdg/blob/main/src/kspdg/lbg1/lbg1_base.py) for detailed description of observation vector.
+See [`get_observation()`](https://github.com/mit-ll/spacegym-kspdg/blob/main/src/kspdg/lbg1/lbg1_base.py) for detailed description of observation vector.
 
-    See [`step_v1()`](https://github.com/mit-ll/spacegym-kspdg/blob/main/src/kspdg/base_envs.py) for detailed description of action vector 
+See `Group1BaseEnv.vessel_step()` in [`base_envs.py`](https://github.com/mit-ll/spacegym-kspdg/blob/main/src/kspdg/base_envs.py) for detailed description of action dictionary
 
 ## Lady-Guard Policy Environment Identifiers
 

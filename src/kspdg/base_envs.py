@@ -8,11 +8,13 @@ import time
 import krpc
 import logging
 import gymnasium as gym
+import numpy as np
 
 from abc import ABC, abstractmethod
 from threading import Thread
 from typing import Tuple, Dict, List
 from numpy.typing import ArrayLike
+from types import SimpleNamespace
 
 from kspdg.utils.loggers import create_logger
 import kspdg.utils.utils as U
@@ -220,109 +222,6 @@ class KSPDGBaseEnv(ABC, gym.Env):
         v__rhvbody = U.convert_lhbody_to_rhbody(v__lhbody=v__lhvbody)
 
         return v__rhvbody
-    
-    def step_v1(self, action: Dict, vesAgent):
-        """ Apply thrust and torque actuation for specified time duration
-        
-        This is step function that is common across a subset of environments (e.g. pe1, lbg1, sb1)
-        so abstracting to parent class to reduce redundancy
-
-        Args:
-            action : dict
-                "burn_vec" :
-                    4-tuple of throttle values in 3D and timestep
-                    [0:3] - throttle vector expressed in ref_frame coords. range -1.0 to 1.0
-                    [3] - time duration to execute burn in seconds
-                "ref_frame" : int
-                    designates the reference frame the burn vector is expressed in
-                    0: rhvbody - right-handed body frame of agent vessel (forward, right, down)
-                        see https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
-                    1: rhcbci - right-handed celestial-body-centered inertial frame 
-                        see https://github.com/mit-ll/spacegym-kspdg/tree/main#code-notation
-                    2: rhntw - right-handed NTW frame (y-axis velocity aligned, z-axis is orbit normal, x-axis completes
-                                right-handed system)
-                        see https://github.com/mit-ll/spacegym-kspdg/tree/main#code-notation
-
-            vesAgent : krpc.Vessel
-                krpc Vessel object for vessel that is acting as the agent (as opposed to pre-scripted bot vessels)
-        
-        """
-
-        if isinstance(action, dict):
-
-            # Dict is the intended action object type
-            k_burn_vec = "burn_vec"
-            k_ref_frame = "ref_frame"
-
-            assert len(action[k_burn_vec]) == 4
-            thr_dur = action[k_burn_vec][3]
-
-            if action[k_ref_frame] == 0:
-                # rh-vessel-body coords
-                # burn vector given in agent vessel's body coords
-                # parse and apply action
-                thr__rhvbody = [
-                    action[k_burn_vec][0],
-                    action[k_burn_vec][1],
-                    action[k_burn_vec][2]
-                ]
-
-            elif action[k_ref_frame] == 1:
-                # rhcbci coords
-                # burn vector given in inertial celestial body centered coords
-                thr__rhcbci = action[k_burn_vec][0:3]
-
-                # convert to agent vessel body frame
-                thr__rhvbody = self.convert_rhcbci_to_rhvbody(thr__rhcbci, vessel=vesAgent)
-
-            elif action[k_ref_frame] == 2:
-                # rhntw coords
-                thr__rhntw =  action[k_burn_vec][0:3]
-                thr__rhvbody = self.convert_rhntw_to_rhvbody(thr__rhntw, vessel=vesAgent)
-
-            else:
-                raise ValueError(f"Unrecognized burn reference frame: {action[k_ref_frame]}")
-
-        elif len(action) == 4:
-
-            # Action as list is for backward compatability
-            thr__rhvbody = [
-                action[0],
-                action[1],
-                action[2]
-            ]
-            thr_dur = action[3]
-
-        else:
-            raise TypeError(f"Unrecognized action format: {action}")
-        
-        # set throttle values for agent vehicle
-        vesAgent.control.forward = thr__rhvbody[0]
-        vesAgent.control.right = thr__rhvbody[1]
-        vesAgent.control.up = -thr__rhvbody[2]
-
-        # execute maneuver for specified time, checking for end
-        # conditions while you do
-        timeout = time.time() + thr_dur
-        while True: 
-            if self.is_episode_done or time.time() > timeout:
-                break
-
-        # zero out thrusts
-        vesAgent.control.forward = 0.0
-        vesAgent.control.up = 0.0
-        vesAgent.control.right = 0.0
-
-        # get observation
-        obs = self.get_observation()
-
-        # compute performance metrics
-        info = self.get_info(obs, self.is_episode_done)
-
-        # compute reward
-        rew = self.get_reward(info, self.is_episode_done)
-
-        return obs, rew, self.is_episode_done, info
 
     @abstractmethod
     def _reset_vessels(self) -> None:
@@ -358,3 +257,219 @@ class KSPDGBaseEnv(ABC, gym.Env):
                 current observation of environment formatted as array-like object
         """
         raise NotImplementedError
+
+class Group1BaseEnv(KSPDGBaseEnv):
+    """Abstract base class for all group-1 environments
+
+    Group 1 environments all share a common action space,
+    but not a common observation space or reward structure
+    """
+
+    PARAMS = SimpleNamespace()
+    PARAMS.ACTION = SimpleNamespace()
+    PARAMS.OBSERVATION = SimpleNamespace()
+    PARAMS.INFO = SimpleNamespace()
+
+    # action space params
+    PARAMS.ACTION.K_BURN_VEC = "burn_vec"   # 4-tuple: 3D vector [0:3] and burn duration [3]
+    PARAMS.ACTION.K_REF_FRAME = "ref_frame" # discrete: reference frame in which burn vector is defined
+    PARAMS.ACTION.K_VEC_TYPE = "vec_type"   # discrete: what does the vector represent: throttle, thrust, acceleration
+
+    def __init__(self, **kwargs) -> None:
+        
+        super().__init__(**kwargs)
+
+        # define common action space 
+        # see vessel_step() for mapping
+        self.action_space = gym.spaces.Dict(
+            {
+                self.PARAMS.ACTION.K_BURN_VEC: gym.spaces.Box(
+                    low=np.array([-1.0, -1.0, -1.0, 0.0]), 
+                    high=np.array([1.0, 1.0, 1.0, 10.0])
+                ),
+                self.PARAMS.ACTION.K_REF_FRAME: gym.spaces.Discrete(3),
+                self.PARAMS.ACTION.K_VEC_TYPE: gym.spaces.Discrete(3)
+            }
+        )
+
+    def vessel_step(self, action: Dict, vesAgent):
+        """ Apply propulsive burn for the specified vessel for specified time duration
+        
+        This is step function that is common across a subset of environments (e.g. pe1, lbg1, sb1)
+        so abstracting to parent class to reduce redundancy
+
+        Args:
+            action : dict
+                "burn_vec" :
+                    4-tuple of burn vector in 3D and duration of burn
+                    [0:3] - burn vector expressed in ref_frame coords. 
+                    [3] - time duration to execute burn in seconds
+                "vec_type" : int
+                    description of what the burn vector represents
+                    0: throttle vector - unitless vector in range -1 to 1 in each dimension
+                        1.0 represents a maximum forward thrust in that dimension where as 
+                        -1.0 represent a maximum reverse thrust in that dimension
+                        inputing values outside the range [-1, 1] will not throw errors,
+                        However the spacecraft will not be able to "overthrottle" in anyway
+                    1: thrust - [N] force vector that spacecraft attempts to reproduce
+                        inputing force vectors that are not achievable by the spacecraft
+                        will not throw errors, but the spacecraft will not behave as commanded
+                    Note: acceleration is not included as a vector type because it requires
+                        vehicle mass to convert to thrust and then throttle.
+                        The instantaneous vehicle mass does not have a top-level representation
+                        in Group1BaseEnv and would need to be distinguished based on child classes
+                        (e.g. self.vesPursue.mass or self.vesBandit.mass, etc). Furthermore,
+                        the vessel mass is already included in the observation vector sent to the
+                        agent object that is generating the action; therefore the agent can
+                        more directly make this conversion from accel to thrust than this top-
+                        level environment class
+                "ref_frame" : int
+                    designates the reference frame the burn vector is expressed in
+                    0: rhvbody - right-handed body frame of agent vessel (forward, right, down)
+                        see https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
+                    1: rhcbci - right-handed celestial-body-centered inertial frame 
+                        see https://github.com/mit-ll/spacegym-kspdg/tree/main#code-notation
+                    2: rhntw - right-handed NTW frame (y-axis velocity aligned, z-axis is orbit normal, x-axis completes
+                                right-handed system)
+                        see https://github.com/mit-ll/spacegym-kspdg/tree/main#code-notation
+
+            vesAgent : krpc.Vessel
+                krpc Vessel object for vessel that is acting as the agent (as opposed to pre-scripted bot vessels)
+        
+        """
+
+        # raise NotImplementedError("Exand action space to include units and add corresponding logic")
+
+        k_burn_vec = self.PARAMS.ACTION.K_BURN_VEC
+        k_vec_type = self.PARAMS.ACTION.K_VEC_TYPE
+        k_ref_frame = self.PARAMS.ACTION.K_REF_FRAME
+
+        if isinstance(action, dict):
+
+            # process the burn vector in body coords
+            burn__rhvbody, burn_dur = self.get_burn__rhvbody(
+                burn_vec=action[k_burn_vec], 
+                ref_frame=action[k_ref_frame],
+                vesAgent=vesAgent)
+
+            # convert burn vector into throttle values along each body axes
+            if k_vec_type not in action.keys() or action[k_vec_type] == 0:
+                # burn vector already represents throttle
+                thr__rhvbody = burn__rhvbody
+
+            elif action[k_vec_type] == 1:
+
+                # burn vector represents thrust in Newtons, use max thrusts to scale to throttle
+                f_max_forward = self.agent_max_thrust_forward if burn__rhvbody[0] >= 0 else \
+                    self.agent_max_thrust_reverse
+                f_max_right = self.agent_max_thrust_right if burn__rhvbody[1] >= 0 else \
+                    self.agent_max_thrust_left
+                f_max_down = self.agent_max_thrust_down if burn__rhvbody[2] >= 0 else \
+                    self.agent_max_thrust_up
+                
+                # convert to throttle
+                thr__rhvbody = [
+                    burn__rhvbody[0]/f_max_forward,
+                    burn__rhvbody[1]/f_max_right,
+                    burn__rhvbody[2]/f_max_down,
+                ]
+                
+            else:
+                raise ValueError(f"Unrecognized burn vector type: {action[k_vec_type]}")
+
+
+        elif len(action) == 4:
+
+            # Action as list is for backward compatability
+            thr__rhvbody = [
+                action[0],
+                action[1],
+                action[2]
+            ]
+            burn_dur = action[3]
+
+        else:
+            raise TypeError(f"Unrecognized action format: {action}")
+        
+        # set throttle values for agent vehicle
+        vesAgent.control.forward = thr__rhvbody[0]
+        vesAgent.control.right = thr__rhvbody[1]
+        vesAgent.control.up = -thr__rhvbody[2]
+
+        # execute maneuver for specified time, checking for end
+        # conditions while you do
+        timeout = time.time() + burn_dur
+        while True: 
+            if self.is_episode_done or time.time() > timeout:
+                break
+
+        # zero out thrusts
+        vesAgent.control.forward = 0.0
+        vesAgent.control.up = 0.0
+        vesAgent.control.right = 0.0
+
+        # get observation
+        obs = self.get_observation()
+
+        # compute performance metrics
+        info = self.get_info(obs, self.is_episode_done)
+
+        # compute reward
+        rew = self.get_reward(info, self.is_episode_done)
+
+        return obs, rew, self.is_episode_done, info
+
+    def get_burn__rhvbody(self, burn_vec, ref_frame, vesAgent):
+        """map the burn vec from the given reference frame into the right-hand vessel body frame
+        
+        Args:
+            burn_vec : arraylike
+                    4-tuple of burn vector in 3D and duration of burn
+                    [0:3] - burn vector expressed in ref_frame coords. 
+                    [3] - time duration to execute burn in seconds
+            ref_frame : int
+                    designates the reference frame the burn vector is expressed in
+                    0: rhvbody - right-handed body frame of agent vessel (forward, right, down)
+                        see https://krpc.github.io/krpc/tutorials/reference-frames.html#vessel-surface-reference-frame
+                    1: rhcbci - right-handed celestial-body-centered inertial frame 
+                        see https://github.com/mit-ll/spacegym-kspdg/tree/main#code-notation
+                    2: rhntw - right-handed NTW frame (y-axis velocity aligned, z-axis is orbit normal, x-axis completes
+                                right-handed system)
+                        see https://github.com/mit-ll/spacegym-kspdg/tree/main#code-notation
+            vesAgent : krpc.Vessel
+                krpc Vessel object for vessel that is acting as the agent (as opposed to pre-scripted bot vessels)
+
+        Returns:
+            burn__rhvbody : arraylike
+                3-vector representing the burn vector in the vessel's right-handed body frame
+            burn_dur : float
+                duration of burn to be executed
+        """
+        assert len(burn_vec) == 4
+            
+        # extract burn vector components and map to
+        # right-handed body coords of vessel (rhvbody)
+        burn_dur = burn_vec[3]
+        burn__rhvbody = None
+        if ref_frame == 0:
+            # rh-vessel-body coords
+            # burn vector given in agent vessel's body coords
+            burn__rhvbody = burn_vec[0:3]
+
+        elif ref_frame == 1:
+            # rhcbci coords
+            # burn vector given in inertial celestial body centered coords
+            burn__rhcbci = burn_vec[0:3]
+
+            # convert to agent vessel body frame
+            burn__rhvbody = self.convert_rhcbci_to_rhvbody(burn__rhcbci, vessel=vesAgent)
+
+        elif ref_frame == 2:
+            # rhntw coords
+            burn__rhntw =  burn_vec[0:3]
+            burn__rhvbody = self.convert_rhntw_to_rhvbody(burn__rhntw, vessel=vesAgent)
+
+        else:
+            raise ValueError(f"Unrecognized burn reference frame: {ref_frame}")
+        
+        return burn__rhvbody, burn_dur
