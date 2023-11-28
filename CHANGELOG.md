@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [UNRELEASED]
+
+### Added
+
+### Fixed
+
+### Changed
+
+- Updated which tests to be run, i.e. `sb1_e1_i5`
+
+### Removed
+
+- 20220516_PursuitEvade mission files
+- Tests for 20220629 pursuit scenario
+
 ## [v0.4.1] - 2023-11-22
 
 ### Added

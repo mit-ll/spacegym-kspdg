@@ -248,8 +248,8 @@ pytest tests/ksp_ingame_tests/test_pe1_e1_i3.py
 # ESC > Quit to Main Menu > Exit to Main Menu > Play Missions > `lbg1_i2` > Continue
 pytest tests/ksp_ingame_tests/test_lbg1_lg0_i2.py
 
-# ESC > Quit to Main Menu > Exit to Main Menu > Play Missions > 20220516_PursuitEvade > Continue
-pytest tests/ksp_ingame_tests/test_pursuit_v20220516.py
+# ESC > Quit to Main Menu > Exit to Main Menu > Play Missions > `sb1_i5` > Continue
+pytest tests/ksp_ingame_tests/test_sb1_e1_i5.py
 ```
 5. You should see the KSP game reset and focus on a vehicle that then performs several orientation and propulsive maneuvers. The pytest command should then indicate the number of passed tests.
 
@@ -372,9 +372,9 @@ This should output to a file in the `results/` subdirectory with a name like `ks
 1313515906
 ```
 
-This results file will then be sent to the authentication and scoreboard server for official ranking in the KSPDG Challenge
+This results file will then be sent to the authentication and scoreboard server for official ranking in the KSPDG Challenge. 
 
-_DETAILS ON THIS PROCESS ARE FORTHCOMING_
+_INSTRUCTIONS FOR UPLOADING RESULTS TO COMPETITION SCOREBOARD HAVE BEEN EMAILED TO PARTICIPANTS_
 
 ------------
 
