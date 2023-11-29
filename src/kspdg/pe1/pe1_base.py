@@ -8,6 +8,7 @@ import numpy as np
 
 from types import SimpleNamespace
 from typing import List, Dict
+from copy import deepcopy
 
 import kspdg.utils.constants as C
 import kspdg.utils.utils as U
@@ -38,7 +39,7 @@ class PursuitEvadeGroup1Env(Group1BaseEnv):
     # in observation which should really only be variable values)
     # Need for hard-coding rsc properties comes from the errors in 
     # krpc's handling of thruster objects.
-    PARAMS = Group1BaseEnv.PARAMS
+    PARAMS = deepcopy(Group1BaseEnv.PARAMS)
     PARAMS.PURSUER = SimpleNamespace()
     PARAMS.EVADER = SimpleNamespace()
     PARAMS.PURSUER.RCS = SimpleNamespace()

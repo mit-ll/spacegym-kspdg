@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.4.3] - 2023-11-29
+
+### Added
+
+### Fixed
+
+- bug where PARAMS from LBG1 classes overwrite PARAMS in PE1 classes due to top-level imports at kspdg/__init__.py.
+
+### Changed
+
+### Removed
+
 ## [v0.4.2] - 2023-11-28
 
 ### Added

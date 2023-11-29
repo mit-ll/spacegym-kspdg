@@ -26,7 +26,11 @@ def pe1_e1_i3_env():
 def test_observation_dict_list_convert_0(pe1_e1_i3_env):
     '''check that converting between lists and dict to not alter observation'''
     # ~~ ARRANGE ~~
-    env = pe1_e1_i3_env
+    if pe1_e1_i3_env is None:
+        env = PE1_E1_I3_Env()
+        env.reset()
+    else:
+        env = pe1_e1_i3_env
 
     # collect current observation as list
     obs_list = env.get_observation()
@@ -379,4 +383,5 @@ def test_step_action_ref_frame_2(pe1_e1_i3_env):
         assert np.isclose(v0, v1)
 
 if __name__ == "__main__":
-    test_get_info_0(None)
+    # test_get_info_0(None)
+    test_observation_dict_list_convert_0(None)
