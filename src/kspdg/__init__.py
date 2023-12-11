@@ -28,6 +28,8 @@ from kspdg.lbg1.lg0_envs import LBG1_LG0_I1_Env as LBG1_LG0_I1_V1
 from kspdg.lbg1.lg0_envs import LBG1_LG0_I2_Env as LBG1_LG0_I2_V1
 from kspdg.lbg1.lg1_envs import LBG1_LG1_I1_Env as LBG1_LG1_I1_V1
 from kspdg.lbg1.lg1_envs import LBG1_LG1_I2_Env as LBG1_LG1_I2_V1
+from kspdg.lbg1.lg2_envs import LBG1_LG2_I1_Env as LBG1_LG2_I1_V1
+from kspdg.lbg1.lg2_envs import LBG1_LG2_I2_Env as LBG1_LG2_I2_V1
 
 from kspdg.sb1.e1_envs import SB1_E1_I1_Env as SB1_E1_I1_V1
 from kspdg.sb1.e1_envs import SB1_E1_I2_Env as SB1_E1_I2_V1
