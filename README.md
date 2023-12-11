@@ -171,7 +171,7 @@ git clone git@github.com:jrodrigv/PhysicsRangeExtender.git
 
 # copy the necessary game data for the mod into your KSP install
 mkdir ~/Desktop/KSP_osx/GameData/PhysicsRangeExtender
-cp -r ~/Desktop/PhysicsRangeExtender/PhysicsRangeExtender/Distribution/GameData/PhysicsRangeExtender/ ~/Desktop/KSP_osx/GameData/PhysicsRangeExtender/
+cp -r ~/Desktop/PhysicsRangeExtender/PhysicsRangeExtender/Distribution/GameData/PhysicsRangeExtender/* ~/Desktop/KSP_osx/GameData/PhysicsRangeExtender/
 ```
 
 ### Install `kspdg`
