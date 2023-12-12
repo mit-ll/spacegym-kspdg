@@ -43,7 +43,7 @@ class PE1_E3_ParentEnv(PursuitEvadeGroup1Env):
 
                 # turn on evader sas if not yet active
                 if not is_control_set:
-                    print("Activating Evader SAS and RCS...")
+                    self.logger.info("Activating Evader SAS and RCS...")
                     self.vesEvade.control.sas = True
                     self.vesEvade.control.sas_mode = self.vesEvade.control.sas_mode.normal
                     self.vesEvade.control.rcs = True
@@ -53,12 +53,12 @@ class PE1_E3_ParentEnv(PursuitEvadeGroup1Env):
                 if d_vesE_vesP < self.evade_dist:
                     self.vesEvade.control.forward = self.evade_throttle
                     if not was_evading:
-                        print("\n~~~PURSUER DETECTED! Executing evasive maneuvers~~~\n")
+                        self.logger.info("\n~~~PURSUER DETECTED! Executing evasive maneuvers~~~\n")
                     was_evading = True
                 else:
                     self.vesEvade.control.forward = 0.0
                     if was_evading:
-                        print("\n~~~NO PURSUER IN RANGE! Zeroing thrust...~~~\n")
+                        self.logger.info("\n~~~NO PURSUER IN RANGE! Zeroing thrust...~~~\n")
                     was_evading = False
         
         # terminate throttle
@@ -104,5 +104,5 @@ class PE1_E3_I20220516_Env(PE1_E3_ParentEnv):
             d_vesE_vesP = self.get_pe_relative_distance()
             self.is_episode_done = d_vesE_vesP < PE1_E3_I20220516_Env.MISSION_DONE_DIST_THRESHOLD
             if self.is_episode_done:
-                print("Successful Capture!")
+                self.logger.info("\n~~~SUCCESSFUL CAPTURE!~~~\n")
                 self.stop_episode_termination_thread = True

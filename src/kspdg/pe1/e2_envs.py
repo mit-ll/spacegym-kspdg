@@ -25,7 +25,7 @@ class PE1_E2_ParentEnv(PursuitEvadeGroup1Env):
 
                 # turn on evader sas if not yet active
                 if not is_control_set:
-                    print("Activating Evader SAS and RCS...")
+                    self.logger.info("Activating Evader SAS and RCS...")
                     self.vesEvade.control.sas = True
                     self.vesEvade.control.sas_mode = self.vesEvade.control.sas_mode.prograde
                     self.vesEvade.control.rcs = True
