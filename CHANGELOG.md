@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- updating test file names and adding additional scenarios to the test files (e.g. `test_lbg1_lg0_i2.py` -> `test_lbg1_i2.py` so we can test lg1_i2 and lg2_i2 in the same file)
 - Updating print statements to logger statements in pe1 e3_envs
 
 ### Removed

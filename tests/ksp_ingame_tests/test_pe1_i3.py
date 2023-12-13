@@ -14,6 +14,9 @@ import numpy as np
 
 import kspdg.utils.constants as C
 from kspdg.pe1.e1_envs import PE1_E1_I3_Env
+from kspdg.pe1.e2_envs import PE1_E2_I3_Env
+from kspdg.pe1.e3_envs import PE1_E3_I3_Env
+from kspdg.pe1.e4_envs import PE1_E4_I3_Env
 
 @pytest.fixture
 def pe1_e1_i3_env():
@@ -22,6 +25,46 @@ def pe1_e1_i3_env():
     env.reset()
     yield env
     env.close()
+
+@pytest.fixture
+def pe1_e2_i3_env():
+    '''setup and teardown of the pursuit-evade env object connected to kRPC server'''
+    env = PE1_E2_I3_Env()
+    env.reset()
+    yield env
+    env.close()
+
+@pytest.fixture
+def pe1_e3_i3_env():
+    '''setup and teardown of the pursuit-evade env object connected to kRPC server'''
+    env = PE1_E3_I3_Env()
+    env.reset()
+    yield env
+    env.close()
+
+@pytest.fixture
+def pe1_e4_i3_env():
+    '''setup and teardown of the pursuit-evade env object connected to kRPC server'''
+    env = PE1_E4_I3_Env()
+    env.reset()
+    yield env
+    env.close()
+
+def test_smoketest_e1(pe1_e1_i3_env):
+    """Ensure no errors are thrown from starting E1 environment"""
+    pass
+
+def test_smoketest_e2(pe1_e2_i3_env):
+    """Ensure no errors are thrown from starting E2 environment"""
+    pass
+
+def test_smoketest_e3(pe1_e3_i3_env):
+    """Ensure no errors are thrown from starting E3 environment"""
+    pass
+
+def test_smoketest_e4(pe1_e4_i3_env):
+    """Ensure no errors are thrown from starting E4 environment"""
+    pass
 
 def test_observation_dict_list_convert_0(pe1_e1_i3_env):
     '''check that converting between lists and dict to not alter observation'''
