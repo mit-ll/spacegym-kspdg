@@ -242,14 +242,14 @@ __KSP In-Game Tests:__ These tests require the KSP game engine to be running, th
 ```bash
 cd spacegym-kspdg
 conda activate kspdg
-pytest tests/ksp_ingame_tests/test_pe1_e1_i3.py
+pytest tests/ksp_ingame_tests/test_pe1_i3.py
 
 # for additional tests, load a different mission in KSP: 
 # ESC > Quit to Main Menu > Exit to Main Menu > Play Missions > `lbg1_i2` > Continue
-pytest tests/ksp_ingame_tests/test_lbg1_lg0_i2.py
+pytest tests/ksp_ingame_tests/test_lbg1_i2.py
 
 # ESC > Quit to Main Menu > Exit to Main Menu > Play Missions > `sb1_i5` > Continue
-pytest tests/ksp_ingame_tests/test_sb1_e1_i5.py
+pytest tests/ksp_ingame_tests/test_sb1_i5.py
 ```
 5. You should see the KSP game reset and focus on a vehicle that then performs several orientation and propulsive maneuvers. The pytest command should then indicate the number of passed tests.
 
