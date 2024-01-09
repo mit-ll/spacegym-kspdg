@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.5.1] - 2024.01.09
+
+_KSPDG Challenge @ SciTech 2024 - Finals Codebase_
+
+### Added
+
+- Printout of current score for audience engagement purposes
+
+### Fixed
+
+- infinite loop in lbg1_lg2 if proximity to lady never reached
+- lbg1 smoketest overwrite
+
+### Changed
+
+- moved PARMAS.INFO.K_WEIGHTED_SCORE to parent environment class
+
+### Removed
+
 ## [v0.5.0] - 2023.12.15
 
 _KSPDG Challenge @ SciTech 2024 - Semi-Finals Codebase_
