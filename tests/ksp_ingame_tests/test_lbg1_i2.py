@@ -45,11 +45,11 @@ def test_smoketest_lg0(lbg1_lg0_i2_env):
     """Ensure no errors are thrown from starting LG0 environment"""
     pass
 
-def test_smoketest_lg0(lbg1_lg1_i2_env):
+def test_smoketest_lg1(lbg1_lg1_i2_env):
     """Ensure no errors are thrown from starting LG1 environment"""
     pass
 
-def test_smoketest_lg0(lbg1_lg1_i2_env):
+def test_smoketest_lg2(lbg1_lg2_i2_env):
     """Ensure no errors are thrown from starting LG2 environment"""
     pass
 
@@ -338,5 +338,49 @@ def test_step_action_ref_frame_2(lbg1_lg0_i2_env):
         # ~~ ASSERT ~~
         assert np.isclose(r0, r1)
         assert np.isclose(v0, v1)
+
+def test_physics_range_extender_1(lbg1_lg1_i2_env):
+    '''Check that PRE is installed properly
+    '''
+    # ~~ ARRANGE ~~
+
+    if lbg1_lg1_i2_env is None:
+        env = LBG1_LG1_I2_Env()
+        env.reset()
+    else:
+        env = lbg1_lg1_i2_env
+
+
+    # ~~ ACT ~~
+
+    rf = env.vesBandit.orbital_reference_frame
+
+    # get initial speed of lady wrt pursuer
+    ve0 = np.linalg.norm(env.vesLady.velocity(rf))
+
+    # Set and engage lady auto-pilot reference frame so 
+    # that it points in it's own prograde direction
+    env.vesLady.auto_pilot.reference_frame = env.vesLady.orbital_reference_frame
+    env.vesLady.auto_pilot.target_pitch = 0.0
+    env.vesLady.auto_pilot.target_heading = 0.0
+    env.vesLady.auto_pilot.target_roll = 0.0
+    env.vesLady.auto_pilot.engage()
+
+    # turn on low-thrust maneuver for lady for fixed amount of time
+    env.vesLady.parts.engines[0].active = True
+    env.vesLady.control.throttle = 1.0
+    time.sleep(1.0)
+
+    # terminate throttle
+    env.vesLady.control.throttle = 0.0
+    env.vesLady.auto_pilot.disengage()
+
+    # get final speed of lady wrt bandit
+    ve1 = np.linalg.norm(env.vesLady.velocity(rf))
+
+    # ~~ ASSERT ~~
+    assert not np.isclose(ve0, ve1)
+    dv = ve1 - ve0
+    assert dv > 1.0
 
  

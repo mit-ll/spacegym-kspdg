@@ -93,7 +93,7 @@ class PursuitEvadeGroup1Env(Group1BaseEnv):
     PARAMS.INFO.K_PURSUER_FUEL_USAGE = "pursuer_fuel_usage"
     PARAMS.INFO.K_EVADER_FUEL_USAGE = "evader_fuel_usage"
 
-    PARAMS.INFO.K_WEIGHTED_SCORE = "weighted_score"
+    # PARAMS.INFO.K_WEIGHTED_SCORE = "weighted_score"
     PARAMS.INFO.V_SCORE_DIST_SCALE = 0.1
     PARAMS.INFO.V_SCORE_DIST_WEIGHT = 2.0
     PARAMS.INFO.V_SCORE_SPEED_SCALE = 0.5

@@ -275,6 +275,9 @@ class Group1BaseEnv(KSPDGBaseEnv):
     PARAMS.ACTION.K_REF_FRAME = "ref_frame" # discrete: reference frame in which burn vector is defined
     PARAMS.ACTION.K_VEC_TYPE = "vec_type"   # discrete: what does the vector represent: throttle, thrust, acceleration
 
+    # info space params
+    PARAMS.INFO.K_WEIGHTED_SCORE = "weighted_score"
+
     def __init__(self, **kwargs) -> None:
         
         super().__init__(**kwargs)
@@ -413,6 +416,9 @@ class Group1BaseEnv(KSPDGBaseEnv):
 
         # compute performance metrics
         info = self.get_info(obs, self.is_episode_done)
+
+        # display weighted score
+        print("CURRENT SCORE: {}".format(info[self.PARAMS.INFO.K_WEIGHTED_SCORE]))
 
         # compute reward
         rew = self.get_reward(info, self.is_episode_done)

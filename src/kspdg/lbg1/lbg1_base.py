@@ -116,7 +116,7 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
     PARAMS.INFO.K_LADY_FUEL_USAGE = "lady_fuel_usage"
     PARAMS.INFO.K_GUARD_FUEL_USAGE = "guard_fuel_usage"
 
-    PARAMS.INFO.K_WEIGHTED_SCORE = "weighted_score"
+    # PARAMS.INFO.K_WEIGHTED_SCORE = "weighted_score"
     PARAMS.INFO.V_SCORE_BG_DIST_SCALE = 1e6
     PARAMS.INFO.V_SCORE_BG_DIST_OFFSET = 0.1
 

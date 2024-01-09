@@ -26,6 +26,11 @@ class LBG1_LG2_ParentEnv(LBG1_LG1_ParentEnv):
 
         # Do nothing until, and unless, bandit gets too close
         while True:
+
+            # break out and do nothing if bot thread is stopped
+            if self.stop_bot_thread:
+                return
+            
             bandit_dist = min(self.get_lb_relative_distance(), self.get_bg_relative_distance())
             if bandit_dist < EVASION_DIST_THRESHOLD:
                 self.logger.info("\n~~~BANDIT DETECTED!\nExecuting evasive maneuvers in {} sec~~~\n".format(EVASION_BURN_DELAY))
