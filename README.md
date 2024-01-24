@@ -61,7 +61,7 @@ DISTRIBUTION STATEMENT A. Approved for public release. Distribution is unlimited
 
 This material is based upon work supported by the Under Secretary of Defense for Research and Engineering under Air Force Contract No. FA8702-15-D-0001. Any opinions, findings, conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the Under Secretary of Defense for Research and Engineering.
 
-© 2022 Massachusetts Institute of Technology.
+© 2024 Massachusetts Institute of Technology.
 
 Subject to FAR52.227-11 Patent Rights - Ownership by the contractor (May 2014)
 
