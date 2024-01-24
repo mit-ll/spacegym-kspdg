@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Updated copyright year in headers
+
 ### Removed
 
 - KSPDG Challenge announcement from README
