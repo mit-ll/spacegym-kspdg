@@ -45,7 +45,7 @@ def ksp_interface_loop(
             observation_query_event.clear()
 
     # Create environment
-    logger.info("\n~~~Instantiating KSPDG envrionment~~~\n")
+    logger.info("\n~~~Instantiating KSPDG environment~~~\n")
     env_cls = env_cls
     if env_kwargs is not None:
         env = env_cls(**env_kwargs, debug=debug)
@@ -94,5 +94,5 @@ def ksp_interface_loop(
     return_dict["agent_env_results"] =  env_info
 
     # cleanup
-    logger.info("\n~~~Closing KSPDG envrionment~~~\n")
+    logger.info("\n~~~Closing KSPDG environment~~~\n")
     env.close()
