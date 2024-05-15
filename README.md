@@ -205,6 +205,7 @@ _Future Work_
 
 ### Verify Installation
 
+__TODO:__ Update install instructions to reflect testing w/ new `pyproject.toml` and `optional-dependencies` 
 __NOTE:__ Because the KSPDG environments are inexorably linked to the KSP game engine, many of the library's unit/integration test can only be run when a particular game mission file has been loaded and running. This means that verifying installation and testing during code development is a bit more involved than just a single `pytest` call
 
 __Serverless Tests:__ Quick test to run without KSP game engine running nor kRPC server connection

@@ -9,14 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `pyproject.toml` for package and dependency management
+
 ### Fixed
 
 ### Changed
 
+- Updated `setup.py` to delegate most package management to `pyproject.toml`; maintains the get_version functionality
 - Updated copyright year in headers
 
 ### Removed
 
+- `setup.py` and `version.py` since single-source version moved to `pyproject.toml` and `kspdg/__init__.py`. See https://packaging.python.org/en/latest/guides/single-sourcing-package-version/ 
+- `requirements.txt` since there are no "pinned" or "concrete" dependencies as kspdg is not (yet?) intended to be released as a stand-alone app. For further information about the intended role of requirements.txt, see and [setup vs requirements](https://caremad.io/posts/2013/07/setup-vs-requirement/) and [use of requirements w/ pyproject](https://stackoverflow.com/questions/74508024/is-requirements-txt-still-needed-when-using-pyproject-toml)
 - KSPDG Challenge announcement from README
 
 ## [v0.5.1] - 2024.01.09

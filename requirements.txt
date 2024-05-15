@@ -1,1 +1,0 @@
--e .    # deconflicting setup.py and requirements.txt, see https://caremad.io/posts/2013/07/setup-vs-requirement/

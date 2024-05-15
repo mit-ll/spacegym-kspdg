@@ -2,6 +2,11 @@
 # Subject to FAR 52.227-11 – Patent Rights – Ownership by the Contractor (May 2014).
 # SPDX-License-Identifier: MIT
 
+# Single-sourcing package version
+# https://packaging.python.org/guides/single-sourcing-package-version/
+
+__version__ = "0.6.0"
+
 # these imports make the individual environments accessible at the top-level
 # of the library and assign an environment version number
 # If the underlying environment changes, then the version number should be

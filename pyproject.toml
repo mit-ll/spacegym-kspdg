@@ -1,0 +1,34 @@
+# New way to specify project dependencies
+# Ref:
+#   https://peps.python.org/pep-0518/
+#   Example: https://github.com/Farama-Foundation/Gymnasium/blob/main/pyproject.toml
+#   Example: https://github.com/pypa/sampleproject/blob/main/pyproject.toml
+#   Guide (user-friendly): https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
+#   Specification (technical, formal): https://packaging.python.org/en/latest/specifications/pyproject-toml/
+
+[build-system]
+requires = ["setuptools >= 61.0.0"] # to 61 or greater support single-source versioning
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kspdg"
+description = "Non-cooperative satellite operations challenge problems implemented in the Kerbal Space Program game engine"
+readme = "README.md"
+requires-python = ">=3"
+
+dependencies = [
+    "krpc",
+    "numpy",
+    "gymnasium",
+    "astropy"
+]
+
+# single source versioning (see tool.setuptools.dynamic table
+# https://packaging.python.org/en/latest/guides/single-sourcing-package-version/
+dynamic = ["version"]
+
+[tool.setuptools.dynamic]
+version = {attr = "kspdg.__version__"}
+
+[project.optional-dependencies]
+testing = ["pytest"]
