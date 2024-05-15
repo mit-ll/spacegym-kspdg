@@ -6,4 +6,4 @@ dependencies:
   - ipython
   - pip
   - pip:
-    - -e .
+    - -e .[testing] # install developer dependencies
