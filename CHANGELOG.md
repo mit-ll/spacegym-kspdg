@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.6.1] - 2024.05.22
+
+### Added
+
+- Ability to check versioning on `evaluation/evaluate.cpython-XXX.pyc`, which is different than kspdg version number. Check with
+```bash
+conda activate kspdg
+python evaluation/evaluate.cpython-312.pyc --version
+```
+
+### Fixed
+
+- Updated `evaluation/evaluate.cpython-XXX.pyc` to work with new kspdg packaging
+
+### Changed
+
+### Removed
+
 ## [v0.6.0] - 2024.05.15
 
 ### Added
