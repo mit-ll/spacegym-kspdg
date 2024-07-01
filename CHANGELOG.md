@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.6.2] - 2024.07.01
+
+### Added
+
+- `logger` to `KSPDGBaseAgent` for unified logging interface for all child class agents
+
+### Fixed
+
+### Changed
+
+- `logger_name` for `KSPDGBaseEnv` to point to the child class environment name for better specificity of origin of log statements (i.e. a log statement with child's name but originating in the parent class is more traceable than a log statement with the parent's name but originating in the child class)
+
+### Removed
+
 ## [v0.6.1] - 2024.05.22
 
 ### Added

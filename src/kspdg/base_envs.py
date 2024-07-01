@@ -33,8 +33,9 @@ class KSPDGBaseEnv(ABC, gym.Env):
         super().__init__()
 
         # create logger to store environment metrics
+        # use environment child class name for more specificity on origin of log statements
         self.logger = create_logger(
-            __name__, 
+            self.__class__.__name__, 
             stream_log_level=logging.DEBUG if debug else logging.INFO)
 
     def reset(self) -> Tuple[ArrayLike, Dict]:
