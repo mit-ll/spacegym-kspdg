@@ -32,3 +32,5 @@ version = {attr = "kspdg.__version__"}
 
 [project.optional-dependencies]
 testing = ["pytest"]
+adv_bots = ["juliacall"]
+full = ["kspdg[testing,adv_bots]"]

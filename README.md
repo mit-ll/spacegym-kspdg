@@ -183,9 +183,9 @@ To install this package, run:
 
 ```bash
 cd spacegym-kspdg
-pip install -e . 
+pip install -e .[adv_bots]  # installs juliacall allowing use of more advanced bots 
 # if you plan to further develop the kspdg package, install the testing optional dependencies
-# pip install -e .[testing]
+# pip install -e .[full]
 ```
 
 For development of this package, we recommend using the conda environment defined in `environment.yml`. To create and activate this environment, run:
@@ -215,6 +215,15 @@ conda activate kspdg
 > conda activate kspdg
 > pip install .
 > ```
+
+### Install Advanced-Bots Julia Dependencies
+
+For the `[adv_bots]` install, you need to also get Julia dependencies like []`iLQGames.jl`](https://github.com/lassepe/iLQGames.jl). We've created a single python script to achieve this
+
+```bash
+conda activate kspdg
+python install_julia_deps.py    # this may take a long time because julia may be installed here if not already present
+```
 
 ### Install Luna Multiplayer (LMP)
 

@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - 2025 AIAA SciTech competition anouncement to `README.md`
+- `juliacall` dependency including basic unit tests to check proper installation
+- new optional dependency groups in `pyproject.toml`: `adv_bots` with juliacall dependency and `full` which installs all other dependency groups
+- `iLQGames.jl` dependency and python script for partially automating the install process
 
 ### Fixed
 
