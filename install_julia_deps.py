@@ -6,6 +6,7 @@
 
 import juliapkg     # this should have been installed during the juliacall install within conda env
 
+juliapkg.add("FromFile", "ff7dd447-1dcb-4ce3-b8ac-22a812192de7")
 # iLQGames.jl: Need URL since ilqgames does not appear to be registered
 juliapkg.add("iLQGames", "ae812560-bd7e-11e9-3bd3-b502f7cff3d3", url="https://github.com/lassepe/iLQGames.jl.git")
 

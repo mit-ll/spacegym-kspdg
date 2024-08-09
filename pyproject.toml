@@ -31,6 +31,6 @@ dynamic = ["version"]
 version = {attr = "kspdg.__version__"}
 
 [project.optional-dependencies]
-testing = ["pytest"]
+testing = ["pytest","matplotlib"]
 adv_bots = ["juliacall"]
 full = ["kspdg[testing,adv_bots]"]

@@ -41,3 +41,19 @@ from kspdg.sb1.e1_envs import SB1_E1_I2_Env as SB1_E1_I2_V1
 from kspdg.sb1.e1_envs import SB1_E1_I3_Env as SB1_E1_I3_V1
 from kspdg.sb1.e1_envs import SB1_E1_I4_Env as SB1_E1_I4_V1
 from kspdg.sb1.e1_envs import SB1_E1_I5_Env as SB1_E1_I5_V1
+
+# Private-source, python-version-specific environments with advanced bots (e.g. julia-based)
+# from kspdg.lbg1.lg3_envs import LBG1_LG3_I1_Env as LBG1_LG3_I1_V1
+# from kspdg.lbg1.lg3_envs import LBG1_LG3_I2_Env as LBG1_LG3_I2_V1
+import sys
+if sys.version_info[:2] == (3, 12):
+    # Python 3.12
+    from kspdg.private_src.python3_12.kspdg_envs.lbg1.lg3_envs import LBG1_LG3_I1_Env as LBG1_LG3_I1_V1
+    from kspdg.private_src.python3_12.kspdg_envs.lbg1.lg3_envs import LBG1_LG3_I2_Env as LBG1_LG3_I2_V1
+elif sys.version_info[:2] == (3, 9):
+    # Python 3.9
+    from kspdg.private_src.python3_9.kspdg_envs.lbg1.lg3_envs import LBG1_LG3_I1_Env as LBG1_LG3_I1_V1
+    from kspdg.private_src.python3_9.kspdg_envs.lbg1.lg3_envs import LBG1_LG3_I2_Env as LBG1_LG3_I2_V1
+else:
+    # Handle other versions or raise an error
+    raise ImportError(f"Private-source environments require python 3.9 or 3.12, got {sys.version}")

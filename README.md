@@ -218,7 +218,7 @@ conda activate kspdg
 
 ### Install Advanced-Bots Julia Dependencies
 
-For the `[adv_bots]` install, you need to also get Julia dependencies like []`iLQGames.jl`](https://github.com/lassepe/iLQGames.jl). We've created a single python script to achieve this
+For the `[adv_bots]` install, you need to also get Julia dependencies like [`iLQGames.jl`](https://github.com/lassepe/iLQGames.jl). We've created a single python script to achieve this
 
 ```bash
 conda activate kspdg
@@ -346,7 +346,7 @@ See [`evaluation/configs/example_eval_cfg.yaml``](evaluation/configs/example_eva
 Here is a basic example for running an agent-environment evaluation. As with other examples, you begin by:
 
 1. Start KSP game application. 
-2. Select `Start Game` > `Play Missions` > `Community Created` > `pe1_i3` > `Continue`
+2. Select `Start Game` > `Play Missions` > `Community Created` > `lbg1_i2` > `Continue`
 3. In kRPC dialog box click `Add server`. Select `Show advanced settings` and select `Auto-accept new clients`. Then select `Start Server`
 
 ```bash
@@ -362,27 +362,27 @@ This should output to a file in the `results/` subdirectory with a name like `ks
 {
     "agent_env_results": {
         "is_episode_done": true,
-        "closest_approach": 235.2028250841451,
-        "closest_approach_time": 200.80000000002892,
-        "closest_approach_speed": 77.87944143686991,
-        "closest_approach_pursuer_fuel_usage": 651.595703125,
-        "pursuer_fuel_usage": 782.56884765625,
-        "evader_fuel_usage": 0.0,
-        "weighted_score": 983.3304428262093,
-        "expected_deltav_at_final_time": 47.97165399572631
+        "closest_lady_bandit_approach": 334.47956126016373,
+        "closest_lady_bandit_approach_time": 90.81999999999907,
+        "closest_bandit_guard_approach": 4.227775699613422,
+        "minimum_lady_bandit_distance_speed_product": 15536.941529518028,
+        "bandit_fuel_usage": 466.61279296875,
+        "lady_fuel_usage": 0.0,
+        "guard_fuel_usage": 468.96435546875,
+        "weighted_score": 342942.1564060615
     },
-    "user_id": "Team Baselines",
-    "user_key": "b1bb536a-fe95-4dea-8564-4c8305ac963a",
-    "kspdg_version": "0.0.23",
+    "user_id": "Evaluation Test",
+    "user_key": "f2dcf0d1-f977-4e8b-9103-d03be0bffeec",
+    "kspdg_version": "0.6.2",
     "agent_name": "Naive-Ned",
-    "scenario_environment": "PE1_E1_I3_V1"
+    "scenario_environment": "LBG1_LG3_I2_V1"
 }
-1313515906
+1239955493
 ```
 
 This results file will then be sent to the authentication and scoreboard server for official ranking in the KSPDG Challenge. 
 
-_INSTRUCTIONS FOR UPLOADING RESULTS TO COMPETITION SCOREBOARD HAVE BEEN EMAILED TO PARTICIPANTS_
+_INSTRUCTIONS FOR UPLOADING RESULTS TO COMPETITION SCOREBOARD WILL BE EMAILED TO PARTICIPANTS_
 
 ------------
 
