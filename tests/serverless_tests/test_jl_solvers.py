@@ -1,9 +1,21 @@
 # krpc-serverless pytests for differential game solvers written in julia
 
 import pytest
+import sys
 import numpy as np
 
 from pathlib import Path
+
+THIS_FILE = Path(__file__)
+if sys.version_info[:2] == (3, 12):
+    # Python 3.12
+    SOLVE_LBG1_JL_PATH= Path(THIS_FILE.parent, "../../src/kspdg/private_src/python3_12/kspdg_envs/lbg1/solve_lbg1.jl")
+elif sys.version_info[:2] == (3, 9):
+    # Python 3.9
+    SOLVE_LBG1_JL_PATH= Path(THIS_FILE.parent, "../../src/kspdg/private_src/python3_12/kspdg_envs/lbg1/solve_lbg1.jl")
+else:
+    # Handle other versions or raise an error
+    raise ImportError(f"solve_lbg1.jl requires python 3.9 or 3.12, got {sys.version}")
 
 
 def test_solve_lbg1_jl_import():
@@ -12,9 +24,7 @@ def test_solve_lbg1_jl_import():
     from juliacall import Main as jl
 
     # ~~ ACT ~~
-    this_file = Path(__file__)
-    solve_lbg1_jl_path = Path(this_file.parent, "../../src/kspdg/lbg1/solve_lbg1.jl")
-    jl.include(str(solve_lbg1_jl_path))
+    jl.include(str(SOLVE_LBG1_JL_PATH))
 
 def test_accel_quad_penalty_1():
     """check acceleration penalty (i.e. soft control constraint) outputs as expected"""
@@ -24,9 +34,7 @@ def test_accel_quad_penalty_1():
     a = np.ones(3)
 
     # ~~ ACT ~~
-    this_file = Path(__file__)
-    solve_lbg1_jl_path = Path(this_file.parent, "../../src/kspdg/lbg1/solve_lbg1.jl")
-    jl.include(str(solve_lbg1_jl_path))
+    jl.include(str(SOLVE_LBG1_JL_PATH))
     c_a = jl.accel_quad_penalty(a, 1, 1)
 
     # ~~ ASSERT ~~
@@ -67,9 +75,7 @@ def test_solve_lady_bandit_guard_costtype_3_2(lbg1_i2_init_conds):
     # ~~ ARRANGE ~~
     from juliacall import Main as jl
 
-    this_file = Path(__file__)
-    solve_lbg1_jl_path = Path(this_file.parent, "../../src/kspdg/lbg1/solve_lbg1.jl")
-    jl.include(str(solve_lbg1_jl_path))
+    jl.include(str(SOLVE_LBG1_JL_PATH))
 
     t_step = 1.0    # [s] length of timestep
     n_steps = 100    # [-] number of timesteps
