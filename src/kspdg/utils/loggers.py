@@ -33,7 +33,7 @@ def create_logger(
     c_handler.setLevel(stream_log_level)
 
     # Create formatters and add it to handlers
-    c_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+    c_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - [%(threadName)s] - %(message)s')
     c_handler.setFormatter(c_format)
 
     # Add handlers to the logger

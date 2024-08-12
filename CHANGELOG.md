@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `private_src` directory to hold all compiled and/or obfuscated source code (e.g. to obfuscate bot policies in environments)
 - 'lg3_envs.py` that use ilqgames-based Guard agent
 - 'matplotlib' dependency for testing group
+- `scripts/example_private_src_env_runner.py` as an example of running and debugging private-source, advanced-bot environment `LBG1_LG3_I2_V1`
 
 ### Fixed
 
@@ -24,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Updated `example_eval_cfg.yaml` and related instructions in README to point to the private-source LBG1_LG3_I2_V1 environment
+- Expanded DEBUG logger for better introspection on thread execution
 
 ### Removed
 

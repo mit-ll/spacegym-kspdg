@@ -118,7 +118,9 @@ class AgentEnvRunner():
         while not self.termination_event.is_set():
 
             # request/receive observation from environment
-            self.logger.debug("Requesting new environment observation")
+            if self.debug:
+                obs_req_time = time.time()
+                self.logger.debug("Requesting new environment observation")
             self.observation_query_event.set()
             if self.obs_conn_recv.poll(timeout=self.OBSERVATION_POLL_TIMEOUT):
                 try:
@@ -134,6 +136,8 @@ class AgentEnvRunner():
                 self.logger.info("Non-responsive environment, terminating agent...")
                 self.termination_event.set()
                 break
+            if self.debug:
+                self.logger.debug(f"Environment observation received after {time.time()-obs_req_time:.5g} sec")
 
             # compute agent-specific action and send to env interface process
             action = self.agent.get_action(observation=observation)

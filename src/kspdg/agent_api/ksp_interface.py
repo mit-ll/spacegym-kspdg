@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 import logging
+import time
 
 from kspdg.utils.loggers import create_logger
 
@@ -70,7 +71,12 @@ def ksp_interface_loop(
             continue
 
         # execute agent's action in KSP environment
+        if debug:
+            env_step_start = time.time()
+            logger.debug("Stepping environment...")
         _, _, env_done, env_info = env.step(action=agent_act)
+        if debug:
+            logger.debug(f"Environment step completed in {time.time()-env_step_start:.5g} sec")
 
         # terminate agent runner loops if environment flags a done episode
         if env_done:

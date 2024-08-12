@@ -322,6 +322,15 @@ Therefore we have defined a Agent-Environment Runner class that helps manage the
 
 See [`scripts/example_agent_runner.py`](scripts/example_agent_runner.py) for more details
 
+Some environments have obfuscated source code with more advanced bots. To here is an example of running a simple agent within such an environment (note that you load `lbg1_i2` mission instead of `pe1_i3`)
+
+1. Start KSP game application. 
+2. Select `Start Game` > `Play Missions` > `Community Created` > `lbg1_i2` > `Continue`
+3. In kRPC dialog box click `Add server`. Select `Show advanced settings` and select `Auto-accept new clients`. Then select `Start Server`
+4. In a terminal, run `python scripts/example_private_src_env_runner.py`
+
+See [`scripts/example_private_src_env_runner.py`](scripts/example_private_src_env_runner.py) for more details
+
 ------------
 
 ## Example: Agent-Environment Evaluator for SciTech Challenge

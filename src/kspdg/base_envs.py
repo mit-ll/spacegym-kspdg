@@ -34,6 +34,7 @@ class KSPDGBaseEnv(ABC, gym.Env):
 
         # create logger to store environment metrics
         # use environment child class name for more specificity on origin of log statements
+        self.debug = debug
         self.logger = create_logger(
             self.__class__.__name__, 
             stream_log_level=logging.DEBUG if debug else logging.INFO)
@@ -105,7 +106,7 @@ class KSPDGBaseEnv(ABC, gym.Env):
                 raise ConnectionError("bot_thread is already running."+ 
                     " Close and join bot_thread before restarting")
 
-        self.bot_thread = Thread(target=self.bot_policy)
+        self.bot_thread = Thread(target=self.bot_policy, name='BotThread')
         self.bot_thread.start()
 
     def _start_episode_termination_thread(self) -> None:
@@ -119,7 +120,7 @@ class KSPDGBaseEnv(ABC, gym.Env):
                 raise ConnectionError("episode_termination_thread is already running."+ 
                     " Close and join episode_termination_thread before restarting")
 
-        self.episode_termination_thread = Thread(target=self.enforce_episode_termination)
+        self.episode_termination_thread = Thread(target=self.enforce_episode_termination, name="TerminationThread")
         self.episode_termination_thread.start()
 
     def close(self):
@@ -341,8 +342,10 @@ class Group1BaseEnv(KSPDGBaseEnv):
                 krpc Vessel object for vessel that is acting as the agent (as opposed to pre-scripted bot vessels)
         
         """
-
-        # raise NotImplementedError("Exand action space to include units and add corresponding logic")
+        
+        if self.debug:
+            vessel_step_start = time.time()
+            self.logger.debug("Beginning vessel_step...")
 
         k_burn_vec = self.PARAMS.ACTION.K_BURN_VEC
         k_vec_type = self.PARAMS.ACTION.K_VEC_TYPE
@@ -402,10 +405,13 @@ class Group1BaseEnv(KSPDGBaseEnv):
 
         # execute maneuver for specified time, checking for end
         # conditions while you do
+        if self.debug:
+            self.logger.debug(f"vessel_step (t+{time.time()-vessel_step_start:.5g}) - Beginning vessel_step burn for {burn_dur:.5g} sec")
         timeout = time.time() + burn_dur
         while True: 
             if self.is_episode_done or time.time() > timeout:
                 break
+        self.logger.debug(f"vessel_step (t+{time.time()-vessel_step_start:.5g}) - Burn complete, zeroing thrust")
 
         # zero out thrusts
         vesAgent.control.forward = 0.0
@@ -413,17 +419,21 @@ class Group1BaseEnv(KSPDGBaseEnv):
         vesAgent.control.right = 0.0
 
         # get observation
+        self.logger.debug(f"vessel_step (t+{time.time()-vessel_step_start:.5g}) - querying environment observation for info processing")
         obs = self.get_observation()
 
         # compute performance metrics
+        self.logger.debug(f"vessel_step (t+{time.time()-vessel_step_start:.5g}) - processing env info")
         info = self.get_info(obs, self.is_episode_done)
 
         # display weighted score
-        print("CURRENT SCORE: {}".format(info[self.PARAMS.INFO.K_WEIGHTED_SCORE]))
+        self.logger.info(f"CURRENT SCORE: {info[self.PARAMS.INFO.K_WEIGHTED_SCORE]}")
 
         # compute reward
+        self.logger.debug(f"vessel_step (t+{time.time()-vessel_step_start:.5g}) - computing reward value")
         rew = self.get_reward(info, self.is_episode_done)
 
+        self.logger.debug(f"vessel_step (t+{time.time()-vessel_step_start:.5g}) - vessel_step complete")
         return obs, rew, self.is_episode_done, info
 
     def get_burn__rhvbody(self, burn_vec, ref_frame, vesAgent):
