@@ -17,14 +17,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 'lg3_envs.py` that use ilqgames-based Guard agent
 - 'matplotlib' dependency for testing group
 
-
 ### Fixed
+
+- Cleaning up inaccurate docstring
 
 ### Changed
 
 - Updated `example_eval_cfg.yaml` and related instructions in README to point to the private-source LBG1_LG3_I2_V1 environment
 
 ### Removed
+
+- 'scripts/basic_evade_v20220509001.py' to cleanup unused code
+- obsolete `pe20220516` environments
+
 
 ## [v0.6.2] - 2024.07.01
 

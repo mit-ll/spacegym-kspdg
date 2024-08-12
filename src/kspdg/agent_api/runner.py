@@ -46,9 +46,6 @@ class AgentEnvRunner():
             runner_timeout : float
                 total time to run agent-environment pair,
                 if None, wait for environment done
-            action_rollout_time_horizon : float
-                amount of time to allocate for an action to rollout in the environment
-                before a new action is queried from the agent
             debug : bool
                 if true, set logging level to debug
         """
@@ -147,7 +144,6 @@ class AgentEnvRunner():
             # if agent returns non-None action
             if action is not None:
                 self.act_conn_send.send(action)
-
 
             # check for agent timeout
             if self.runner_timeout is not None:
