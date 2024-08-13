@@ -405,13 +405,10 @@ class Group1BaseEnv(KSPDGBaseEnv):
 
         # execute maneuver for specified time, checking for end
         # conditions while you do
-        if self.debug:
-            self.logger.debug(f"vessel_step (t+{time.time()-vessel_step_start:.5g}) - Beginning vessel_step burn for {burn_dur:.5g} sec")
         timeout = time.time() + burn_dur
         while True: 
             if self.is_episode_done or time.time() > timeout:
                 break
-        self.logger.debug(f"vessel_step (t+{time.time()-vessel_step_start:.5g}) - Burn complete, zeroing thrust")
 
         # zero out thrusts
         vesAgent.control.forward = 0.0
@@ -419,21 +416,18 @@ class Group1BaseEnv(KSPDGBaseEnv):
         vesAgent.control.right = 0.0
 
         # get observation
-        self.logger.debug(f"vessel_step (t+{time.time()-vessel_step_start:.5g}) - querying environment observation for info processing")
         obs = self.get_observation()
 
         # compute performance metrics
-        self.logger.debug(f"vessel_step (t+{time.time()-vessel_step_start:.5g}) - processing env info")
         info = self.get_info(obs, self.is_episode_done)
 
         # display weighted score
         self.logger.info(f"CURRENT SCORE: {info[self.PARAMS.INFO.K_WEIGHTED_SCORE]}")
 
         # compute reward
-        self.logger.debug(f"vessel_step (t+{time.time()-vessel_step_start:.5g}) - computing reward value")
         rew = self.get_reward(info, self.is_episode_done)
 
-        self.logger.debug(f"vessel_step (t+{time.time()-vessel_step_start:.5g}) - vessel_step complete")
+        self.logger.debug(f"vessel_step complete after {time.time()-vessel_step_start:.5g} sec")
         return obs, rew, self.is_episode_done, info
 
     def get_burn__rhvbody(self, burn_vec, ref_frame, vesAgent):

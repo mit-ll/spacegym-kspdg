@@ -372,9 +372,6 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
             (see https://krpc.github.io/krpc/python/api/space-center/celestial-body.html#SpaceCenter.CelestialBody.non_rotating_reference_frame)
 
         '''
-
-        self.logger.debug("Starting get_observation ...")
-
         rf = self.vesBandit.orbit.body.non_rotating_reference_frame
 
         obs = [None] * self.PARAMS.OBSERVATION.LEN
@@ -431,8 +428,6 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
             obs[self.PARAMS.OBSERVATION.I_GUARD_VY], \
             obs[self.PARAMS.OBSERVATION.I_GUARD_VZ]  = \
             v_g_cb__rhcbci
-        
-        self.logger.debug("get_observation complete")
 
         return np.array(obs)
         
