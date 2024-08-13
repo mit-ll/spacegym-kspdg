@@ -1,0 +1,7 @@
+// Copyright (c) 2024, MASSACHUSETTS INSTITUTE OF TECHNOLOGY
+// Subject to FAR 52.227-11 – Patent Rights – Ownership by the Contractor (May 2014).
+// SPDX-License-Identifier: MIT
+{
+    "version": "0.1.1",
+    "commit": "532df82390f95b9a31d1b5e4fd0dda11928bd17f"
+}

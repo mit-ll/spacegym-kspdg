@@ -343,9 +343,8 @@ class Group1BaseEnv(KSPDGBaseEnv):
         
         """
         
-        if self.debug:
-            vessel_step_start = time.time()
-            self.logger.debug("Beginning vessel_step...")
+        vessel_step_start = time.time()
+        self.logger.debug("Beginning vessel_step...")
 
         k_burn_vec = self.PARAMS.ACTION.K_BURN_VEC
         k_vec_type = self.PARAMS.ACTION.K_VEC_TYPE
