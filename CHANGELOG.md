@@ -5,18 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [UNREALEASED] - XXXX.XX.XX
+## [0.7.0] - 2024.08.13
 
 ### Added
 
-- 2025 AIAA SciTech competition anouncement to `README.md`
-- `juliacall` dependency including basic unit tests to check proper installation
-- new optional dependency groups in `pyproject.toml`: `adv_bots` with juliacall dependency and `full` which installs all other dependency groups
-- `iLQGames.jl` dependency and python script for partially automating the install process
 - `private_src` directory to hold all compiled and/or obfuscated source code (e.g. to obfuscate bot policies in environments)
 - 'lg3_envs.py` that use ilqgames-based Guard agent
-- 'matplotlib' dependency for testing group
+- `juliacall` dependency including basic unit tests to check proper installation
+- `iLQGames.jl` dependency and python script `install_julia_deps.py` for partially automating the install process
+- new optional dependency groups in `pyproject.toml`: `adv_bots` with juliacall dependency and `full` which installs all other dependency groups
 - `scripts/example_private_src_env_runner.py` as an example of running and debugging private-source, advanced-bot environment `LBG1_LG3_I2_V1`
+- 'matplotlib' dependency for testing group
+- 2025 AIAA SciTech competition anouncement to `README.md`
 
 ### Fixed
 
