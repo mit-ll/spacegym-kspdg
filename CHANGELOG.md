@@ -5,7 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.7.0] - 2024.08.13
+## [v0.8.0] - 2024.08.13
+
+### Added
+
++ `private_src/python3_XX/kspdg_envs/dist_evaluate.py` which replace
++ `evaluation/evaluate.py` that replaces `evaluation/evaluate.cpython-39.pyc` and `evaluation/evaluate.cpython-312.pyc` by automatically detecting which python version is in use and importing the appropriate `private_src/python3_XX/kspdg_envs/dist_evaluate.py` for use
+
+### Fixed
+
+### Changed
+
+### Removed
+
+- `evaluation/evaluate.cpython-39.pyc` and `evaluation/evaluate.cpython-312.pyc`, replaced with single `evaluation/evaluate.py` that in turn imports version-specific code from `private_src` 
+
+## [v0.7.0] - 2024.08.13
 
 ### Added
 

@@ -5,7 +5,7 @@
 # Single-sourcing package version
 # https://packaging.python.org/guides/single-sourcing-package-version/
 
-__version__ = "0.7.0"
+__version__ = "0.8.0"
 
 # these imports make the individual environments accessible at the top-level
 # of the library and assign an environment version number
@@ -43,8 +43,6 @@ from kspdg.sb1.e1_envs import SB1_E1_I4_Env as SB1_E1_I4_V1
 from kspdg.sb1.e1_envs import SB1_E1_I5_Env as SB1_E1_I5_V1
 
 # Private-source, python-version-specific environments with advanced bots (e.g. julia-based)
-# from kspdg.lbg1.lg3_envs import LBG1_LG3_I1_Env as LBG1_LG3_I1_V1
-# from kspdg.lbg1.lg3_envs import LBG1_LG3_I2_Env as LBG1_LG3_I2_V1
 import sys
 if sys.version_info[:2] == (3, 12):
     # Python 3.12
