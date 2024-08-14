@@ -32,7 +32,7 @@ version = {attr = "kspdg.__version__"}
 
 # ensure that private_src pyarmor shared object files are part of kspdg build
 [tool.setuptools.package-data]
-your_package = ["*.so"]
+kspdg = ["*.so"]
 
 [project.optional-dependencies]
 testing = ["pytest","matplotlib"]
