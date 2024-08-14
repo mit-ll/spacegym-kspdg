@@ -7,7 +7,7 @@
 #   Specification (technical, formal): https://packaging.python.org/en/latest/specifications/pyproject-toml/
 
 [build-system]
-requires = ["setuptools >= 61.0.0"] # to 61 or greater support single-source versioning
+requires = ["setuptools >= 61.0"] # to 61 or greater support single-source versioning
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -32,9 +32,15 @@ version = {attr = "kspdg.__version__"}
 
 # ensure that private_src pyarmor shared object files are part of kspdg build
 [tool.setuptools.package-data]
-kspdg = ["*.so"]
+kspdg = [
+    "private_src/python3_9/pyarmor_runtime_000000/*.so",
+    "private_src/python3_12/pyarmor_runtime_000000/*.so"
+]
 
+# Further dependencies for dev, testing, and envrionments with advanced bots
+# Kept as optional so that there are lighter-weight versions of the library
+# available
 [project.optional-dependencies]
 testing = ["pytest","matplotlib"]
 adv_bots = ["juliacall"]
-full = ["kspdg[testing,adv_bots]"]
+full = ["kspdg[testing,adv_bots]","build"]
