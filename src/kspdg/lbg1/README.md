@@ -44,10 +44,7 @@ See `Group1BaseEnv.vessel_step()` in [`base_envs.py`](https://github.com/mit-ll/
 + ID `lg0`: Lady and Guard are passive, no maneuvering
 + ID `lg1`: Lady is passive, Guard applies heuristic pursuit of Bandit using target-zero_vel-target relative maneuver sequence
 + ID `lg2`: Lady applies hueristic evasive maneuvers of Bandit using out-of-plane burns in order to maintian constant period of orbit, Guard applies heuristic pursuit of Bandit using target-zero_vel-target relative maneuver sequence
-+ ID `lgnash1`: Lady is passive, Nash-equliibrium/optimal pursuit maneuvers for Guard
-    + _NotImplemented_
-+ ID `lgnash2`: Nash-equliibrium/optimal pursuit maneuvers for Lady and Guard
-    + _NotImplemented_
++ ID `lg3`: Code-obfuscated environment with passive Lady and advanced algorithms for Guard maneuvering
 
 ## Initial Orbit Environment Identifiers
 

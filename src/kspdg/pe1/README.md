@@ -42,8 +42,6 @@ See `Group1BaseEnv.vessel_step()` in [`base_envs.py`](https://github.com/mit-ll/
 + ID `e2`: Randomized evasion maneuvers
 + ID `e3`: Heuristic/mission-centric evasion maneuvers
 + ID `e4`: Low-thrust orbit raise. Evader applies a constant, low-thrust, velocity-tangent burn regardless of pursuer
-+ ID `e5`: Nash/optimal evasion maneuvers
-    + _NotImplemented_
 
 ## Initial Orbit Environment Identifiers
 
