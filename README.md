@@ -139,7 +139,7 @@ The save files are located in this repo under `ksp_files/saves/missions` and `ks
 
 Copy the contents of `ksp_files/saves/missions/` and `ksp_files/Missions` directory into your local installation of KSP. For example, on a Mac with this repo and KSP's install directories on the desktop this would look like:
 ```bash
-git clone git@github.com:mit-ll/spacegym-kspdg.git
+git clone https://github.com/mit-ll/spacegym-kspdg.git
 cd spacegym-kspdg
 cp -r ksp_files/saves/missions/. ~/Desktop/KSP_osx/saves/missions
 cp -r ksp_files/Missions/. ~/Desktop/KSP_osx/Missions
@@ -164,7 +164,7 @@ By default in KSP, high-fidelity physical simulation of spacecraft is only perfo
 ```bash
 # clone PhysicsRange Extender locally
 cd ~/Desktop
-git clone git@github.com:jrodrigv/PhysicsRangeExtender.git
+git clone https://github.com/jrodrigv/PhysicsRangeExtender.git
 
 # copy the necessary game data for the mod into your KSP install
 mkdir ~/Desktop/KSP_osx/GameData/PhysicsRangeExtender
@@ -176,7 +176,7 @@ cp -r ~/Desktop/PhysicsRangeExtender/PhysicsRangeExtender/Distribution/GameData/
 If you have not yet done so, clone this repository locally on your machine
 
 ```bash
-git clone git@github.com:mit-ll/spacegym-kspdg.git
+git clone https://github.com/mit-ll/spacegym-kspdg.git
 ```
 
 To install this package, run:
