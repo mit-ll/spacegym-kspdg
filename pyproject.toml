@@ -33,8 +33,14 @@ version = {attr = "kspdg.__version__"}
 # ensure that private_src pyarmor shared object files are part of kspdg build
 [tool.setuptools.package-data]
 kspdg = [
-    "private_src/python3_9/pyarmor_runtime_000000/*.so",
-    "private_src/python3_12/pyarmor_runtime_000000/*.so"
+    "private_src/python3_9/Darwin_arm64/pyarmor_runtime_000000/*.so",
+    "private_src/python3_9/Darwin_x86_64/pyarmor_runtime_000000/*.so",
+    "private_src/python3_9/Linux_x86_64/pyarmor_runtime_000000/*.so",
+    "private_src/python3_9/Windows_x86_64/pyarmor_runtime_000000/*.pyd",
+    "private_src/python3_12/Darwin_arm64/pyarmor_runtime_000000/*.so",
+    "private_src/python3_12/Darwin_x86_64/pyarmor_runtime_000000/*.so",
+    "private_src/python3_12/Linux_x86_64/pyarmor_runtime_000000/*.so",
+    "private_src/python3_12/Windows_x86_64/pyarmor_runtime_000000/*.pyd"
 ]
 
 # Further dependencies for dev, testing, and envrionments with advanced bots
