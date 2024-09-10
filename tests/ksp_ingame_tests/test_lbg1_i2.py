@@ -17,16 +17,7 @@ import kspdg.utils.constants as C
 from kspdg.lbg1.lg0_envs import LBG1_LG0_I2_Env
 from kspdg.lbg1.lg1_envs import LBG1_LG1_I2_Env
 from kspdg.lbg1.lg2_envs import LBG1_LG2_I2_Env
-
-if sys.version_info[:2] == (3, 12):
-    # Python 3.12
-    from kspdg.private_src.python3_12.kspdg_envs.lbg1.lg3_envs import LBG1_LG3_I2_Env
-elif sys.version_info[:2] == (3, 9):
-    # Python 3.9
-    from kspdg.private_src.python3_9.kspdg_envs.lbg1.lg3_envs import LBG1_LG3_I2_Env
-else:
-    # Handle other versions or raise an error
-    raise ImportError(f"LBG1_LG3_I2_Env requires python 3.9 or 3.12, got {sys.version}")
+from kspdg import LBG1_LG3_I2_V1
 
 @pytest.fixture
 def lbg1_lg0_i2_env():
@@ -55,7 +46,7 @@ def lbg1_lg2_i2_env():
 @pytest.fixture
 def lbg1_lg3_i2_env():
     """setup and teardown of the LBG1_LG2_I2_Env object connected to kRPC server"""
-    env = LBG1_LG3_I2_Env()
+    env = LBG1_LG3_I2_V1()
     env.reset()
     yield env
     env.close()

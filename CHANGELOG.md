@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
++ Platform (e.g. Windows, Mac, Linux) and architecture (e.g. x86_64, arm64) specific private source environments and evaluate.py
+
 ### Fixed
 
 ### Changed

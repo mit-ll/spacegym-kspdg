@@ -42,16 +42,77 @@ from kspdg.sb1.e1_envs import SB1_E1_I3_Env as SB1_E1_I3_V1
 from kspdg.sb1.e1_envs import SB1_E1_I4_Env as SB1_E1_I4_V1
 from kspdg.sb1.e1_envs import SB1_E1_I5_Env as SB1_E1_I5_V1
 
-# Private-source, python-version-specific environments with advanced bots (e.g. julia-based)
+# Private-source, python-version-specific, platform and architecture-specific
+# environments with advanced bots (e.g. julia-based)
 import sys
-if sys.version_info[:2] == (3, 12):
-    # Python 3.12
-    from kspdg.private_src.python3_12.kspdg_envs.lbg1.lg3_envs import LBG1_LG3_I1_Env as LBG1_LG3_I1_V1
-    from kspdg.private_src.python3_12.kspdg_envs.lbg1.lg3_envs import LBG1_LG3_I2_Env as LBG1_LG3_I2_V1
-elif sys.version_info[:2] == (3, 9):
-    # Python 3.9
-    from kspdg.private_src.python3_9.kspdg_envs.lbg1.lg3_envs import LBG1_LG3_I1_Env as LBG1_LG3_I1_V1
-    from kspdg.private_src.python3_9.kspdg_envs.lbg1.lg3_envs import LBG1_LG3_I2_Env as LBG1_LG3_I2_V1
-else:
-    # Handle other versions or raise an error
-    raise ImportError(f"Private-source environments require python 3.9 or 3.12, got {sys.version}")
+import platform
+import importlib
+def get_python_version():
+    # Get the Python version in the format 'python3_12'
+    version_info = sys.version_info
+    return f"python{version_info.major}_{version_info.minor}"
+
+def get_platform_architecture():
+    # Get the platform and architecture information
+    system_platform = platform.system()
+    machine = platform.machine()
+
+    if system_platform == 'Darwin':
+        system_platform = 'Darwin'
+    elif system_platform == 'Linux':
+        system_platform = 'Linux'
+    elif system_platform == 'Windows':
+        system_platform = 'Windows'
+    else:
+        raise RuntimeError(f"Unsupported platform: {system_platform}")
+
+    # Handle architecture
+    if machine == 'x86_64':
+        architecture = 'x86_64'
+    elif machine in ['arm64', 'armv8']:
+        architecture = 'arm64'
+    else:
+        raise RuntimeError(f"Unsupported architecture: {machine}")
+
+    return f"{system_platform}_{architecture}"
+
+def get_private_src_module_str(mod_name):
+    """returns string of module location to obfuscated code based on python version and system architecture"""
+    # Get dynamic parts of the import path
+    python_version = get_python_version()
+    platform_architecture = get_platform_architecture()
+
+    # Build the module path
+    return f"kspdg.private_src.{python_version}.{platform_architecture}.{mod_name}"
+
+    
+# import obfuscated LBG1-LG3 environments
+__lg3_envs_path = get_private_src_module_str("kspdg_envs.lbg1.lg3_envs")
+try:
+    __lg3_envs_module = importlib.import_module(__lg3_envs_path)
+except ModuleNotFoundError:
+    print(f"Module {__lg3_envs_path} not found.")
+LBG1_LG3_I1_V1 = getattr(__lg3_envs_module, 'LBG1_LG3_I1_Env')
+LBG1_LG3_I2_V1 = getattr(__lg3_envs_module, 'LBG1_LG3_I2_Env')
+
+# import obfuscated evaluate.py
+__evaluate_path = get_private_src_module_str("kspdg_envs.dist_evaluate")
+try:
+    evaluate = importlib.import_module(__evaluate_path)
+except ModuleNotFoundError:
+    print(f"Module {__evaluate_path} not found.")
+    
+# current_platform = platform.system()
+# architecture = platform.machine()
+# platform_architecture = f"{current_platform}_{architecture}"
+# if sys.version_info[:2] == (3, 12):
+#     # Python 3.12a
+#     from kspdg.private_src.python3_12.kspdg_envs.lbg1.lg3_envs import LBG1_LG3_I1_Env as LBG1_LG3_I1_V1
+#     from kspdg.private_src.python3_12.kspdg_envs.lbg1.lg3_envs import LBG1_LG3_I2_Env as LBG1_LG3_I2_V1
+# elif sys.version_info[:2] == (3, 9):
+#     # Python 3.9
+#     from kspdg.private_src.python3_9.kspdg_envs.lbg1.lg3_envs import LBG1_LG3_I1_Env as LBG1_LG3_I1_V1
+#     from kspdg.private_src.python3_9.kspdg_envs.lbg1.lg3_envs import LBG1_LG3_I2_Env as LBG1_LG3_I2_V1
+# else:
+#     # Handle other versions or raise an error
+#     raise ImportError(f"Private-source environments require python 3.9 or 3.12, got {sys.version}")

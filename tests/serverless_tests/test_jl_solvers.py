@@ -7,16 +7,21 @@ import numpy as np
 from pathlib import Path
 
 THIS_FILE = Path(__file__)
-if sys.version_info[:2] == (3, 12):
-    # Python 3.12
-    SOLVE_LBG1_JL_PATH= Path(THIS_FILE.parent, "../../src/kspdg/private_src/python3_12/kspdg_envs/lbg1/solve_lbg1.jl")
-elif sys.version_info[:2] == (3, 9):
-    # Python 3.9
-    SOLVE_LBG1_JL_PATH= Path(THIS_FILE.parent, "../../src/kspdg/private_src/python3_12/kspdg_envs/lbg1/solve_lbg1.jl")
-else:
-    # Handle other versions or raise an error
-    raise ImportError(f"solve_lbg1.jl requires python 3.9 or 3.12, got {sys.version}")
+# if sys.version_info[:2] == (3, 12):
+#     # Python 3.12
+#     SOLVE_LBG1_JL_PATH= Path(THIS_FILE.parent, "../../src/kspdg/private_src/python3_12/kspdg_envs/lbg1/solve_lbg1.jl")
+# elif sys.version_info[:2] == (3, 9):
+#     # Python 3.9
+#     SOLVE_LBG1_JL_PATH= Path(THIS_FILE.parent, "../../src/kspdg/private_src/python3_9/kspdg_envs/lbg1/solve_lbg1.jl")
+# else:
+#     # Handle other versions or raise an error
+#     raise ImportError(f"solve_lbg1.jl requires python 3.9 or 3.12, got {sys.version}")
 
+import kspdg
+SOLVE_LBG1_JL_PATH = kspdg.get_private_src_module_str("kspdg_envs.lbg1")
+SOLVE_LBG1_JL_PATH = SOLVE_LBG1_JL_PATH.replace('.','/')
+SOLVE_LBG1_JL_PATH = "../../src/"+SOLVE_LBG1_JL_PATH+"/solve_lbg1.jl"
+SOLVE_LBG1_JL_PATH = Path(THIS_FILE.parent, SOLVE_LBG1_JL_PATH)
 
 def test_solve_lbg1_jl_import():
     """check import of solve_lbg1.jl does not error"""
