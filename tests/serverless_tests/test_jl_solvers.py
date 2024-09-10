@@ -1,24 +1,15 @@
 # krpc-serverless pytests for differential game solvers written in julia
 
 import pytest
-import sys
 import numpy as np
 
 from pathlib import Path
 
-THIS_FILE = Path(__file__)
-# if sys.version_info[:2] == (3, 12):
-#     # Python 3.12
-#     SOLVE_LBG1_JL_PATH= Path(THIS_FILE.parent, "../../src/kspdg/private_src/python3_12/kspdg_envs/lbg1/solve_lbg1.jl")
-# elif sys.version_info[:2] == (3, 9):
-#     # Python 3.9
-#     SOLVE_LBG1_JL_PATH= Path(THIS_FILE.parent, "../../src/kspdg/private_src/python3_9/kspdg_envs/lbg1/solve_lbg1.jl")
-# else:
-#     # Handle other versions or raise an error
-#     raise ImportError(f"solve_lbg1.jl requires python 3.9 or 3.12, got {sys.version}")
+from kspdg.utils.private_src_utils import get_private_src_module_str
 
-import kspdg
-SOLVE_LBG1_JL_PATH = kspdg.get_private_src_module_str("kspdg_envs.lbg1")
+THIS_FILE = Path(__file__)
+
+SOLVE_LBG1_JL_PATH = get_private_src_module_str("kspdg_envs.lbg1")
 SOLVE_LBG1_JL_PATH = SOLVE_LBG1_JL_PATH.replace('.','/')
 SOLVE_LBG1_JL_PATH = "../../src/"+SOLVE_LBG1_JL_PATH+"/solve_lbg1.jl"
 SOLVE_LBG1_JL_PATH = Path(THIS_FILE.parent, SOLVE_LBG1_JL_PATH)

@@ -5,13 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v0.9.0-alpha] - 2024.09.09
+## [v0.9.0-beta] - 2024.09.10
 
 ### Added
 
 + Platform (e.g. Windows, Mac, Linux) and architecture (e.g. x86_64, arm64) specific private source environments and evaluate.py
++ New `utils/private_src_utils.py` module that provides helper functions for managing obfuscated code imports
 
 ### Fixed
+
++ Conditional statements for importing LBG1_LG3 environments so that the lighter-weight install of kspdg without `juliacall` dependency does not error on import
 
 ### Changed
 
@@ -19,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 + Updating top-level README to simplify installation process
 
 ### Removed
+
++ Removed unused astropy imports in `utils.py`
 
 ## [v0.8.1] - 2024.08.14
 

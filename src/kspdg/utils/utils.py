@@ -4,12 +4,8 @@
 
 import numpy as np
 
-import astropy.units as astro_units
-
 from copy import deepcopy
 from typing import List
-
-from astropy.units import Quantity
 
 from kspdg.utils import constants as CONST
 
