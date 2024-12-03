@@ -34,6 +34,7 @@ version = {attr = "kspdg.__version__"}
 [tool.setuptools.package-data]
 kspdg = [
     "private_src/python3_9/Darwin_arm64/pyarmor_runtime_000000/*.so",
+    "src/kspdg/private_src/python3_9/Darwin_arm64/kspdg_envs/lbg1/*.jl",
     "private_src/python3_9/Darwin_x86_64/pyarmor_runtime_000000/*.so",
     "private_src/python3_9/Linux_x86_64/pyarmor_runtime_000000/*.so",
     "private_src/python3_9/Windows_x86_64/pyarmor_runtime_000000/*.pyd",
