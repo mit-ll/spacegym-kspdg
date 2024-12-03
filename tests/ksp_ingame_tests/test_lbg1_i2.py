@@ -17,7 +17,7 @@ import kspdg.utils.constants as C
 from kspdg.lbg1.lg0_envs import LBG1_LG0_I2_Env
 from kspdg.lbg1.lg1_envs import LBG1_LG1_I2_Env
 from kspdg.lbg1.lg2_envs import LBG1_LG2_I2_Env
-from kspdg import LBG1_LG3_I2_V1
+from kspdg import LBG1_LG3_I2_V1, LBG1_LG4_I2_V1
 
 @pytest.fixture
 def lbg1_lg0_i2_env():
@@ -45,8 +45,16 @@ def lbg1_lg2_i2_env():
 
 @pytest.fixture
 def lbg1_lg3_i2_env():
-    """setup and teardown of the LBG1_LG2_I2_Env object connected to kRPC server"""
+    """setup and teardown of the LBG1_LG3_I2_Env object connected to kRPC server"""
     env = LBG1_LG3_I2_V1()
+    env.reset()
+    yield env
+    env.close()
+
+@pytest.fixture
+def lbg1_lg4_i2_env():
+    """setup and teardown of the LBG1_LG4_I2_Env object connected to kRPC server"""
+    env = LBG1_LG4_I2_V1()
     env.reset()
     yield env
     env.close()
@@ -65,6 +73,10 @@ def test_smoketest_lg2(lbg1_lg2_i2_env):
 
 def test_smoketest_lg3(lbg1_lg3_i2_env):
     """Ensure no errors are thrown from starting LG3 environment"""
+    pass
+
+def test_smoketest_lg4(lbg1_lg4_i2_env):
+    """Ensure no errors are thrown from starting LG4 environment"""
     pass
 
 def test_observation_0(lbg1_lg0_i2_env):
