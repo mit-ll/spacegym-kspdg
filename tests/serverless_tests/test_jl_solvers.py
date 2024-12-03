@@ -4,15 +4,26 @@ import pytest
 import numpy as np
 
 from pathlib import Path
+from importlib.resources import files
 
 from kspdg.utils.private_src_utils import get_private_src_module_str
 
-THIS_FILE = Path(__file__)
 
+#--- Get path to solve_lbg1.jl from kspdg installation point
+# (e.g. may be local to this file if pip installed editably or within a 
+# conda environment somewhere else in the file system)
+
+# PosixPath to kspdg installation point
+KSPDG_INSTALL_PATH = files('kspdg')
+
+# Path to solve_lbg1.jl relative to kspdg install point, accounting for
+# python version and OS-specific directories
 SOLVE_LBG1_JL_PATH = get_private_src_module_str("kspdg_envs.lbg1")
 SOLVE_LBG1_JL_PATH = SOLVE_LBG1_JL_PATH.replace('.','/')
-SOLVE_LBG1_JL_PATH = "../../src/"+SOLVE_LBG1_JL_PATH+"/solve_lbg1.jl"
-SOLVE_LBG1_JL_PATH = Path(THIS_FILE.parent, SOLVE_LBG1_JL_PATH)
+SOLVE_LBG1_JL_PATH = SOLVE_LBG1_JL_PATH.partition('/')[2]
+
+# Join the solve_lbg1.jl relative path to kspdg absolute path
+SOLVE_LBG1_JL_PATH = KSPDG_INSTALL_PATH / SOLVE_LBG1_JL_PATH / "solve_lbg1.jl"
 
 def test_solve_lbg1_jl_import():
     """check import of solve_lbg1.jl does not error"""

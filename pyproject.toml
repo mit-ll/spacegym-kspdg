@@ -36,16 +36,27 @@ kspdg = [
     "private_src/python3_9/Darwin_arm64/pyarmor_runtime_000000/*.so",
     "private_src/python3_9/Darwin_arm64/kspdg_envs/lbg1/*.jl",
     "private_src/python3_9/Darwin_x86_64/pyarmor_runtime_000000/*.so",
+    "private_src/python3_9/Darwin_x86_64/kspdg_envs/lbg1/*.jl",
     "private_src/python3_9/Linux_x86_64/pyarmor_runtime_000000/*.so",
+    "private_src/python3_9/Linux_x86_64/kspdg_envs/lbg1/*.jl",
     "private_src/python3_9/Windows_x86_64/pyarmor_runtime_000000/*.pyd",
+    "private_src/python3_9/Windows_x86_64/kspdg_envs/lbg1/*.jl",
     "private_src/python3_12/Darwin_arm64/pyarmor_runtime_000000/*.so",
+    "private_src/python3_12/Darwin_arm64/kspdg_envs/lbg1/*.jl",
     "private_src/python3_12/Darwin_x86_64/pyarmor_runtime_000000/*.so",
+    "private_src/python3_12/Darwin_x86_64/kspdg_envs/lbg1/*.jl",
     "private_src/python3_12/Linux_x86_64/pyarmor_runtime_000000/*.so",
+    "private_src/python3_12/Linux_x86_64/kspdg_envs/lbg1/*.jl",
     "private_src/python3_12/Windows_x86_64/pyarmor_runtime_000000/*.pyd",
+    "private_src/python3_12/Windows_x86_64/kspdg_envs/lbg1/*.jl",
     "private_src/python3_13/Darwin_arm64/pyarmor_runtime_000000/*.so",
+    "private_src/python3_13/Darwin_arm64/kspdg_envs/lbg1/*.jl",
     "private_src/python3_13/Darwin_x86_64/pyarmor_runtime_000000/*.so",
+    "private_src/python3_13/Darwin_x86_64/kspdg_envs/lbg1/*.jl",
     "private_src/python3_13/Linux_x86_64/pyarmor_runtime_000000/*.so",
-    "private_src/python3_13/Windows_x86_64/pyarmor_runtime_000000/*.pyd"
+    "private_src/python3_13/Linux_x86_64/kspdg_envs/lbg1/*.jl",
+    "private_src/python3_13/Windows_x86_64/pyarmor_runtime_000000/*.pyd",
+    "private_src/python3_13/Windows_x86_64/kspdg_envs/lbg1/*.jl"
 ]
 
 # Further dependencies for dev, testing, and envrionments with advanced bots
