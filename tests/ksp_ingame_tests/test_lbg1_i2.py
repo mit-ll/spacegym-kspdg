@@ -192,7 +192,7 @@ def test_convert_rhntw_to_rhvbody_0(lbg1_lg0_i2_env):
     # vector pointing normal
     v__rhntw = [0, 0, 1]
     env.vesBandit.control.sas_mode = env.vesBandit.control.sas_mode.normal
-    time.sleep(2.0)   # give time to re-orient
+    time.sleep(2.5)   # give time to re-orient
     v__rhpbody = lbg1_lg0_i2_env.convert_rhntw_to_rhvbody(v__rhntw, vessel=env.vesBandit)
     assert np.allclose(v__rhpbody, v_exp__rhpbody, atol=1e-2)
 
@@ -206,7 +206,7 @@ def test_convert_rhntw_to_rhvbody_0(lbg1_lg0_i2_env):
     # vector pointing in-radial
     v__rhntw = [-1, 0, 0]
     env.vesBandit.control.sas_mode = env.vesBandit.control.sas_mode.anti_radial
-    time.sleep(2.0)   # give time to re-orient
+    time.sleep(2.5)   # give time to re-orient
     v__rhpbody = lbg1_lg0_i2_env.convert_rhntw_to_rhvbody(v__rhntw, vessel=env.vesBandit)
     assert np.allclose(v__rhpbody, v_exp__rhpbody, atol=1e-2)
 
