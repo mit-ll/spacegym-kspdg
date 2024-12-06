@@ -137,11 +137,73 @@ def test_solve_lady_bandit_guard_costtype_3_2(lbg1_i2_init_conds):
 
         # running test for unit testing
         assert conv
+
+def test_solve_lady_bandit_guard_costtype_3_3(lbg1_i2_init_conds):
+    """run solve_lady_bandit_guard_3 (type-3 costs) solver on KSP conditions"""
+
+    # ~~ ARRANGE ~~
+    from juliacall import Main as jl
+
+    jl.include(str(SOLVE_LBG1_JL_PATH))
+
+    t_step = 1.0    # [s] length of timestep
+    n_steps = 100    # [-] number of timesteps
+
+    # define solver regularization terms
+    # NOTE: I do not yet have intuition on exactly how these terms affect/apply in the solver, but
+    # they can make a big difference as to whether or not the solver converges. If left to their defaults
+    # of 0.0 as encoded in iLQGames.jl, the solution to this problem will not converge
+    sol_max_n_iter = 200
+    sol_state_reg = 1e-3
+    sol_control_reg = 1e-3
+
+    # get init conds from fixture
+    R_k, mu_k, ladyX0, banditX0, guardX0, bandit_acc_max, guard_acc_max = \
+        lbg1_i2_init_conds if lbg1_i2_init_conds is not None else get_lbg1_i2_init_conds()
+    
+    bg_dist_weight = 1e4
+    lb_dist_weight = 0.0
+    bg_speed_weight = 0.0 # [s^2]
+    lb_speed_weight = 0.0 # [s^2]
+    bandit_acc_max_penalty_weight = 1e1 # [km^2]
+    guard_acc_max_penalty_weight = 1e1 # [km^2]
+
+    # ~~ ACT ~~
+    conv, b_pos, b_vel, b_acc, g_pos, g_vel, g_acc, l_pos, l_vel = jl.solve_lady_bandit_guard_costtype_3(
+        t_step = t_step,
+        n_steps = n_steps,
+        mu = mu_k,
+        ladyX0 = ladyX0,
+        banditX0 = banditX0,
+        guardX0 = guardX0,
+        bandit_acc_max = bandit_acc_max, 
+        bandit_acc_max_penalty_weight = bandit_acc_max_penalty_weight, 
+        guard_acc_max = guard_acc_max, 
+        guard_acc_max_penalty_weight = guard_acc_max_penalty_weight, 
+        bg_dist_weight = bg_dist_weight, 
+        lb_dist_weight = lb_dist_weight,
+        bg_speed_weight = bg_speed_weight,
+        lb_speed_weight = lb_speed_weight,
+        solver_max_n_iter = sol_max_n_iter,
+        solver_state_regularization = sol_state_reg,
+        solver_control_regularization = sol_control_reg)
+    
+    assert b_pos.shape == (3,n_steps)
+
+    if __name__ == "__main__":
+        
+        # running test for visualization
+        return conv, b_pos, b_vel, b_acc, g_pos, g_vel, g_acc, l_pos, l_vel
+    
+    else:
+
+        # running test for unit testing
+        assert conv
     
 
 if __name__ == "__main__":
 
-    conv, b_pos, b_vel, b_acc, g_pos, g_vel, g_acc, l_pos, l_vel = test_solve_lady_bandit_guard_costtype_3_2(None)
+    conv, b_pos, b_vel, b_acc, g_pos, g_vel, g_acc, l_pos, l_vel = test_solve_lady_bandit_guard_costtype_3_3(None)
 
     print(f"Converged: {conv}")
 
