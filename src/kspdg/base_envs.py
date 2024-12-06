@@ -23,6 +23,9 @@ class KSPDGBaseEnv(ABC, gym.Env):
     """ Abstract base class for all KSPDG gym environments
     """
 
+    BOT_HEALTHY_FLAG = 0
+    BOT_ERROR_FLAG = 1
+
     def __init__(self, debug:bool=False) -> None:
         """
         Args:
@@ -99,6 +102,7 @@ class KSPDGBaseEnv(ABC, gym.Env):
         """
 
         self.stop_bot_thread = False
+        self.bot_thread_status = self.BOT_HEALTHY_FLAG
 
         # check that thread does not exist or is not running
         if hasattr(self, "bot_thread"):
@@ -345,6 +349,9 @@ class Group1BaseEnv(KSPDGBaseEnv):
         
         vessel_step_start = time.time()
         self.logger.debug("Beginning vessel_step...")
+
+        # check that bot thread has not errored
+        assert self.bot_thread_status == self.BOT_HEALTHY_FLAG
 
         k_burn_vec = self.PARAMS.ACTION.K_BURN_VEC
         k_vec_type = self.PARAMS.ACTION.K_VEC_TYPE
