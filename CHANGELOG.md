@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
++ Very basic check of bot_thread status to see if an error occurs; if so, an error is thrown in the MainThread (e.g. Group1BaseEnv) so that environment execution does not continue with the bot error unnoticed
 + LBG1_LG4 private-source environments and unit-tests
 
 ## [v0.9.2] - 2024.12.03
