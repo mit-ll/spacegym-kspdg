@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED] - XXXX.XX.XX
 
+### Changed
+
++ Moving `install_julia_deps.py` into kspdg package and adding it as a command-line entry point within pyproject.toml to simplify install process
+
 ### Removed
 
 + Unused `astropy` dependency and related instructions in readme

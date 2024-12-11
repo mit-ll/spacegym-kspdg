@@ -65,3 +65,7 @@ kspdg = [
 testing = ["pytest","matplotlib"]
 adv_bots = ["juliacall"]
 full = ["kspdg[testing,adv_bots]","build"]
+
+# Command-line entry point for julia dependency install script
+[project.scripts]
+kspdg-install-julia-deps = "kspdg.scripts.install_julia_deps:main"
