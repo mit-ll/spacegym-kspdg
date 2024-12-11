@@ -196,26 +196,6 @@ conda env create -f environment.yml
 conda activate kspdg
 ``` 
 
-> :warning: **Troubleshooting**
-> + Note that the `kspdg` library depends upon [astropy](https://www.astropy.org/), which in turn depends upon [pyerfa](https://github.com/liberfa/pyerfa)
-> + __FOR MAC USERS with M1 chipsets:__ as of this writing, [pyerfa has not fully supported M1's arm64 architecture](https://github.com/liberfa/pyerfa/issues/83)
-> + This can lead to errors running `kspdg` such as
-> ```
-> (mach-o file, but is an incompatible architecture (have 'x86_64', need 'arm64e'))
-> ```
-> + The workaround for Mac users with M1 chipsets is described [here](https://github.com/liberfa/pyerfa/issues/83#issuecomment-1255333177). For Python 3.9, the workaround entails cloning pyerfa locally, checking out a specific version, and installing in the conda environment
-> ```bash
-> # get pyerfa source code and switch to specific release of pyerfa
-> git clone --recursive https://github.com/liberfa/pyerfa/
-> cd pyerfa
-> git fetch origin
-> git checkout v2.0.0.1
-> 
-> # install specific version of pyerfa in conda environment
-> conda activate kspdg
-> pip install .
-> ```
-
 ### Install Advanced-Bots Julia Dependencies
 
 For the `[adv_bots]` install, you need to also get Julia dependencies like [`iLQGames.jl`](https://github.com/lassepe/iLQGames.jl). We've created a single python script to achieve this
@@ -260,10 +240,6 @@ pytest tests/ksp_ingame_tests/test_lbg1_i2.py
 pytest tests/ksp_ingame_tests/test_sb1_i5.py
 ```
 5. You should see the KSP game reset and focus on a vehicle that then performs several orientation and propulsive maneuvers. The pytest command should then indicate the number of passed tests.
-
-
-> :warning: **Troubleshooting**
-> If you are using a Mac with an arm64 architecture (e.g. M1 chipset) and recieve an error like `(mach-o file, but is an incompatible architecture (have 'x86_64', need 'arm64e'))`, please refer to instructions in the [kspdg library installation section](#install-kspdg) about installing `pyerfa` from source.
 
 ------------
 
