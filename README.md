@@ -173,7 +173,25 @@ cp -r ~/Desktop/PhysicsRangeExtender/PhysicsRangeExtender/Distribution/GameData/
 
 ### Install `kspdg`
 
-If you have not yet done so, clone this repository locally on your machine
+Light-weight installation with limited functionality
+```bash
+```
+
+Full installation with private-source environments that depend on Julia
+```bash
+# pip install full kspdg package
+
+# install juliaup to manage julia versions
+# for further instructions: https://github.com/JuliaLang/juliaup#installation
+curl -fsSL https://install.julialang.org | sh
+
+# install kspdg's julia dependencies
+
+```
+
+### Develop `kspdg`
+
+These instructions are for if you are looking to develop this package, and not merely utilize it as an end-user. If you have not yet done so, clone this repository locally on your machine
 
 ```bash
 git clone https://github.com/mit-ll/spacegym-kspdg.git
