@@ -56,7 +56,8 @@ kspdg = [
     "private_src/python3_13/Linux_x86_64/pyarmor_runtime_000000/*.so",
     "private_src/python3_13/Linux_x86_64/kspdg_envs/lbg1/*.jl",
     "private_src/python3_13/Windows_x86_64/pyarmor_runtime_000000/*.pyd",
-    "private_src/python3_13/Windows_x86_64/kspdg_envs/lbg1/*.jl"
+    "private_src/python3_13/Windows_x86_64/kspdg_envs/lbg1/*.jl",
+    "../tests/*.py"
 ]
 
 # Further dependencies for dev, testing, and envrionments with advanced bots
@@ -70,3 +71,4 @@ full = ["kspdg[testing,adv_bots]","build"]
 # Command-line entry point for julia dependency install script
 [project.scripts]
 kspdg-install-julia-deps = "kspdg.scripts.install_julia_deps:main"
+kspdg-run-serverless-tests = "kspdg.scripts.run_tests:serverless_tests"
