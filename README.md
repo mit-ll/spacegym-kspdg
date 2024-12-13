@@ -131,19 +131,6 @@ The installation process includes several components:
 
 6. Test installation by opening KSP (e.g. KSP.app on Mac). When main screen has loaded, select `Start Game` and you should see options for `Play Missions` and `Mission Builder` to confirm that the Making History Expansion was successfully installed
 
-### Install KSPDG Mission Save Files
-
-For each differential game environment there are associated mission files created using the "Making History" expansion pack that serves to populate the KSP game engine with the necessary spacecraft in the appropriate orbits. There is also a number of mission save files for in-game software development testing purposes.
-
-The save files are located in this repo under `ksp_files/saves/missions` and `ksp_files/Missions`; both sets are necessary to populate the differential game environments. These mission save files must be downloaded and manaully installed into the correct directory of the KSP game installation.
-
-Copy the contents of `ksp_files/saves/missions/` and `ksp_files/Missions` directory into your local installation of KSP. For example, on a Mac with this repo and KSP's install directories on the desktop this would look like:
-```bash
-git clone https://github.com/mit-ll/spacegym-kspdg.git
-cd spacegym-kspdg
-cp -r ksp_files/saves/missions/. ~/Desktop/KSP_osx/saves/missions
-cp -r ksp_files/Missions/. ~/Desktop/KSP_osx/Missions
-```
 
 ### Install kRPC Server
 
@@ -175,19 +162,58 @@ cp -r ~/Desktop/PhysicsRangeExtender/PhysicsRangeExtender/Distribution/GameData/
 
 Light-weight installation with limited functionality
 ```bash
+# pip install minimal kspdg package
+pip install kspdg@git+https://github.com/mit-ll/spacegym-kspdg@latest
+
+# KSPDG mission save files, follow instructions for pointing to your KSP game installation
+kspdg-install-ksp-files
 ```
 
 Full installation with private-source environments that depend on Julia
 ```bash
 # pip install full kspdg package
+pip install kspdg@git+https://github.com/mit-ll/spacegym-kspdg@latest#egg=kspdg[full]
 
-# install juliaup to manage julia versions
+# KSPDG mission save files, follow instructions for pointing to your KSP game installation
+kspdg-install-ksp-files
+
+# install juliaup to manage julia versions (Mac, Linux)
+# WINDOWS USERS instead use command: winget install julia -s msstore
 # for further instructions: https://github.com/JuliaLang/juliaup#installation
 curl -fsSL https://install.julialang.org | sh
 
 # install kspdg's julia dependencies
-
+kspdg-install-julia-deps
 ```
+
+### Verify Installation
+
+__NOTE:__ Because the KSPDG environments are inexorably linked to the KSP game engine, many of the library's unit/integration test can only be run when a particular game mission file has been loaded and running. This means that verifying installation and testing during code development is a bit more involved than just a single `pytest` call
+
+__Serverless Tests:__ Quick test to run without KSP game engine running nor kRPC server connection
+
+```bash
+kspdg-run-serverless-tests
+```
+
+__KSP In-Game Tests:__ These tests require the KSP game engine to be running, the test-specific mission to be loaded, and a connection to the kRPC server
+
+1. Start KSP game application. 
+2. Select `Start Game` > `Play Missions` > `Community Created` > `pe1_i3` > `Continue`
+3. In kRPC dialog box click `Add server`. Select `Show advanced settings` and select `Auto-accept new clients`. Then select `Start Server`
+4. In a bash terminal:
+```bash
+kspdg-run-pe1-i3-tests
+
+# for additional tests, load a different mission in KSP: 
+# ESC > Quit to Main Menu > Exit to Main Menu > Play Missions > `lbg1_i2` > Continue
+kspdg-run-lbg1-i2-tests
+
+# ESC > Quit to Main Menu > Exit to Main Menu > Play Missions > `sb1_i5` > Continue
+kspdg-run-sb1-i5-tests
+```
+5. You should see the KSP game reset and focus on a vehicle that then performs several orientation and propulsive maneuvers. The pytest command should then indicate the number of passed tests.
+
 
 ### Develop `kspdg`
 
@@ -212,52 +238,7 @@ For development of this package, we recommend using the conda environment define
 cd spacegym-kspdg
 conda env create -f environment.yml
 conda activate kspdg
-``` 
-
-### Install Advanced-Bots Julia Dependencies
-
-For the `[adv_bots]` install, you need to also get Julia dependencies like [`iLQGames.jl`](https://github.com/lassepe/iLQGames.jl). We've created a single python script to achieve this
-
-```bash
-conda activate kspdg
-python install_julia_deps.py    # this may take a long time because julia may be installed here if not already present
 ```
-
-### Install Luna Multiplayer (LMP)
-
-_Future Work_
-
-### Verify Installation
-
-__NOTE:__ Because the KSPDG environments are inexorably linked to the KSP game engine, many of the library's unit/integration test can only be run when a particular game mission file has been loaded and running. This means that verifying installation and testing during code development is a bit more involved than just a single `pytest` call
-
-__Serverless Tests:__ Quick test to run without KSP game engine running nor kRPC server connection
-
-```bash
-cd spacegym-kspdg
-conda activate kspdg
-pytest tests/serverless_tests/
-```
-
-__KSP In-Game Tests:__ These tests require the KSP game engine to be running, the test-specific mission to be loaded, and a connection to the kRPC server
-
-1. Start KSP game application. 
-2. Select `Start Game` > `Play Missions` > `Community Created` > `pe1_i3` > `Continue`
-3. In kRPC dialog box click `Add server`. Select `Show advanced settings` and select `Auto-accept new clients`. Then select `Start Server`
-4. In a bash terminal:
-```bash
-cd spacegym-kspdg
-conda activate kspdg
-pytest tests/ksp_ingame_tests/test_pe1_i3.py
-
-# for additional tests, load a different mission in KSP: 
-# ESC > Quit to Main Menu > Exit to Main Menu > Play Missions > `lbg1_i2` > Continue
-pytest tests/ksp_ingame_tests/test_lbg1_i2.py
-
-# ESC > Quit to Main Menu > Exit to Main Menu > Play Missions > `sb1_i5` > Continue
-pytest tests/ksp_ingame_tests/test_sb1_i5.py
-```
-5. You should see the KSP game reset and focus on a vehicle that then performs several orientation and propulsive maneuvers. The pytest command should then indicate the number of passed tests.
 
 ------------
 
