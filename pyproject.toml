@@ -57,6 +57,7 @@ kspdg = [
     "private_src/python3_13/Linux_x86_64/kspdg_envs/lbg1/*.jl",
     "private_src/python3_13/Windows_x86_64/pyarmor_runtime_000000/*.pyd",
     "private_src/python3_13/Windows_x86_64/kspdg_envs/lbg1/*.jl",
+    "evaluation/configs/example_eval_cfg.yaml",
     "tests/**/*.jl",
     "ksp_files/**/*"
 ]
@@ -77,3 +78,4 @@ kspdg-run-serverless-tests = "kspdg.scripts.run_tests:serverless_tests"
 kspdg-run-lbg1-i2-tests = "kspdg.scripts.run_tests:lbg1_i2_tests"
 kspdg-run-pe1-i3-tests = "kspdg.scripts.run_tests:pe1_i3_tests"
 kspdg-run-sb1-i5-tests = "kspdg.scripts.run_tests:sb1_i5_tests"
+kspdg-evalutate = "kspdg.evaluation.evaluate:run_evaluation"

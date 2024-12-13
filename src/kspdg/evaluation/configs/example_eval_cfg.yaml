@@ -7,7 +7,7 @@
 user_id: "Evaluation Test"  # your individual team or user name goes here
 user_key:  "f2dcf0d1-f977-4e8b-9103-d03be0bffeec" # your indivdiualized id goes here (distributed to you by organizers)
 scenario_environment: LBG1_LG3_I2_V1
-agent_module_path: "../src/kspdg/agent_api/example_agent.py"  # this must be relative to working directory when script is called
+agent_module_path: "[kspdg]/agent_api/example_agent.py"  # absolute path to python module defining agent. Using [kspdg] at start will make this relative to kspdg installation
 agent_cls: NaivePursuitAgent
 agent_name: "Naive-Ned" # identifier name for logging purposes. 
                         # The same agent class with different inputs can lead to different behaviors,

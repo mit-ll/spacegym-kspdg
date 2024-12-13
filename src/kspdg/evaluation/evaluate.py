@@ -17,5 +17,9 @@
 #     raise ImportError(f"evaluate.py requires python 3.9 or 3.12, got {sys.version}")
 
 import kspdg
-if __name__ == "__main__":
+
+def run_evaluation():
     kspdg.evaluate.main()
+    
+if __name__ == "__main__":
+    run_evaluation()
