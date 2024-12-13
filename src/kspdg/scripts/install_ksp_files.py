@@ -47,7 +47,7 @@ def main():
 
     # Find kspdg's `ksp_files/` directory in kspdg install
     # ksp_files_path = os.path.join(KSPDG_INSTALL_PATH, "../../ksp_files")
-    ksp_files_path = KSPDG_INSTALL_PATH / Path("../../ksp_files")
+    ksp_files_path = KSPDG_INSTALL_PATH / Path("ksp_files")
     ksp_files_path = ksp_files_path.resolve()
 
     # Query user for destination path

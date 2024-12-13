@@ -14,20 +14,20 @@ KSPDG_INSTALL_PATH = files('kspdg')
 
 def serverless_tests():
     """Run tests that do not require connection to krpc server; i.e. ksp does not need to be running"""
-    test_path = os.path.join(KSPDG_INSTALL_PATH, "../../tests/serverless_tests")
+    test_path = os.path.join(KSPDG_INSTALL_PATH, "tests/serverless_tests")
     pytest.main([test_path])
 
 def lbg1_i2_tests():
     """Run tests in lbg1_i2 mission"""
-    test_path = os.path.join(KSPDG_INSTALL_PATH, "../../tests/ksp_ingame_tests/test_lbg1_i2.py")
+    test_path = os.path.join(KSPDG_INSTALL_PATH, "tests/ksp_ingame_tests/test_lbg1_i2.py")
     pytest.main([test_path])
 
 def pe1_i3_tests():
     """Run tests in pe1_i3 mission"""
-    test_path = os.path.join(KSPDG_INSTALL_PATH, "../../tests/ksp_ingame_tests/test_pe1_i3.py")
+    test_path = os.path.join(KSPDG_INSTALL_PATH, "tests/ksp_ingame_tests/test_pe1_i3.py")
     pytest.main([test_path])
 
 def sb1_i5_tests():
     """Run tests in sb1_i5 mission"""
-    test_path = os.path.join(KSPDG_INSTALL_PATH, "../../tests/ksp_ingame_tests/test_sb1_i5.py")
+    test_path = os.path.join(KSPDG_INSTALL_PATH, "tests/ksp_ingame_tests/test_sb1_i5.py")
     pytest.main([test_path])

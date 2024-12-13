@@ -57,7 +57,7 @@ kspdg = [
     "private_src/python3_13/Linux_x86_64/kspdg_envs/lbg1/*.jl",
     "private_src/python3_13/Windows_x86_64/pyarmor_runtime_000000/*.pyd",
     "private_src/python3_13/Windows_x86_64/kspdg_envs/lbg1/*.jl",
-    "../tests/*.py"
+    "ksp_files/**/*"
 ]
 
 # Further dependencies for dev, testing, and envrionments with advanced bots
