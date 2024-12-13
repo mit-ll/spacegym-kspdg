@@ -1,6 +1,6 @@
 # KSPDG-specific stuff
 kspdg_results*.txt
-evaluation/configs/
+src/kspdg/evaluation/configs/
 scripts/debug*.py
 
 # Byte-compiled / optimized / DLL files
