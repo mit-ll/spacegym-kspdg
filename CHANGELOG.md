@@ -12,6 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 + Explicit `pyyaml` dependency (I think this used to be a sub-dependency of astropy)
 + In-package `src/kspdg/scripts/` directory for holding command-line entry-point scripts (e.g. julia install, unit tests) so that full download/clone of kspdg is not needed for julia install and unit testing
 + `MANIFEST.in` to include tests in source distributions
++ Julia dependency entry point. Run with
+```bash
+kspdg-install-julia-deps
+```
++ Serverless and in-game unit test entry points. Run with
+```bash
+kspdg-run-serverless-tests
+kspdg-run-lbg1-i2-tests
+```
+
 
 ### Changed
 
