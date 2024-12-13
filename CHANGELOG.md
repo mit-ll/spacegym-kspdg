@@ -20,6 +20,8 @@ kspdg-install-julia-deps
 ```bash
 kspdg-run-serverless-tests
 kspdg-run-lbg1-i2-tests
+kspdg-run-pe1-i3-tests
+kspdg-run-sb1-i5-tests
 ```
 
 
