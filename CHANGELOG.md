@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ```bash
 kspdg-install-julia-deps
 ```
++ KSP files copy script entry point. Run with
+```bash
+kspdg-install-ksp-files
+```
 + Serverless and in-game unit test entry points. Run with
 ```bash
 kspdg-run-serverless-tests

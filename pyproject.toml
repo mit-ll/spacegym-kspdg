@@ -30,7 +30,7 @@ dynamic = ["version"]
 [tool.setuptools.dynamic]
 version = {attr = "kspdg.__version__"}
 
-# ensure that private_src pyarmor shared object files are part of kspdg build
+# Ensure that private_src pyarmor shared object files are part of kspdg build
 [tool.setuptools.package-data]
 kspdg = [
     "private_src/python3_9/Darwin_arm64/pyarmor_runtime_000000/*.so",
@@ -71,6 +71,7 @@ full = ["kspdg[testing,adv_bots]","build"]
 # Command-line entry point for julia dependency install script
 [project.scripts]
 kspdg-install-julia-deps = "kspdg.scripts.install_julia_deps:main"
+kspdg-install-ksp-files = "kspdg.scripts.install_ksp_files:main"
 kspdg-run-serverless-tests = "kspdg.scripts.run_tests:serverless_tests"
 kspdg-run-lbg1-i2-tests = "kspdg.scripts.run_tests:lbg1_i2_tests"
 kspdg-run-pe1-i3-tests = "kspdg.scripts.run_tests:pe1_i3_tests"
