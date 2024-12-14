@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 kspdg-install-julia-deps
 ```
 
-+ KSP files copy script entry point. Run with
++ KSP files copy script entry point. This creates the GameData/KSPDG directory for easier management of evaluation configs and results and copies the KSPDG mission files into the KSP installation. Run with
 ```bash
 kspdg-install-ksp-files
 ```
