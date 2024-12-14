@@ -320,23 +320,25 @@ This example walks through how to evaluate agents for scoring purpose in the AIA
 > 
 > __We reserve the right to disqualify teams for unsporting behavior__
 
-The agent evaluation process uses a python scripts located in `evaluation/evaluate.py` which takes a command-line argument pointing to a Agent-Env runner configuration file. The configuration file contains several pieces of information, inlcuding:
+The agent evaluation process uses the `kspdg-evaluate` terminal command that comes packaged with kspdg. This command takes a command-line argument pointing to a Agent-Env runner configuration file (and optionally a path for where you want the results to be saved, the default is to create a `results/` directory in the working directory when `kspdg-evaluate` is called). 
+
+The configuration file contains several pieces of information, inlcuding:
 - user name and pass key for authentication on the public leaderboard
 - The kspdg environment that is too be evaluated. 
 - path to the user-defined agent to be evaluated, the agent's class name, any input arguments needed to instantiate the agent, and an agent nickname to distinguish it from other agents on the leaderboard that may be instantiated from the agent class (e.g. if the user runs the same agent multiple times or with different input arguements)
 
-See [`evaluation/configs/example_eval_cfg.yaml``](evaluation/configs/example_eval_cfg.yaml) for an example of the config file
+See [`evaluation/configs/example_eval_cfg.yaml`](src/kspdg/evaluation/configs/example_eval_cfg.yaml) for an example of the config file
 
 Here is a basic example for running an agent-environment evaluation. As with other examples, you begin by:
 
 1. Start KSP game application. 
 2. Select `Start Game` > `Play Missions` > `Community Created` > `lbg1_i2` > `Continue`
 3. In kRPC dialog box click `Add server`. Select `Show advanced settings` and select `Auto-accept new clients`. Then select `Start Server`
+4. Download/copy the [example configuration file](src/kspdg/evaluation/configs/example_eval_cfg.yaml). Let's assume it is downloaded to `~/Desktop/example_eval_cfg.yaml`
 
 ```bash
-conda activate kspdg # while it is not strictly necessary to use conda environments, it is encouraged for development and debugging purpose
-cd evaluation # working directory is important due to relative path in cfg.yaml
-python evaluate.py configs/example_eval_cfg.yaml
+mkdir ~/Desktop/results # create directory for evaluation results to be store, otherwise it will be create in current working direcotry
+kspdg-evaluate ~/Desktop/example_eval_cfg.yaml ~/Desktop/results
 ```
 
 This should output to a file in the `results/` subdirectory with a name like `kspdg_results_20231018_125336.txt`. That file has JSON-formatted results that look like (details will vary in your file)
