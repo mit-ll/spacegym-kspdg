@@ -45,7 +45,7 @@ def copy_ksp_mission_files(kspdg_path_in, ksp_game_path_in):
             # Ensure destination subdirectory exists
             dest_file.mkdir(parents=True, exist_ok=True)
         elif src_file.is_file():
-            # Copy file, overwriting only if it already exists
+            # Copy file, overwriting if it already exists
             shutil.copy2(src_file, dest_file)
 
 def setup_kspdg_game_data_dir(kspdg_path_in, ksp_game_path_in):

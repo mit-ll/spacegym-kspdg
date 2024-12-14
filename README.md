@@ -174,7 +174,8 @@ Full installation with private-source environments that depend on Julia
 # pip install full kspdg package
 pip install kspdg@git+https://github.com/mit-ll/spacegym-kspdg@latest#egg=kspdg[full]
 
-# KSPDG mission save files, follow instructions for pointing to your KSP game installation
+# Copy KSPDG mission save files and evaluation configs to your KSP game installation
+# follow instructions for pointing to your KSP game installation
 kspdg-install-ksp-files
 
 # install juliaup to manage julia versions (Mac, Linux)
@@ -334,11 +335,10 @@ Here is a basic example for running an agent-environment evaluation. As with oth
 1. Start KSP game application. 
 2. Select `Start Game` > `Play Missions` > `Community Created` > `lbg1_i2` > `Continue`
 3. In kRPC dialog box click `Add server`. Select `Show advanced settings` and select `Auto-accept new clients`. Then select `Start Server`
-4. Download/copy the [example configuration file](src/kspdg/evaluation/configs/example_eval_cfg.yaml). Let's assume it is downloaded to `~/Desktop/example_eval_cfg.yaml`
+4. A copy of the [example configuration file](src/kspdg/evaluation/configs/example_eval_cfg.yaml) should have been installed in your KSP installation at `GameData/KSPDG/configs/example_eval_cfg.yaml` during the `kspdg-install-ksp-files` process. Let's assume you've install KSP at `~/Desktop/KSP_osx` (example of a Mac installation, Windows and Linux will have different suffixes on KSP)
 
 ```bash
-mkdir ~/Desktop/results # create directory for evaluation results to be store, otherwise it will be create in current working direcotry
-kspdg-evaluate ~/Desktop/example_eval_cfg.yaml ~/Desktop/results
+kspdg-evaluate ~/Desktop/KSP_osx/GameData/KSPDG/configs/example_eval_cfg.yaml ~/Desktop/KSP_osx/GameData/KSPDG/results/
 ```
 
 This should output to a file in the `results/` subdirectory with a name like `kspdg_results_20231018_125336.txt`. That file has JSON-formatted results that look like (details will vary in your file)
