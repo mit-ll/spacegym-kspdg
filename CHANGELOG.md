@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [UNRELEASED] - XXXX.XX.XX
+## [v0.11.0] - 2024.12.16
 
 ### Added
 
@@ -44,6 +44,24 @@ kspdg-evaluate path/to/cfg.yml optional/path/to/results/
 ### Removed
 
 + Unused `astropy` dependency and related instructions in readme
++ `environment.yml` and developer instructions in readme as they are not needed by, and may confuse, end-users and are easy to reprodocue for developers. For example, developers can use the following process:
+```bash
+# create conda development environment
+conda create --name kspdg_dev python=3.12 ipython
+conda activate kspdg_dev
+
+# clone kspdg repo and install as editable
+git clone git@github.com:mit-ll/spacegym-kspdg.git
+cd spacegym-kspdg
+pip install -e .[full]
+
+# copy necessary game files to KSP install
+kspdg-install-ksp-files
+
+# instal juliaup and julia dependencies
+curl -fsSL https://install.julialang.org | sh
+kspdg-install-julia-deps
+```
 
 ## [v0.10.0] - 2024.12.09
 

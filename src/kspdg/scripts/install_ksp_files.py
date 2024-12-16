@@ -103,9 +103,9 @@ def setup_kspdg_game_data_dir(kspdg_path_in, ksp_game_path_in):
             raise FileNotFoundError(f"Example eval config not found in kspdg install: {kspdg_example_eval_cfg_path}")
         
         shutil.copy(kspdg_example_eval_cfg_path, ksp_example_eval_cfg_path)
-        print(f"Copied example.yaml from '{kspdg_example_eval_cfg_path}' to '{ksp_example_eval_cfg_path}'.")
+        print(f"Copied example_eval_cfg.yamlfrom '{kspdg_example_eval_cfg_path}' to '{ksp_example_eval_cfg_path}'.")
     else:
-        print(f"File 'example.yaml' already exists in '{ksp_example_eval_cfg_path}'. It will not be overwritten.")
+        print(f"File 'example_eval_cfg.yaml' already exists in '{ksp_example_eval_cfg_path}'. It will not be overwritten.")
 
 def main():
 
