@@ -131,16 +131,31 @@ The installation process includes several components:
 
 6. Test installation by opening KSP (e.g. KSP.app on Mac). When main screen has loaded, select `Start Game` and you should see options for `Play Missions` and `Mission Builder` to confirm that the Making History Expansion was successfully installed
 
+7. __Graphics Settings:__ speed of running the KSP game engine is far more important than good visuals. Therefore it is _strongly_ recommended to set minimal graphics settings in KSP. After starting KSP game engine, in the main menu, go to `Settings` > `Graphics` and turn down these options to their lowest settings
+    + Terrain Detail: Low
+    + Terrain Scatters: Off
+    + Scatter Density: 0%
+    + Render Quality: Fastest
+    + Texture Quality: Eighth Res
+    + Aerodynamic FX Quality: Low
+    + Reflection Refresh Mode: Off
+    + Reflection Texture Resolution: 128
+    + Terrain Shader Quality: Low
+    + Surface FX: Off
+    + Underwater FX: Off
+    + Highlight FX: Off
+    + The other graphics settings can be left on their defaults
+
 
 ### Install kRPC Server
 
 kRPC is what allows external scripts and processes (such as python programs) to send commands to and control the KSP game engine
-1. Download latest version of kRPC from the [GitHub link on the kRPC Getting Started Page](https://krpc.github.io/krpc/getting-started.html#installation). As of this writing, you should download `krpc-0.5.2.zip`. __NOTE:__ make sure to download a full version, not just the python package; v0.5.2 is a full version but v0.5.3 is just the python package
-2. Unzip `krpc-0.5.2/` folder to `~/Desktop/krpc-0.5.2/`
+1. Download latest version of kRPC from the [GitHub link on the kRPC Getting Started Page](https://krpc.github.io/krpc/getting-started.html#installation). As of this writing, you should download `krpc-0.5.4.zip`. __NOTE:__ make sure to download a full version, not just the python package; for example, v0.5.4 is a full version but v0.5.3 is just the python package
+2. Unzip `krpc-0.5.4/` folder to `~/Desktop/krpc-0.5.4/`
 3. Create a new directory in KSP's `GameData` directory and move all of the krpc contents there
 ```bash
 mkdir ~/Desktop/KSP_osx/GameData/kRPC
-mv ~/Desktop/krpc-0.5.2/* ~/Desktop/KSP_osx/GameData/kRPC/
+mv ~/Desktop/krpc-0.5.4/* ~/Desktop/KSP_osx/GameData/kRPC/
 ```
 
 ### Install PhysicsRangeExtender
