@@ -230,32 +230,6 @@ kspdg-run-sb1-i5-tests
 ```
 5. You should see the KSP game reset and focus on a vehicle that then performs several orientation and propulsive maneuvers. The pytest command should then indicate the number of passed tests.
 
-
-### Develop `kspdg`
-
-These instructions are for if you are looking to develop this package, and not merely utilize it as an end-user. If you have not yet done so, clone this repository locally on your machine
-
-```bash
-git clone https://github.com/mit-ll/spacegym-kspdg.git
-```
-
-To install this package, run:
-
-```bash
-cd spacegym-kspdg
-pip install -e .[adv_bots]  # installs juliacall allowing use of more advanced bots 
-# if you plan to further develop the kspdg package, install the testing optional dependencies
-# pip install -e .[full]
-```
-
-For development of this package, we recommend using the conda environment defined in `environment.yml`. To create and activate this environment, run:
-
-```bash
-cd spacegym-kspdg
-conda env create -f environment.yml
-conda activate kspdg
-```
-
 ------------
 
 ## Example: Hello KSPDG
@@ -353,7 +327,8 @@ Here is a basic example for running an agent-environment evaluation. As with oth
 4. A copy of the [example configuration file](src/kspdg/evaluation/configs/example_eval_cfg.yaml) should have been installed in your KSP installation at `GameData/KSPDG/configs/example_eval_cfg.yaml` during the `kspdg-install-ksp-files` process. Let's assume you've install KSP at `~/Desktop/KSP_osx` (example of a Mac installation, Windows and Linux will have different suffixes on KSP)
 
 ```bash
-kspdg-evaluate ~/Desktop/KSP_osx/GameData/KSPDG/configs/example_eval_cfg.yaml ~/Desktop/KSP_osx/GameData/KSPDG/results/
+cd ~/Desktop/KSP_osx/GameData/KSPDG
+kspdg-evaluate configs/example_eval_cfg.yaml results/
 ```
 
 This should output to a file in the `results/` subdirectory with a name like `kspdg_results_20231018_125336.txt`. That file has JSON-formatted results that look like (details will vary in your file)
@@ -373,7 +348,7 @@ This should output to a file in the `results/` subdirectory with a name like `ks
     },
     "user_id": "Evaluation Test",
     "user_key": "f2dcf0d1-f977-4e8b-9103-d03be0bffeec",
-    "kspdg_version": "0.6.2",
+    "kspdg_version": "0.11.0",
     "agent_name": "Naive-Ned",
     "scenario_environment": "LBG1_LG3_I2_V1"
 }

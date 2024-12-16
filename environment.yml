@@ -1,9 +1,0 @@
-name: kspdg
-channels:
-  - conda-forge
-dependencies:
-  - python=3
-  - ipython
-  - pip
-  - pip:
-    - -e .[full] # install developer dependencies and advanced bots

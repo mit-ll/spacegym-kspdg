@@ -39,6 +39,7 @@ kspdg-evaluate path/to/cfg.yml optional/path/to/results/
 
 + Moving `tests/`, `ksp_files/`, and `evaluation/` directories __into__ `src/kspdg/` so that they are considered package-data that is accessible at runtime by end users. This enables no-clone unit testing and ksp-file installation. For justification for avoiding use of non-package data, see: https://setuptools.pypa.io/en/latest/userguide/datafiles.html#non-package-data-files
 + Moving `install_julia_deps.py` into kspdg package and adding it as a command-line entry point within pyproject.toml to simplify install process
++ Updated readme with no-clone install instructions and added recommended graphics settings
 
 ### Removed
 
