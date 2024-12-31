@@ -36,6 +36,7 @@ def copy_ksp_mission_files(kspdg_path_in, ksp_game_path_in):
         raise FileNotFoundError(f"ksp_files directory does not exist in kspdg install: {kspdg_path}")
     
     # Recursively walk through the ksp_files source directory
+    print(f"Recursively copying and overwriting KSPDG mission files from '{kspdg_ksp_files_path}' to `{ksp_game_path}`.")
     for src_file in kspdg_ksp_files_path.rglob('*'):
         # Compute the corresponding destination file path
         relative_path = src_file.relative_to(kspdg_ksp_files_path)
@@ -44,9 +45,11 @@ def copy_ksp_mission_files(kspdg_path_in, ksp_game_path_in):
         if src_file.is_dir():
             # Ensure destination subdirectory exists
             dest_file.mkdir(parents=True, exist_ok=True)
+            # print(f"Created directory '{dest_file}', NOT overwriting if already exists.")
         elif src_file.is_file():
             # Copy file, overwriting if it already exists
             shutil.copy2(src_file, dest_file)
+            # print(f"Copied from '{src_file}' to '{dest_file}', overwriting if already exists.")
 
 def setup_kspdg_game_data_dir(kspdg_path_in, ksp_game_path_in):
     """
@@ -86,7 +89,7 @@ def setup_kspdg_game_data_dir(kspdg_path_in, ksp_game_path_in):
     else:
         print(f"Directory already exists: {ksp_kspdg_path}")
     
-    # Step 3: Check for "configs" and "results" in "BizBaz", create if they don't exist
+    # Step 3: Check for "configs" and "results" in "KSPDG", create if they don't exist
     for subdirectory in ["configs", "results"]:
         subdirectory_path = ksp_kspdg_path / subdirectory
         if not subdirectory_path.exists():
