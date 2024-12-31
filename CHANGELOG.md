@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed 
 
 + Improving print functions in `install_ksp_files.py` called by `kspdg-install-ksp-files` entry point script
++ Improved default results/ directory handling/creation during kspdg-evaluate to make print commands less ambiguous about potential overwriting of existing directory
 
 ## [v0.11.1] - 2024.12.30
 
