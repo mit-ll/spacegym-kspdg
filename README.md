@@ -178,7 +178,7 @@ cp -r ~/Desktop/PhysicsRangeExtender/PhysicsRangeExtender/Distribution/GameData/
 Light-weight installation with limited functionality
 ```bash
 # pip install minimal kspdg package
-pip install kspdg@git+https://github.com/mit-ll/spacegym-kspdg@latest
+pip install kspdg@git+https://github.com/mit-ll/spacegym-kspdg@main
 
 # KSPDG mission save files, follow instructions for pointing to your KSP game installation
 kspdg-install-ksp-files
@@ -187,7 +187,7 @@ kspdg-install-ksp-files
 Full installation with private-source environments that depend on Julia
 ```bash
 # pip install full kspdg package
-pip install kspdg@git+https://github.com/mit-ll/spacegym-kspdg@latest#egg=kspdg[full]
+pip install kspdg@git+https://github.com/mit-ll/spacegym-kspdg@main#egg=kspdg[full]
 
 # Copy KSPDG mission save files and evaluation configs to your KSP game installation
 # follow instructions for pointing to your KSP game installation
