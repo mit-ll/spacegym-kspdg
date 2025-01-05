@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED] - XXXX.XX.XX
 
+### Added
+
++ Obfuscated LBG1_LG5 challenge environments
+
 ### Changed 
 
 + Improving print functions in `install_ksp_files.py` called by `kspdg-install-ksp-files` entry point script
