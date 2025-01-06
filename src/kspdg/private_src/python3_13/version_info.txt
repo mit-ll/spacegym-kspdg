@@ -2,6 +2,6 @@
 // Subject to FAR 52.227-11 – Patent Rights – Ownership by the Contractor (May 2014).
 // SPDX-License-Identifier: MIT
 {
-    "version": "0.2.1",
-    "commit": "9df6a8cdea43d3663a829912a898629c2e3dd90a-uncommitted-changes"
+    "version": "0.3.0",
+    "commit": "bc86d37077ff2f4ebbf698415b8953ab80afedcf"
 }
