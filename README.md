@@ -14,7 +14,7 @@ _Join us at [AIAA SciTech 2026](https://aiaa.org/scitech/) for a software design
 
 There is no cost to participate and membership and/or SciTech registration is not required. 
 
-_Information regarding participant signup will be posted shortly._
+_To participate in the competition, please register your team at: https://www.surveymonkey.com/r/GC6G5BJ_
 
 ## KSPDG Overview
 
