@@ -2,7 +2,7 @@
 
 <img src="docs/20230309_logo.png" width="250">   <img src="docs/20230831_LBG1_LG1_I2_Demo_reduced.gif" width="400">
 
-## _Announcement: 3rd Annual Non-Cooperative Space Operations Challenge @ AIAA SciTech 2026_ 
+## _Announcement: 3rd Annual Capture the Satellite Challenge @ AIAA SciTech 2026_ 
 
 _Join us at [AIAA SciTech 2026](https://aiaa.org/scitech/) for a software design competition where participants develop autonomous agents for maneuvering satellites engaged in non-cooperative space operations._
 
