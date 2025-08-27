@@ -96,7 +96,6 @@ The installation process includes several components:
 + [kRPC Server](https://krpc.github.io/krpc/getting-started.html#the-server-plugin)
 + [PhysicsRangeExtender](https://github.com/jrodrigv/PhysicsRangeExtender)
 + [`kspdg` python package](https://github.com/mit-ll/spacegym-kspdg/tree/master/src/kspdg)
-+ [Luna Multiplayer](http://lunamultiplayer.com/) (optional/future work)
 
 > :warning: **Note**
 > These instructions have been written and verified on a macOS. They have been partially tested on Ubuntu 18.04 as well. Other operating systems should be similar with deviations on file and directory names
@@ -130,7 +129,7 @@ The installation process includes several components:
     + Scatter Density: 0%
     + Render Quality: Fastest
     + Texture Quality: Eighth Res
-    + Aerodynamic FX Quality: Low
+    + Aerodynamic FX Quality: Minimal
     + Reflection Refresh Mode: Off
     + Reflection Texture Resolution: 128
     + Terrain Shader Quality: Low
