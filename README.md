@@ -104,11 +104,13 @@ The installation process includes several components:
 
 ### Install KSP & Making History Expansion
 
-1. Purchase and Download Kerbal Space Program and Making History expansion: https://store.privatedivision.com/game/buy-kerbal-space-program-ksp
-    + Make sure to purchase _Direct Download / DRM Free Private Division_ as the platform. Make sure you are buying KSP1 and not the recently released KSP2; none of this will work on KSP2!
-    + Download the most recent version of KSP  "On Final Approach" Portable (.zip). As of this writing and testing, the most recent version was v1.12.5
-    + Download the most recent version of Making History expansion pack. As of this writing the most recent version was v1.12.1 
-2. Unzip `ksp-osx-1.12.5.zip` to desired location; for simplicity, all instructions assume the unzipped KSP folder is placed on the Desktop
+1. Purchase and Download Kerbal Space Program and Making History expansion from one of the links provided at https://www.kerbalspaceprogram.com/. Following instructions use [GOG.com version](https://www.gog.com/en/game/kerbal_space_program) but similar processes for other sites should work
+    - All of the purchase options (Steam, GOG, Epic) require an account on the respective website
+    - Make sure you are buying KSP1 and not the recently released KSP2; none of this will work on KSP2!
+    - Make sure to purchase the Making History expansion as well as the base game (the Breaking Ground expansion is NOT needed)
+    - After purchase on GOG.com, you should arrive on a page with a __DOWNLOAD AND INSTALL NOW__ button and a __DOWNLOAD OFFLINE BACKUP GAME INSTALLERS__ section. To avoid downloading 3rd party intermediate software, download the __Kerbal Space Program (Part 1 of 2)__, __Kerbal Space Program (Part 2 of 2)__, __Making History - Kerbal Space Program: Making History (Part 1 of 2)__, and __Making History - Kerbal Space Program: Making History (Part 2 of 2)__ executables and binary files from under the __DOWNLOAD OFFLINE BACKUP GAME INSTALLERS__ section
+    - Once downloaded, run the executable `setup_kerbal_space_program_1.12.5.03190...exe` program and follow the on-screen prompts. This will create a directory on your computer for your KSP game. The rest of these instructions assumes that directory is on the Desktop at `~/Desktop/KSP_osx` (for a Mac, similar directories, with slightly different names, would be created for Windows and Linux)
+    - Once the `setup_kerbal_space_program_1.12.5.03190...exe` is complete, run the `setup_kerbal_space_program_making_history_1.12.5.03190...exe` program and follow the on-screen instructions to add the Making History expansion to your KSP installation
 3. Attempt to open the KSP game executable/app (e.g. `KSP.app` on Mac)
 
 > :warning: **Troubleshooting**
@@ -119,14 +121,6 @@ The installation process includes several components:
 > :warning: **Troubleshooting**
 > + On a Mac, after enabling KSP to be opened in Security and Privacy, you may encounter a bug where [the game loading screen stalls indefinitely](ttps://forum.kerbalspaceprogram.com/index.php?/topic/151986-just-purchased-and-stuck-on-loading-screen-mac-os/)
 > + The workaround is to move the `KSP.app` icon onto the desktop and then back into the `KSP_osx` directory. For some reason bash commands didn't seem to work to fix this bug. Had to manually open Finder, drag the KSP.app icon onto the Desktop, and then drag it back into the KSP_osx/ directory
-
-4. Unzip `KSP-Making_History_Expansion-en-us-mac-1.12.1.zip`
-5. Follow the instructions in the `Instructions-xxx-xx-xx.txt` file located in the unzipped Making History Expansion directory. 
-
-> Instructions:
-> 1. Copy the two other files located in this folder (.command and .zip) to the folder where the KSP app is located
-> 2. Once you have copied the files, double click the .command file
-> Thats it! Enjoy the Making History Expansion of Kerbal Space Program!
 
 6. Test installation by opening KSP (e.g. KSP.app on Mac). When main screen has loaded, select `Start Game` and you should see options for `Play Missions` and `Mission Builder` to confirm that the Making History Expansion was successfully installed
 
