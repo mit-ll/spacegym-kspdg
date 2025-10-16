@@ -102,7 +102,7 @@ else:
     )
 
     LBG1_LG5_I1_V1 = LBG1_LG5_I2_V1 = lambda *args, **kwargs: (
-        "Unmet dependency juliacall for using LBG1_LG4 environments.\n" +
+        "Unmet dependency juliacall for using LBG1_LG5 environments.\n" +
         "Please install kspdg[adv_bots] or kspdg[full] to use these.\n" +
         "Refere to README for further instructions."
     )

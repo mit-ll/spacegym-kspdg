@@ -76,7 +76,8 @@ kspdg = [
 [project.optional-dependencies]
 testing = ["pytest","matplotlib"]
 adv_bots = ["juliacall"]
-full = ["kspdg[testing,adv_bots]","build"]
+viz_tools = ["dearpygui"]
+full = ["kspdg[testing,adv_bots,viz_tools]","build"]
 
 # Command-line entry point for julia dependency install script
 [project.scripts]

@@ -5,6 +5,7 @@
 import time
 import logging
 import multiprocessing as mp
+import math
 
 from typing import Dict
 
@@ -12,6 +13,7 @@ from kspdg.base_envs import KSPDGBaseEnv
 from kspdg.agent_api.base_agent import KSPDGBaseAgent
 from kspdg.utils.loggers import create_logger
 from kspdg.agent_api.ksp_interface import ksp_interface_loop
+from kspdg.utils.plotters import run_dpg_plotter
 
 
 class AgentEnvRunner():
@@ -24,7 +26,8 @@ class AgentEnvRunner():
         env_cls:type[KSPDGBaseEnv], 
         env_kwargs:Dict, 
         runner_timeout:float=None, 
-        debug:bool=False):
+        debug:bool=False,
+        enable_plots:bool=False):
         """ instantiates agent-environment pair and brokers communication between processes
 
         Even though KSPDGBaseEnv objects are Gym (Gymnasium) Environments with the standard API
@@ -48,6 +51,8 @@ class AgentEnvRunner():
                 if None, wait for environment done
             debug : bool
                 if true, set logging level to debug
+            enable_plots : bool
+                if true, real-time plots will be generated and displayed using DreamPyGui
         """
         
         self.agent = agent
@@ -55,6 +60,12 @@ class AgentEnvRunner():
         self.env_kwargs = env_kwargs
         self.runner_timeout = runner_timeout
         self.debug = debug
+
+        # plotter process objects
+        self.enable_plots = enable_plots
+        self._plot_proc = None
+        self._plot_q = None
+        self._plot_stop_evt = None
 
         # create logger for Agent-Env Runner
         # (distinct from environment logger)
@@ -89,12 +100,20 @@ class AgentEnvRunner():
         )
         self.env_interface_process.start()
 
-        # start agent policy loop that computes actions
-        # given observations from environment
-        self.policy_loop()
+        # start plotter process
+        if self.enable_plots:
+            self._start_plotter()
 
-        # cleanup
-        self.stop_agent()
+        try: 
+            # start agent policy loop that computes actions
+            # given observations from environment
+            self.policy_loop()
+
+        finally:
+            # cleanup
+            self.stop_agent()
+            if self.enable_plots:
+                self._stop_plotter()
 
         # return info from environment
         return dict(return_dict)
@@ -132,6 +151,23 @@ class AgentEnvRunner():
                     self.logger.info("Environment closed, terminating agent...")
                     self.termination_event.set()
                     break
+
+                # PLOTTER DEMO: still plotting a sine wave here; switch to obs when ready
+                if self.enable_plots:
+                    t = time.time() - policy_loop_start
+                    y = math.sin(2.0 * math.pi * 0.5 * t)
+
+                    # Non-blocking put with drop-old behavior
+                    if self._plot_q is not None:
+                        if self._plot_q.full():
+                            try:
+                                self._plot_q.get_nowait()  # drop old
+                            except Exception:
+                                pass
+                        try:
+                            self._plot_q.put_nowait((t, y))
+                        except Exception:
+                            pass
             else:
                 self.logger.info("Non-responsive environment, terminating agent...")
                 self.termination_event.set()
@@ -158,3 +194,29 @@ class AgentEnvRunner():
 
         # cleanup agent
         self.stop_agent()
+
+    def _start_plotter(self):
+        self._plot_q = mp.Queue(maxsize=1)           # coalesce to newest
+        self._plot_stop_evt = mp.Event()
+        self._plot_proc = mp.Process(
+            target=run_dpg_plotter,
+            args=(self._plot_q, self._plot_stop_evt),
+            kwargs=dict(
+                title="kspdg – Live Telemetry",
+                fps=30,
+                history_sec=10.0,
+                ingest_cap_hz=240,
+                show_sine_if_no_data=True,  # shows sine until first obs
+            ),
+            daemon=True,  # dies with parent if parent exits
+        )
+        self._plot_proc.start()
+
+    def _stop_plotter(self, timeout=2.0):
+        if self._plot_stop_evt is not None:
+            self._plot_stop_evt.set()
+        if self._plot_proc is not None:
+            self._plot_proc.join(timeout=timeout)
+        self._plot_proc = None
+        self._plot_q = None
+        self._plot_stop_evt = None
