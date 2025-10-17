@@ -498,7 +498,7 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
         state = {
             "H": history_sec,
             "P": cls.PARAMS.OBSERVATION,    # subset of class params, used in state for simplification in update function
-            "buf": {"dist_lb": rb(), "dist_gb": rb(), "speed_lb": rb(), "speed_gb": rb()},
+            "buf": {"dist_lb": rb(), "dist_gb": rb(), "closure_lb": rb(), "closure_gb": rb()},
             "tags": {}, "axes": {}
         }
 
@@ -509,7 +509,7 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
             t1 = dpg.add_line_series([], [], parent=y1, label="Lady-Bandit")
             t2 = dpg.add_line_series([], [], parent=y1, label="Guard-Bandit")
-        with dpg.plot(label="Relative Speed (m/s)", height=280, width=860):
+        with dpg.plot(label="Closure Speed (m/s)", height=280, width=860):
             x2 = dpg.add_plot_axis(dpg.mvXAxis, label="time since present (s)")
             y2 = dpg.add_plot_axis(dpg.mvYAxis, label="speed (m/s)")
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
@@ -519,7 +519,7 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
         dpg.set_axis_limits(x1, -history_sec, 0.0)
         dpg.set_axis_limits(x2, -history_sec, 0.0)
 
-        state["tags"].update({"dist_lb": t1, "dist_gb": t2, "speed_lb": t3, "speed_gb": t4})
+        state["tags"].update({"dist_lb": t1, "dist_gb": t2, "closure_lb": t3, "closure_gb": t4})
         state["axes"].update({"x1": x1, "y1": y1, "x2": x2, "y2": y2})
         return state
     
@@ -553,13 +553,34 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
             gx,gy,gz = obs[P.I_GUARD_PX], obs[P.I_GUARD_PY], obs[P.I_GUARD_PZ]
             gvx,gvy,gvz = obs[P.I_GUARD_VX], obs[P.I_GUARD_VY], obs[P.I_GUARD_VZ]
 
-            dist_lb  = math.dist((lx,ly,lz), (bx,by,bz))
-            dist_gb  = math.dist((gx,gy,gz), (bx,by,bz))
-            speed_lb = math.dist((lvx,lvy,lvz), (bvx,bvy,bvz))
-            speed_gb = math.dist((gvx,gvy,gvz), (bvx,bvy,bvz))
+
+            # Position vectors
+            p_b_cb__rhcbci  = obs[[P.I_BANDIT_PX, P.I_BANDIT_PY, P.I_BANDIT_PZ]]
+            p_l_cb__rhcbci  = obs[[P.I_LADY_PX,   P.I_LADY_PY,   P.I_LADY_PZ]]
+            p_g_cb__rhcbci  = obs[[P.I_GUARD_PX,  P.I_GUARD_PY,  P.I_GUARD_PZ]]
+
+            # Velocity vectors
+            v_b_cb__rhcbci  = obs[[P.I_BANDIT_VX, P.I_BANDIT_VY, P.I_BANDIT_VZ]]
+            v_l_cb__rhcbci  = obs[[P.I_LADY_VX,   P.I_LADY_VY,   P.I_LADY_VZ]]
+            v_g_cb__rhcbci  = obs[[P.I_GUARD_VX,  P.I_GUARD_VY,  P.I_GUARD_VZ]]
+
+            # Relative position and velocity (target - bandit)
+            p_l_b__rhcbci = p_l_cb__rhcbci  - p_b_cb__rhcbci
+            p_g_b__rhcbci = p_g_cb__rhcbci - p_b_cb__rhcbci
+            v_l_b__rhcbci = v_l_cb__rhcbci  - v_b_cb__rhcbci
+            v_g_b__rhcbci = v_g_cb__rhcbci - v_b_cb__rhcbci
+
+            # Range magnitudes
+            dist_lb = np.linalg.norm(p_l_b__rhcbci)
+            dist_gb = np.linalg.norm(p_g_b__rhcbci)
+
+            # Closure speeds (positive when closing)
+            closure_lb = -np.dot(p_l_b__rhcbci, v_l_b__rhcbci) / (dist_lb + 1e-9)
+            closure_gb = -np.dot(p_g_b__rhcbci, v_g_b__rhcbci) / (dist_gb + 1e-9)
+
 
             for k,v in (("dist_lb",dist_lb),("dist_gb",dist_gb),
-                        ("speed_lb",speed_lb),("speed_gb",speed_gb)):
+                        ("closure_lb",closure_lb),("closure_gb",closure_gb)):
                 xs, ys = state["buf"][k]
                 xs.append(float(t)); ys.append(float(v))
 
@@ -587,12 +608,12 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
 
         push("dist_lb",  tags["dist_lb"])
         push("dist_gb",  tags["dist_gb"])
-        push("speed_lb", tags["speed_lb"])
-        push("speed_gb", tags["speed_gb"])
+        push("closure_lb", tags["closure_lb"])
+        push("closure_gb", tags["closure_gb"])
 
         # Light autoscale
         for pair, yaxis in ((("dist_lb","dist_gb"), axes["y1"]),
-                            (("speed_lb","speed_gb"), axes["y2"])):
+                            (("closure_lb","closure_gb"), axes["y2"])):
             ys = list(state["buf"][pair[0]][1]) + list(state["buf"][pair[1]][1])
             if ys:
                 ymin, ymax = min(ys), max(ys); pad = 0.05 * max(1e-6, ymax - ymin)
