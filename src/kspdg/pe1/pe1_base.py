@@ -498,10 +498,10 @@ class PursuitEvadeGroup1Env(Group1BaseEnv):
                 self.stop_episode_termination_thread = True
 
     @classmethod
-    def dpg_setup(cls, history_sec: float):
+    def dpg_telem_setup(cls, history_sec: float):
         """
         ## Description
-        Initializes DearPyGui plots and state for this environment. Called once
+        Initializes DearPyGui telemetry plots and state for this environment. Called once
         at startup by `run_dpg_plotter` inside the DPG window context.
 
         ## Parameters
@@ -531,12 +531,12 @@ class PursuitEvadeGroup1Env(Group1BaseEnv):
         with dpg.plot(label="Relative Distance (m)", height=280, width=860):
             x1 = dpg.add_plot_axis(dpg.mvXAxis, label="time since present (s)")
             y1 = dpg.add_plot_axis(dpg.mvYAxis, label="distance (m)")
-            dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
+            dpg.add_plot_legend(location=dpg.mvPlot_Location_SouthWest)
             t1 = dpg.add_line_series([], [], parent=y1, label="Evader-Pursuer")
         with dpg.plot(label="Relative Speed (m/s)", height=280, width=860):
             x2 = dpg.add_plot_axis(dpg.mvXAxis, label="time since present (s)")
             y2 = dpg.add_plot_axis(dpg.mvYAxis, label="speed (m/s)")
-            dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
+            dpg.add_plot_legend(location=dpg.mvPlot_Location_SouthWest)
             t2 = dpg.add_line_series([], [], parent=y2, label="Evader-Pursuer")
 
         dpg.set_axis_limits(x1, -history_sec, 0.0)
@@ -547,14 +547,14 @@ class PursuitEvadeGroup1Env(Group1BaseEnv):
         return state
     
     @classmethod
-    def dpg_update(cls, state, t, obs, *, do_draw: bool):
+    def dpg_telem_update(cls, state, t, obs, *, do_draw: bool):
         """
         ## Description
-        Processes new observations and refreshes plot data as needed.
+        Processes new observations and refreshes telemetry plot data as needed.
         Called repeatedly by `run_dpg_plotter` at the GUI frame rate.
 
         ## Parameters
-        - **state** (`dict`): The plotting state returned from `dpg_setup()`.
+        - **state** (`dict`): The plotting state returned from `dpg_telem_setup()`.
         - **t** (`float` or `None`): Timestamp in seconds for the current observation.
         - **obs** (array-like or `None`): Observation vector from the environment.
         - **do_draw** (`bool`): `True` when the plot should be redrawn this frame;

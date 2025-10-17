@@ -45,6 +45,6 @@ if __name__ == "__main__":
         env_kwargs=None,
         runner_timeout=100,     # agent runner that will timeout after 100 seconds
         debug=True,
-        enable_plots=True)
+        enable_telemetry=True)
     print(runner.run())
 

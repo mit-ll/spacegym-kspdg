@@ -1,8 +1,6 @@
 # kspdg/plot_dpg.py
-import math
 import time
 import queue
-from collections import deque
 from multiprocessing import Event, Queue
 import dearpygui.dearpygui as dpg
 
@@ -16,7 +14,7 @@ def _try_init_viewport(title: str, width=900, height=650):
     except Exception as e:
         return False, e
 
-def run_dpg_plotter(
+def run_dpg_telem_plotter(
     data_q: Queue,
     stop_evt: Event,
     env_cls,
@@ -26,7 +24,7 @@ def run_dpg_plotter(
 ):
     """
     ## Description
-    Launches a DearPyGui window for real-time plotting.
+    Launches a DearPyGui window for real-time telemetry plotting.
     This function handles GUI initialization, queue polling, and frame-rate
     control, while delegating environment-specific visualization to methods
     on `env_cls`.
@@ -36,8 +34,8 @@ def run_dpg_plotter(
     produced by the main simulation or policy loop.
     - **stop_evt** (`multiprocessing.Event`): Event used to request clean
     shutdown of the plotter process.
-    - **env_cls** (`type`): Environment class that defines `dpg_setup()` and
-    `dpg_update()` class methods for building and updating plots.
+    - **env_cls** (`type`): Environment class that defines `dpg_telem_setup()` and
+    `dpg_telem_update()` class methods for building and updating plots.
     - **title** (`str`): Window title shown in the viewport.
     - **fps** (`int`): Maximum GUI redraw rate (frames per second).
     - **history_sec** (`float`): Duration of the rolling time window displayed.
@@ -48,16 +46,16 @@ def run_dpg_plotter(
     """
     ok, err = _try_init_viewport(title)
     if not ok:
-        print("[kspdg.plot] DearPyGui init failed:", err); return
+        print("[kspdg.plotter] DearPyGui init failed:", err); return
 
-    if not callable(getattr(env_cls, "dpg_setup", None)) or \
-       not callable(getattr(env_cls, "dpg_update", None)):
-        print("[kspdg.plot] env_cls missing dpg_setup/dpg_update; plotting disabled.")
+    if not callable(getattr(env_cls, "dpg_telem_setup", None)) or \
+       not callable(getattr(env_cls, "dpg_telem_update", None)):
+        print("[kspdg.plotter] env_cls missing dpg_telem_setup/dpg_telem_update; plotting disabled.")
         dpg.destroy_context(); return
 
     try:
         with dpg.window(label=title, width=880, height=620):
-            state = env_cls.dpg_setup(history_sec)
+            state = env_cls.dpg_telem_setup(history_sec)
 
         target_dt = 1.0 / max(1, fps)
         last_draw = 0.0
@@ -75,10 +73,10 @@ def run_dpg_plotter(
 
             if newest_data is not None:
                 t, obs = newest_data
-                env_cls.dpg_update(state, t, obs, do_draw=do_draw)
+                env_cls.dpg_telem_update(state, t, obs, do_draw=do_draw)
             elif do_draw:
                 # Optional: allow the env to redraw even without new data (moving axes, etc.)
-                env_cls.dpg_update(state, None, None, do_draw=True)
+                env_cls.dpg_telem_update(state, None, None, do_draw=True)
 
             dpg.render_dearpygui_frame()
     except KeyboardInterrupt:

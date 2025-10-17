@@ -13,7 +13,7 @@ from kspdg.base_envs import KSPDGBaseEnv
 from kspdg.agent_api.base_agent import KSPDGBaseAgent
 from kspdg.utils.loggers import create_logger
 from kspdg.agent_api.ksp_interface import ksp_interface_loop
-from kspdg.utils.plotters import run_dpg_plotter
+from kspdg.utils.plotters import run_dpg_telem_plotter
 
 
 class AgentEnvRunner():
@@ -27,7 +27,7 @@ class AgentEnvRunner():
         env_kwargs:Dict, 
         runner_timeout:float=None, 
         debug:bool=False,
-        enable_plots:bool=False):
+        enable_telemetry:bool=False):
         """ instantiates agent-environment pair and brokers communication between processes
 
         Even though KSPDGBaseEnv objects are Gym (Gymnasium) Environments with the standard API
@@ -51,7 +51,7 @@ class AgentEnvRunner():
                 if None, wait for environment done
             debug : bool
                 if true, set logging level to debug
-            enable_plots : bool
+            enable_telemetry : bool
                 if true, real-time plots will be generated and displayed using DreamPyGui
         """
         
@@ -62,10 +62,10 @@ class AgentEnvRunner():
         self.debug = debug
 
         # plotter process objects
-        self.enable_plots = enable_plots
-        self._plot_proc = None
-        self._plot_q = None
-        self._plot_stop_evt = None
+        self.enable_telemetry = enable_telemetry
+        self._telem_proc = None
+        self._telem_q = None
+        self._telem_stop_evt = None
 
         # create logger for Agent-Env Runner
         # (distinct from environment logger)
@@ -101,8 +101,8 @@ class AgentEnvRunner():
         self.env_interface_process.start()
 
         # start plotter process
-        if self.enable_plots:
-            self._start_plotter()
+        if self.enable_telemetry:
+            self._start_telem_plotter()
 
         try: 
             # start agent policy loop that computes actions
@@ -112,8 +112,8 @@ class AgentEnvRunner():
         finally:
             # cleanup
             self.stop_agent()
-            if self.enable_plots:
-                self._stop_plotter()
+            if self.enable_telemetry:
+                self._stop_telem_plotter()
 
         # return info from environment
         return dict(return_dict)
@@ -152,13 +152,13 @@ class AgentEnvRunner():
                     self.termination_event.set()
                     break
 
-                # Visualize data graphs, if plotting is enabled
-                if self.enable_plots:
+                # Visualize telemetry graphs, if enabled
+                if self.enable_telemetry:
                     t = time.time() - policy_loop_start
-                    if self._plot_q.full():
-                        try: self._plot_q.get_nowait()
+                    if self._telem_q.full():
+                        try: self._telem_q.get_nowait()
                         except: pass
-                    self._plot_q.put_nowait((t, observation))
+                    self._telem_q.put_nowait((t, observation))
                     
             else:
                 self.logger.info("Non-responsive environment, terminating agent...")
@@ -187,22 +187,22 @@ class AgentEnvRunner():
         # cleanup agent
         self.stop_agent()
 
-    def _start_plotter(self):
-        self._plot_q = mp.Queue(maxsize=1)
-        self._plot_stop_evt = mp.Event()
-        self._plot_proc = mp.Process(
-            target=run_dpg_plotter,
-            args=(self._plot_q, self._plot_stop_evt, self.env_cls),
+    def _start_telem_plotter(self):
+        self._telem_q = mp.Queue(maxsize=1)
+        self._telem_stop_evt = mp.Event()
+        self._telem_proc = mp.Process(
+            target=run_dpg_telem_plotter,
+            args=(self._telem_q, self._telem_stop_evt, self.env_cls),
             kwargs=dict(title="kspdg – Live Telemetry", fps=30, history_sec=20.0),
             daemon=True,
         )
-        self._plot_proc.start()
+        self._telem_proc.start()
 
-    def _stop_plotter(self, timeout=2.0):
-        if self._plot_stop_evt is not None:
-            self._plot_stop_evt.set()
-        if self._plot_proc is not None:
-            self._plot_proc.join(timeout=timeout)
-        self._plot_proc = None
-        self._plot_q = None
-        self._plot_stop_evt = None
+    def _stop_telem_plotter(self, timeout=2.0):
+        if self._telem_stop_evt is not None:
+            self._telem_stop_evt.set()
+        if self._telem_proc is not None:
+            self._telem_proc.join(timeout=timeout)
+        self._telem_proc = None
+        self._telem_q = None
+        self._telem_stop_evt = None
