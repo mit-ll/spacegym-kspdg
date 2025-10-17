@@ -3,11 +3,14 @@
 # SPDX-License-Identifier: MIT
 
 import time
+import math
 import gymnasium as gym
 import numpy as np
+import dearpygui.dearpygui as dpg
 
 from types import SimpleNamespace
 from typing import List, Dict
+from collections import deque
 from copy import deepcopy
 
 import kspdg.utils.constants as C
@@ -493,4 +496,88 @@ class PursuitEvadeGroup1Env(Group1BaseEnv):
                 self.is_episode_done = True
                 self.stop_bot_thread = True
                 self.stop_episode_termination_thread = True
+
+    @classmethod
+    def dpg_setup(cls, history_sec: float):
+        ingest_cap_hz = 240
+        max_points = int(history_sec * ingest_cap_hz)
+        def rb(): return (deque(maxlen=max_points), deque(maxlen=max_points))  # (t,y)
+
+        # state of plotter
+        state = {
+            "H": history_sec,
+            "P": cls.PARAMS.OBSERVATION,    # subset of class params, used in state for simplification in update function
+            "buf": {"dist_ep": rb(), "speed_ep": rb()},
+            "tags": {}, "axes": {}
+        }
+
+        # UI
+        with dpg.plot(label="Relative Distance (m)", height=280, width=860):
+            x1 = dpg.add_plot_axis(dpg.mvXAxis, label="time since present (s)")
+            y1 = dpg.add_plot_axis(dpg.mvYAxis, label="distance (m)")
+            dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
+            t1 = dpg.add_line_series([], [], parent=y1, label="Evader-Pursuer")
+        with dpg.plot(label="Relative Speed (m/s)", height=280, width=860):
+            x2 = dpg.add_plot_axis(dpg.mvXAxis, label="time since present (s)")
+            y2 = dpg.add_plot_axis(dpg.mvYAxis, label="speed (m/s)")
+            dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
+            t2 = dpg.add_line_series([], [], parent=y2, label="Evader-Pursuer")
+
+        dpg.set_axis_limits(x1, -history_sec, 0.0)
+        dpg.set_axis_limits(x2, -history_sec, 0.0)
+
+        state["tags"].update({"dist_ep": t1, "speed_ep": t2})
+        state["axes"].update({"x1": x1, "y1": y1, "x2": x2, "y2": y2})
+        return state
+    
+    @classmethod
+    def dpg_update(cls, state, t, obs, *, do_draw: bool):
+        P = state["P"]; H = state["H"]; tags = state["tags"]; axes = state["axes"]
+
+        # Ingest only when we have new data
+        if t is not None and obs is not None:
+            px,py,pz = obs[P.I_PURSUER_PX], obs[P.I_PURSUER_PY], obs[P.I_PURSUER_PZ]
+            pvx,pvy,pvz = obs[P.I_PURSUER_VX], obs[P.I_PURSUER_VY], obs[P.I_PURSUER_VZ]
+            ex,ey,ez = obs[P.I_EVADER_PX], obs[P.I_EVADER_PY], obs[P.I_EVADER_PZ]
+            evx,evy,evz = obs[P.I_EVADER_VX], obs[P.I_EVADER_VY], obs[P.I_EVADER_VZ]
+
+            dist_ep  = math.dist((ex,ey,ez), (px,py,pz))
+            speed_ep = math.dist((evx,evy,evz), (pvx,pvy,pvz))
+
+            for k,v in (("dist_ep",dist_ep), ("speed_ep",speed_ep)):
+                xs, ys = state["buf"][k]
+                xs.append(float(t)); ys.append(float(v))
+
+        if not do_draw:
+            return
+
+        # Draw (use latest t across series)
+        latest_t = None
+        for xs,_ in state["buf"].values():
+            if xs:
+                latest_t = xs[-1] if latest_t is None else max(latest_t, xs[-1])
+        if latest_t is None:
+            return
+
+        def push(k, tag):
+            xs, ys = state["buf"][k]
+            if not xs: dpg.set_value(tag, [[], []]); return
+            xl, yl = list(xs), list(ys)
+            tmin = latest_t - H
+            start = 0
+            for i in range(len(xl)-1, -1, -1):
+                if xl[i] < tmin: start = i+1; break
+            x_rel = [xi - latest_t for xi in xl[start:]]
+            dpg.set_value(tag, [x_rel, yl[start:]])
+
+        push("dist_ep",  tags["dist_ep"])
+        push("speed_ep", tags["speed_ep"])
+
+        # Light autoscale
+        for valname, yaxis in (("dist_ep", axes["y1"]),
+                            ("speed_ep", axes["y2"])):
+            ys = list(state["buf"][valname][1])
+            if ys:
+                ymin, ymax = min(ys), max(ys); pad = 0.05 * max(1e-6, ymax - ymin)
+                dpg.set_axis_limits(yaxis, ymin - pad, ymax + pad)
 

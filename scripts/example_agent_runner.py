@@ -44,6 +44,7 @@ if __name__ == "__main__":
         env_cls=PE1_E1_I3_Env, 
         env_kwargs=None,
         runner_timeout=100,     # agent runner that will timeout after 100 seconds
-        debug=True)
+        debug=True,
+        enable_plots=True)
     print(runner.run())
 

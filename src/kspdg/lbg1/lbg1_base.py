@@ -488,15 +488,17 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
 
         # UI
         with dpg.plot(label="Relative Distance (m)", height=280, width=860):
-            x1 = dpg.add_plot_axis(dpg.mvXAxis, label="time (s, last window)")
+            x1 = dpg.add_plot_axis(dpg.mvXAxis, label="time since present (s)")
             y1 = dpg.add_plot_axis(dpg.mvYAxis, label="distance (m)")
-            t1 = dpg.add_line_series([], [], parent=y1, label="Lady–Bandit")
-            t2 = dpg.add_line_series([], [], parent=y1, label="Guard–Bandit")
+            dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
+            t1 = dpg.add_line_series([], [], parent=y1, label="Lady-Bandit")
+            t2 = dpg.add_line_series([], [], parent=y1, label="Guard-Bandit")
         with dpg.plot(label="Relative Speed (m/s)", height=280, width=860):
-            x2 = dpg.add_plot_axis(dpg.mvXAxis, label="time (s, last window)")
+            x2 = dpg.add_plot_axis(dpg.mvXAxis, label="time since present (s)")
             y2 = dpg.add_plot_axis(dpg.mvYAxis, label="speed (m/s)")
-            t3 = dpg.add_line_series([], [], parent=y2, label="Lady–Bandit")
-            t4 = dpg.add_line_series([], [], parent=y2, label="Guard–Bandit")
+            dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
+            t3 = dpg.add_line_series([], [], parent=y2, label="Lady-Bandit")
+            t4 = dpg.add_line_series([], [], parent=y2, label="Guard-Bandit")
 
         dpg.set_axis_limits(x1, -history_sec, 0.0)
         dpg.set_axis_limits(x2, -history_sec, 0.0)
