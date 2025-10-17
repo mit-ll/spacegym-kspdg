@@ -5,13 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [UNRELEASE] - XXXX.XX.XX
+## [v0.13.0] - 2025.10.17
 
 ### Added
 
 - pyproject.toml: added dearpygui dependency to new viz_tools optional dependency group
-- runner.py: real-time plots for visualizing scenario data (e.g. relative distances)
-- lbg1_base.py, pe1_base.py: env-group-specific plotting functions dpg_setup and dpg_update
+- utils/plotters.py: high-level, environment-agnostic code for creating and managing dearpygui plots (e.g. live telemetry)
+- runner.py: real-time telemetry plots for visualizing scenario data (e.g. relative distances)
+- lbg1_base.py, pe1_base.py: env-group-specific telemetry plotting functions dpg_setup and dpg_update
 
 ## [v0.12.3] - 2025.10.06
 
