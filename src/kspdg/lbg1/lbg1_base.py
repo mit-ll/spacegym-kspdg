@@ -5,12 +5,15 @@
 # Base class for Lady-Bandit-Guard Group 1 environments
 
 import time
+import math
 import gymnasium as gym
 import numpy as np
+import dearpygui.dearpygui as dpg
 
 from types import SimpleNamespace
 from typing import List, Dict
 from numpy.typing import ArrayLike
+from collections import deque
 from copy import deepcopy
 
 import kspdg.utils.constants as C
@@ -468,3 +471,94 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
                 self.is_episode_done = True
                 self.stop_bot_thread = True
                 self.stop_episode_termination_thread = True
+
+    @classmethod
+    def dpg_setup(cls, history_sec: float):
+        ingest_cap_hz = 240
+        max_points = int(history_sec * ingest_cap_hz)
+        def rb(): return (deque(maxlen=max_points), deque(maxlen=max_points))  # (t,y)
+
+        # state of plotter
+        state = {
+            "H": history_sec,
+            "P": cls.PARAMS.OBSERVATION,    # subset of class params, used in state for simplification in update function
+            "buf": {"dist_lb": rb(), "dist_gb": rb(), "speed_lb": rb(), "speed_gb": rb()},
+            "tags": {}, "axes": {}
+        }
+
+        # UI
+        with dpg.plot(label="Relative Distance (m)", height=280, width=860):
+            x1 = dpg.add_plot_axis(dpg.mvXAxis, label="time (s, last window)")
+            y1 = dpg.add_plot_axis(dpg.mvYAxis, label="distance (m)")
+            t1 = dpg.add_line_series([], [], parent=y1, label="Lady–Bandit")
+            t2 = dpg.add_line_series([], [], parent=y1, label="Guard–Bandit")
+        with dpg.plot(label="Relative Speed (m/s)", height=280, width=860):
+            x2 = dpg.add_plot_axis(dpg.mvXAxis, label="time (s, last window)")
+            y2 = dpg.add_plot_axis(dpg.mvYAxis, label="speed (m/s)")
+            t3 = dpg.add_line_series([], [], parent=y2, label="Lady–Bandit")
+            t4 = dpg.add_line_series([], [], parent=y2, label="Guard–Bandit")
+
+        dpg.set_axis_limits(x1, -history_sec, 0.0)
+        dpg.set_axis_limits(x2, -history_sec, 0.0)
+
+        state["tags"].update({"dist_lb": t1, "dist_gb": t2, "speed_lb": t3, "speed_gb": t4})
+        state["axes"].update({"x1": x1, "y1": y1, "x2": x2, "y2": y2})
+        return state
+    
+    @classmethod
+    def dpg_update(cls, state, t, obs, *, do_draw: bool):
+        P = state["P"]; H = state["H"]; tags = state["tags"]; axes = state["axes"]
+
+        # Ingest only when we have new data
+        if t is not None and obs is not None:
+            bx,by,bz = obs[P.I_BANDIT_PX], obs[P.I_BANDIT_PY], obs[P.I_BANDIT_PZ]
+            bvx,bvy,bvz = obs[P.I_BANDIT_VX], obs[P.I_BANDIT_VY], obs[P.I_BANDIT_VZ]
+            lx,ly,lz = obs[P.I_LADY_PX], obs[P.I_LADY_PY], obs[P.I_LADY_PZ]
+            lvx,lvy,lvz = obs[P.I_LADY_VX], obs[P.I_LADY_VY], obs[P.I_LADY_VZ]
+            gx,gy,gz = obs[P.I_GUARD_PX], obs[P.I_GUARD_PY], obs[P.I_GUARD_PZ]
+            gvx,gvy,gvz = obs[P.I_GUARD_VX], obs[P.I_GUARD_VY], obs[P.I_GUARD_VZ]
+
+            dist_lb  = math.dist((lx,ly,lz), (bx,by,bz))
+            dist_gb  = math.dist((gx,gy,gz), (bx,by,bz))
+            speed_lb = math.dist((lvx,lvy,lvz), (bvx,bvy,bvz))
+            speed_gb = math.dist((gvx,gvy,gvz), (bvx,bvy,bvz))
+
+            for k,v in (("dist_lb",dist_lb),("dist_gb",dist_gb),
+                        ("speed_lb",speed_lb),("speed_gb",speed_gb)):
+                xs, ys = state["buf"][k]
+                xs.append(float(t)); ys.append(float(v))
+
+        if not do_draw:
+            return
+
+        # Draw (use latest t across series)
+        latest_t = None
+        for xs,_ in state["buf"].values():
+            if xs:
+                latest_t = xs[-1] if latest_t is None else max(latest_t, xs[-1])
+        if latest_t is None:
+            return
+
+        def push(k, tag):
+            xs, ys = state["buf"][k]
+            if not xs: dpg.set_value(tag, [[], []]); return
+            xl, yl = list(xs), list(ys)
+            tmin = latest_t - H
+            start = 0
+            for i in range(len(xl)-1, -1, -1):
+                if xl[i] < tmin: start = i+1; break
+            x_rel = [xi - latest_t for xi in xl[start:]]
+            dpg.set_value(tag, [x_rel, yl[start:]])
+
+        push("dist_lb",  tags["dist_lb"])
+        push("dist_gb",  tags["dist_gb"])
+        push("speed_lb", tags["speed_lb"])
+        push("speed_gb", tags["speed_gb"])
+
+        # Light autoscale
+        for pair, yaxis in ((("dist_lb","dist_gb"), axes["y1"]),
+                            (("speed_lb","speed_gb"), axes["y2"])):
+            ys = list(state["buf"][pair[0]][1]) + list(state["buf"][pair[1]][1])
+            if ys:
+                ymin, ymax = min(ys), max(ys); pad = 0.05 * max(1e-6, ymax - ymin)
+                dpg.set_axis_limits(yaxis, ymin - pad, ymax + pad)

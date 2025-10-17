@@ -152,22 +152,14 @@ class AgentEnvRunner():
                     self.termination_event.set()
                     break
 
-                # PLOTTER DEMO: still plotting a sine wave here; switch to obs when ready
+                # Visualize data graphs, if plotting is enabled
                 if self.enable_plots:
                     t = time.time() - policy_loop_start
-                    y = math.sin(2.0 * math.pi * 0.5 * t)
-
-                    # Non-blocking put with drop-old behavior
-                    if self._plot_q is not None:
-                        if self._plot_q.full():
-                            try:
-                                self._plot_q.get_nowait()  # drop old
-                            except Exception:
-                                pass
-                        try:
-                            self._plot_q.put_nowait((t, y))
-                        except Exception:
-                            pass
+                    if self._plot_q.full():
+                        try: self._plot_q.get_nowait()
+                        except: pass
+                    self._plot_q.put_nowait((t, observation))
+                    
             else:
                 self.logger.info("Non-responsive environment, terminating agent...")
                 self.termination_event.set()
@@ -196,19 +188,13 @@ class AgentEnvRunner():
         self.stop_agent()
 
     def _start_plotter(self):
-        self._plot_q = mp.Queue(maxsize=1)           # coalesce to newest
+        self._plot_q = mp.Queue(maxsize=1)
         self._plot_stop_evt = mp.Event()
         self._plot_proc = mp.Process(
             target=run_dpg_plotter,
-            args=(self._plot_q, self._plot_stop_evt),
-            kwargs=dict(
-                title="kspdg – Live Telemetry",
-                fps=30,
-                history_sec=10.0,
-                ingest_cap_hz=240,
-                show_sine_if_no_data=True,  # shows sine until first obs
-            ),
-            daemon=True,  # dies with parent if parent exits
+            args=(self._plot_q, self._plot_stop_evt, self.env_cls),
+            kwargs=dict(title="kspdg – Live Telemetry", fps=30, history_sec=20.0),
+            daemon=True,
         )
         self._plot_proc.start()
 
