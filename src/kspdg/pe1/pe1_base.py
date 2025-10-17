@@ -499,6 +499,22 @@ class PursuitEvadeGroup1Env(Group1BaseEnv):
 
     @classmethod
     def dpg_setup(cls, history_sec: float):
+        """
+        ## Description
+        Initializes DearPyGui plots and state for this environment. Called once
+        at startup by `run_dpg_plotter` inside the DPG window context.
+
+        ## Parameters
+        - **history_sec** (`float`): Duration of the rolling time window to display.
+
+        ## Returns
+        - **state** (`dict`): Container holding plot tags, axis handles, and any
+        internal buffers needed for subsequent updates.
+
+        ## Notes
+        - Responsible for creating all DPG widgets (plots, axes, series, legends).
+        - Should not perform any per-frame updates or data ingestion.
+        """
         ingest_cap_hz = 240
         max_points = int(history_sec * ingest_cap_hz)
         def rb(): return (deque(maxlen=max_points), deque(maxlen=max_points))  # (t,y)
@@ -532,6 +548,23 @@ class PursuitEvadeGroup1Env(Group1BaseEnv):
     
     @classmethod
     def dpg_update(cls, state, t, obs, *, do_draw: bool):
+        """
+        ## Description
+        Processes new observations and refreshes plot data as needed.
+        Called repeatedly by `run_dpg_plotter` at the GUI frame rate.
+
+        ## Parameters
+        - **state** (`dict`): The plotting state returned from `dpg_setup()`.
+        - **t** (`float` or `None`): Timestamp in seconds for the current observation.
+        - **obs** (array-like or `None`): Observation vector from the environment.
+        - **do_draw** (`bool`): `True` when the plot should be redrawn this frame;
+        `False` if only ingestion should occur.
+
+        ## Notes
+        - When `t` and `obs` are `None`, may still update visual elements (e.g.,
+        moving axes or annotations).
+        - Should be lightweight; avoid long computations in this loop.
+        """
         P = state["P"]; H = state["H"]; tags = state["tags"]; axes = state["axes"]
 
         # Ingest only when we have new data

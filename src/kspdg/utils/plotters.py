@@ -25,9 +25,26 @@ def run_dpg_plotter(
     history_sec: float = 20.0,
 ):
     """
-    Env class must implement:
-    - dpg_setup(history_sec) -> state
-    - dpg_update(state, t, obs, *, do_draw: bool) -> None
+    ## Description
+    Launches a DearPyGui window for real-time plotting.
+    This function handles GUI initialization, queue polling, and frame-rate
+    control, while delegating environment-specific visualization to methods
+    on `env_cls`.
+
+    ## Parameters
+    - **data_q** (`multiprocessing.Queue`): Queue of `(t_seconds, obs)` tuples
+    produced by the main simulation or policy loop.
+    - **stop_evt** (`multiprocessing.Event`): Event used to request clean
+    shutdown of the plotter process.
+    - **env_cls** (`type`): Environment class that defines `dpg_setup()` and
+    `dpg_update()` class methods for building and updating plots.
+    - **title** (`str`): Window title shown in the viewport.
+    - **fps** (`int`): Maximum GUI redraw rate (frames per second).
+    - **history_sec** (`float`): Duration of the rolling time window displayed.
+
+    ## Notes
+    - Must be run in its own process; DPG requires ownership of the main thread.
+    - The function blocks until the stop event is set or the window is closed.
     """
     ok, err = _try_init_viewport(title)
     if not ok:

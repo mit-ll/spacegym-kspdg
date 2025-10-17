@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - pyproject.toml: added dearpygui dependency to new viz_tools optional dependency group
 - runner.py: real-time plots for visualizing scenario data (e.g. relative distances)
+- lbg1_base.py, pe1_base.py: env-group-specific plotting functions dpg_setup and dpg_update
 
 ## [v0.12.3] - 2025.10.06
 
