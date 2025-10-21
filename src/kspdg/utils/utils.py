@@ -9,6 +9,63 @@ from typing import List
 
 from kspdg.utils import constants as CONST
 
+def convert_rhcbci_to_rhntw(r_tar__rhcbci, p_ref_cb__rhcbci, v_ref_cb__rhcbci, eps=1e-9):
+    '''convert vector in right-handed celestial-body-centered-inertial coords 
+        to right-handed NTW coords (Vallado, 3rd Edition, Sec 3.3.3)
+
+    Note: CBCI coords are roughly equivalent to "ECI" (earth-centered inertial)
+    and "IJK" coords in Vallado, 3rd ed, 3.3.2 and BMW 2.2.2; but we 
+    don't use the "ECI" terminology because we aren't necessarily working
+    in Earth's orbit (i.e. Kerbin with no axial tilt and no defined vernal equinox)
+    
+    Args:
+        r_tar__rhcbci : List[float]
+            3-vector represented in right-handed CBCI coords to be converted to rhntw
+            Note that this is treated as an arbitrary vector for which only the frame is converted,
+            we do not assume it to be some absolute position that must be made relative to the 
+            rhntw origin
+        p_ref_cb__rhcbci : List[float]
+            position (wrt central body) within reference orbit expressed in rhcbci (rhntw origin) 
+        v_ref_cb__rhcbci : List[float]
+            velocity (wrt central body) within reference orbit expressed in rhcbci (rhntw tangent direction) 
+
+    Returns:
+        r_tar__rhntw : List[float]
+            3-vector represented in right-handed NTW frame
+    '''
+
+    # abbreviate and convert to numpy for brevity and simplicity
+    r_tar = np.asarray(r_tar__rhcbci, dtype=float)
+    p_ref = np.asarray(p_ref_cb__rhcbci, dtype=float)
+    v_ref = np.asarray(v_ref_cb__rhcbci, dtype=float)
+
+    # Unit Tangential (T): parallel to reference orbit velocity
+    vnorm = np.linalg.norm(v_ref)
+    if vnorm < eps:
+        raise ValueError("Reference velocity magnitude too small to define tangential axis.")
+    t_hat = v_ref / vnorm
+
+    # Unit Orbit-Normal (W): orthogonal to reference position and velocity
+    w_vec = np.cross(p_ref, v_ref)
+    w_norm = np.linalg.norm(w_vec)
+
+    if w_norm < eps:
+        # Degenerate case: r_hat nearly parallel to t_hat (e.g., strongly radial motion).
+        raise ValueError("Colinear reference position and velocity, unable to define NTW frame.")
+
+    w_hat = w_vec / w_norm
+
+    # Unit Normal (N): completes right-handed system
+    # generally pointing in radial-out direction, but not parallel to radial-out vector in non-circular orbits
+    n_hat = np.cross(t_hat, w_hat)
+
+    # Rotation matrix rows are the basis vectors (N,T,W) in inertial coords
+    R_ntw_rhcbci = np.vstack((n_hat, t_hat, w_hat))  # 3x3
+
+    # Components in NTW: project target vector onto (n̂, t̂, ŵ)
+    r_tar__rhntw = R_ntw_rhcbci @ r_tar
+    return r_tar__rhntw
+
 def convert_lhcbci_to_rhcbci(v__lhcbci: List[float]) -> List[float]:
     '''convert vector in left-handed celestial-body-centered-inertial coords 
         to right-handed cbci coords
