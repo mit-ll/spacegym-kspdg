@@ -529,13 +529,13 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
         # new window for Lady-centered Hill-frame plot
         with dpg.window(label="Hill Frame (NTW) Relative Motion", width=640, height=720, pos=(640, 0)):
             with dpg.plot(label="Lady-Relative Motion", width=620, height=620):
-                x_ntw = dpg.add_plot_axis(dpg.mvXAxis, label="N: Radial (m)")
-                y_ntw = dpg.add_plot_axis(dpg.mvYAxis, label="T: Velocity-Tangential (in-track) (m)")
+                rad_ntw = dpg.add_plot_axis(dpg.mvYAxis, label="N: Velocity-Normal (radial-out) (m)")
+                tan_ntw = dpg.add_plot_axis(dpg.mvXAxis, label="T: Velocity-Tangent (in-track) (m)")
                 dpg.add_plot_legend()
 
                 # Trails as line series
-                tag_trail_B = dpg.add_line_series([], [], parent=y_ntw, label="Bandit")
-                tag_trail_G = dpg.add_line_series([], [], parent=y_ntw, label="Guard")
+                tag_trail_B = dpg.add_line_series([], [], parent=tan_ntw, label="Bandit")
+                tag_trail_G = dpg.add_line_series([], [], parent=tan_ntw, label="Guard")
 
         dpg.set_axis_limits(x1, -history_sec, 0.0)
         dpg.set_axis_limits(x2, -history_sec, 0.0)
@@ -544,7 +544,7 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
         state["axes"].update({"x1": x1, "y1": y1, "x2": x2, "y2": y2})
         # stash tags/axes
         state["hill"].update({
-            "x_ntw": x_ntw, "y_ntw": y_ntw,
+            "rad_ntw": rad_ntw, "tan_ntw": tan_ntw,
             "tag_trail_B": tag_trail_B,
             "tag_trail_G": tag_trail_G
         })
@@ -668,16 +668,16 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
         hill["frame"] += 1
 
         # Update trail series (convert deques to lists)
-        dpg.set_value(hill["tag_trail_B"], [list(hill["buf_B_N"]), list(hill["buf_B_T"])])
-        dpg.set_value(hill["tag_trail_G"], [list(hill["buf_G_N"]), list(hill["buf_G_T"])])
+        dpg.set_value(hill["tag_trail_B"], [list(hill["buf_B_T"]), list(hill["buf_B_N"])])
+        dpg.set_value(hill["tag_trail_G"], [list(hill["buf_G_T"]), list(hill["buf_G_N"])])
 
         # Light autoscale every ~15 frames
         if hill["frame"] % 15 == 0 and hill["buf_B_N"]:
-            xs = list(hill["buf_B_N"]) + list(hill["buf_G_N"])
-            ys = list(hill["buf_B_T"]) + list(hill["buf_G_T"])
+            ys = list(hill["buf_B_N"]) + list(hill["buf_G_N"])
+            xs = list(hill["buf_B_T"]) + list(hill["buf_G_T"])
             x_min, x_max = min(xs), max(xs)
             y_min, y_max = min(ys), max(ys)
             pad_x = 0.05 * max(1.0, x_max - x_min)
             pad_y = 0.05 * max(1.0, y_max - y_min)
-            dpg.set_axis_limits(hill["x_ntw"], x_min - pad_x, x_max + pad_x)
-            dpg.set_axis_limits(hill["y_ntw"], y_min - pad_y, y_max + pad_y)
+            dpg.set_axis_limits(hill["tan_ntw"], x_min - pad_x, x_max + pad_x)
+            dpg.set_axis_limits(hill["rad_ntw"], y_min - pad_y, y_max + pad_y)
