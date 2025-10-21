@@ -502,6 +502,15 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
             "tags": {}, "axes": {}
         }
 
+        # Buffers for N-T history (Lady-centered NTW)
+        state["hill"] = {
+            "buf_B_N": deque(maxlen=max_points),
+            "buf_B_T": deque(maxlen=max_points),
+            "buf_G_N": deque(maxlen=max_points),
+            "buf_G_T": deque(maxlen=max_points),
+            "frame": 0  # for occasional autoscale
+        }
+
         # UI
         with dpg.plot(label="Relative Distance (m)", height=280, width=860):
             x1 = dpg.add_plot_axis(dpg.mvXAxis, label="time since present (s)")
@@ -515,16 +524,30 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
             dpg.add_plot_legend(location=dpg.mvPlot_Location_SouthWest)
             t3 = dpg.add_line_series([], [], parent=y2, label="Lady-Bandit")
             t4 = dpg.add_line_series([], [], parent=y2, label="Guard-Bandit")
+        with dpg.plot(label="Lady-centered NTW (N vs T)", height=320, width=860):
+            x_ntw = dpg.add_plot_axis(dpg.mvXAxis, label="N (m)")
+            y_ntw = dpg.add_plot_axis(dpg.mvYAxis, label="T (m)")
+            dpg.add_plot_legend()
+
+            # Trails as line series
+            tag_trail_B = dpg.add_line_series([], [], parent=y_ntw, label="Bandit")
+            tag_trail_G = dpg.add_line_series([], [], parent=y_ntw, label="Guard")
 
         dpg.set_axis_limits(x1, -history_sec, 0.0)
         dpg.set_axis_limits(x2, -history_sec, 0.0)
 
         state["tags"].update({"dist_lb": t1, "dist_gb": t2, "closure_lb": t3, "closure_gb": t4})
         state["axes"].update({"x1": x1, "y1": y1, "x2": x2, "y2": y2})
+        # stash tags/axes
+        state["hill"].update({
+            "x_ntw": x_ntw, "y_ntw": y_ntw,
+            "tag_trail_B": tag_trail_B,
+            "tag_trail_G": tag_trail_G
+        })
         return state
     
     @classmethod
-    def dpg_telem_update(cls, state, t, obs, *, do_draw: bool):
+    def dpg_telem_update(cls, state, t, obs, do_draw: bool):
         """
         ## Description
         Processes new observations and refreshes telemetry plot data as needed.
@@ -542,16 +565,16 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
         moving axes or annotations).
         - Should be lightweight; avoid long computations in this loop.
         """
-        P = state["P"]; H = state["H"]; tags = state["tags"]; axes = state["axes"]
+        P = state["P"]; H = state["H"]; tags = state["tags"]; axes = state["axes"]; hill = state["hill"]
 
         # Ingest only when we have new data
         if t is not None and obs is not None:
-            bx,by,bz = obs[P.I_BANDIT_PX], obs[P.I_BANDIT_PY], obs[P.I_BANDIT_PZ]
-            bvx,bvy,bvz = obs[P.I_BANDIT_VX], obs[P.I_BANDIT_VY], obs[P.I_BANDIT_VZ]
-            lx,ly,lz = obs[P.I_LADY_PX], obs[P.I_LADY_PY], obs[P.I_LADY_PZ]
-            lvx,lvy,lvz = obs[P.I_LADY_VX], obs[P.I_LADY_VY], obs[P.I_LADY_VZ]
-            gx,gy,gz = obs[P.I_GUARD_PX], obs[P.I_GUARD_PY], obs[P.I_GUARD_PZ]
-            gvx,gvy,gvz = obs[P.I_GUARD_VX], obs[P.I_GUARD_VY], obs[P.I_GUARD_VZ]
+            # bx,by,bz = obs[P.I_BANDIT_PX], obs[P.I_BANDIT_PY], obs[P.I_BANDIT_PZ]
+            # bvx,bvy,bvz = obs[P.I_BANDIT_VX], obs[P.I_BANDIT_VY], obs[P.I_BANDIT_VZ]
+            # lx,ly,lz = obs[P.I_LADY_PX], obs[P.I_LADY_PY], obs[P.I_LADY_PZ]
+            # lvx,lvy,lvz = obs[P.I_LADY_VX], obs[P.I_LADY_VY], obs[P.I_LADY_VZ]
+            # gx,gy,gz = obs[P.I_GUARD_PX], obs[P.I_GUARD_PY], obs[P.I_GUARD_PZ]
+            # gvx,gvy,gvz = obs[P.I_GUARD_VX], obs[P.I_GUARD_VY], obs[P.I_GUARD_VZ]
 
 
             # Position vectors
@@ -565,9 +588,10 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
             v_g_cb__rhcbci  = obs[[P.I_GUARD_VX,  P.I_GUARD_VY,  P.I_GUARD_VZ]]
 
             # Relative position and velocity (target - bandit)
-            p_l_b__rhcbci = p_l_cb__rhcbci  - p_b_cb__rhcbci
+            p_l_b__rhcbci = p_l_cb__rhcbci - p_b_cb__rhcbci
             p_g_b__rhcbci = p_g_cb__rhcbci - p_b_cb__rhcbci
-            v_l_b__rhcbci = v_l_cb__rhcbci  - v_b_cb__rhcbci
+            p_g_l__rhcbci = p_g_cb__rhcbci - p_l_cb__rhcbci
+            v_l_b__rhcbci = v_l_cb__rhcbci - v_b_cb__rhcbci
             v_g_b__rhcbci = v_g_cb__rhcbci - v_b_cb__rhcbci
 
             # Range magnitudes
@@ -577,6 +601,23 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
             # Closure speeds (positive when closing)
             closure_lb = -np.dot(p_l_b__rhcbci, v_l_b__rhcbci) / (dist_lb + 1e-9)
             closure_gb = -np.dot(p_g_b__rhcbci, v_g_b__rhcbci) / (dist_gb + 1e-9)
+
+            # Bandit and Guard relative positions to Lady in NTW frame
+            p_b_l__rhntw = U.convert_rhcbci_to_rhntw(
+                r_tar__rhcbci   = -p_l_b__rhcbci,
+                p_ref_cb__rhcbci = p_l_cb__rhcbci,
+                v_ref_cb__rhcbci = v_l_cb__rhcbci
+            )
+            p_g_l__rhntw = U.convert_rhcbci_to_rhntw(
+                r_tar__rhcbci=p_g_l__rhcbci,
+                p_ref_cb__rhcbci=p_l_cb__rhcbci,
+                v_ref_cb__rhcbci=v_l_cb__rhcbci
+            )
+            # Append N-T components to trails
+            hill["buf_B_N"].append(float(p_b_l__rhntw[0]))
+            hill["buf_B_T"].append(float(p_b_l__rhntw[1]))
+            hill["buf_G_N"].append(float(p_g_l__rhntw[0]))
+            hill["buf_G_T"].append(float(p_g_l__rhntw[1]))
 
 
             for k,v in (("dist_lb",dist_lb),("dist_gb",dist_gb),
@@ -618,3 +659,21 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
             if ys:
                 ymin, ymax = min(ys), max(ys); pad = 0.05 * max(1e-6, ymax - ymin)
                 dpg.set_axis_limits(yaxis, ymin - pad, ymax + pad)
+
+        # Hill-frame draw
+        hill["frame"] += 1
+
+        # Update trail series (convert deques to lists)
+        dpg.set_value(hill["tag_trail_B"], [list(hill["buf_B_N"]), list(hill["buf_B_T"])])
+        dpg.set_value(hill["tag_trail_G"], [list(hill["buf_G_N"]), list(hill["buf_G_T"])])
+
+        # Light autoscale every ~15 frames
+        if hill["frame"] % 15 == 0 and hill["buf_B_N"]:
+            xs = list(hill["buf_B_N"]) + list(hill["buf_G_N"])
+            ys = list(hill["buf_B_T"]) + list(hill["buf_G_T"])
+            x_min, x_max = min(xs), max(xs)
+            y_min, y_max = min(ys), max(ys)
+            pad_x = 0.05 * max(1.0, x_max - x_min)
+            pad_y = 0.05 * max(1.0, y_max - y_min)
+            dpg.set_axis_limits(hill["x_ntw"], x_min - pad_x, x_max + pad_x)
+            dpg.set_axis_limits(hill["y_ntw"], y_min - pad_y, y_max + pad_y)

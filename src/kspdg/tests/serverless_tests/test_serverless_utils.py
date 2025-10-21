@@ -69,6 +69,7 @@ def test_circular_case_basis_alignment():
     ntw_z = U.convert_rhcbci_to_rhntw(e_z, p_ref, v_ref)
 
     # Expect identity mapping of basis: ex→[1,0,0], ey→[0,1,0], ez→[0,0,1]
+    assert ntw_x.shape == (3,)
     assert np.allclose(ntw_x, [1, 0, 0], atol=1e-12)
     assert np.allclose(ntw_y, [0, 1, 0], atol=1e-12)
     assert np.allclose(ntw_z, [0, 0, 1], atol=1e-12)
