@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - utils.py: add convert_rhcbci_to_rhntw for converting vectors from right-handed celestial-body-centered-inertial to right-handed NTW frame
+- lbg1_base.py: new Hill-frame plot of bandit and guard positions relative to Lady
 
 ## [v0.13.0] - 2025.10.17
 

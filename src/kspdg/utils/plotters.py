@@ -4,7 +4,7 @@ import queue
 from multiprocessing import Event, Queue
 import dearpygui.dearpygui as dpg
 
-def _try_init_viewport(title: str, width=900, height=650):
+def _try_init_viewport(title: str, width=1280, height=720):
     try:
         dpg.create_context()
         dpg.create_viewport(title=title, width=width, height=height)
@@ -54,7 +54,7 @@ def run_dpg_telem_plotter(
         dpg.destroy_context(); return
 
     try:
-        with dpg.window(label=title, width=880, height=620):
+        with dpg.window(label=title,  width=1280, height=720):
             state = env_cls.dpg_telem_setup(history_sec)
 
         target_dt = 1.0 / max(1, fps)
