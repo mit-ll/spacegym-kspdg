@@ -3,7 +3,6 @@
 import pytest
 import numpy as np
 
-from pathlib import Path
 from importlib.resources import files
 
 from kspdg.utils.private_src_utils import get_private_src_module_str
