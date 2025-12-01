@@ -1,4 +1,4 @@
-# Copyright (c) 2024, MASSACHUSETTS INSTITUTE OF TECHNOLOGY
+# Copyright (c) 2025, MASSACHUSETTS INSTITUTE OF TECHNOLOGY
 # Subject to FAR 52.227-11 – Patent Rights – Ownership by the Contractor (May 2014).
 # SPDX-License-Identifier: MIT
 
@@ -12,8 +12,9 @@ functions for definition equations of motion of vehicles in orbit
 """
     satellite_eom__rhcbci(t, x_state, u_ctrl, mu)
 
-Calculate state derivative (equation of motion) of satellite under gravitational and propulsive acceleration
-expressed in right-handed celestial-body-centered inertial coordinates
+Contiuous-time state derivative (equation of motion) of satellite under 
+gravitational and propulsive acceleration expressed in 
+right-handed celestial-body-centered inertial coordinates
 
 # Arguments
 - `t::Float64`: The current time (not used in this example but required for ODE solver compatibility).
@@ -88,4 +89,142 @@ function lbg_eom1__rhcbci(t, x_state, u_ctrl, mu)
     # concat and return
     return vcat(dx_lady, dx_bandit, dx_guard)
 
+end
+
+using LinearAlgebra
+
+"""
+    cw_discrete__rhntw(n; dt)
+
+Return discrete-time (A, B) matrices for the 3D Clohessy–Wiltshire (Hill) model
+under zero-order hold (ZOH) on the input over timestep `dt`. Expressed in 
+right-hand NTW (normal-out, velocity-tangent, orthogonal) frame
+
+State (NTW / Hill frame, chief on circular orbit):
+    x = [x, y, z, xdot, ydot, zdot]
+
+Input (accelerations in same NTW frame):
+    u = [a_x, a_y, a_z]
+
+Continuous-time dynamics:
+    xdot = A_c * x + B_c * u
+
+Discretized (ZOH):
+    x_{k+1} = A * x_k + B * u_k
+
+You provide the mean motion n [rad/s] directly.
+"""
+function cw_discrete__rhntw(dt::Real, n::Real)
+    @assert dt > 0 "dt must be positive"
+
+    T  = typeof(n * dt)     # promote type
+    s  = n * dt
+    c  = cos(s)
+    s_sin = sin(s)
+    n2 = n^2
+
+    # -----------------------
+    # Discrete A = Phi(dt)
+    # -----------------------
+    # Blocks: [ r ; v ] = [Phi_rr  Phi_rv; Phi_vr  Phi_vv] * [ r0 ; v0 ]
+    phi_rr = Matrix{T}(undef, 3, 3)
+    phi_rr[1,1] = 4 - 3c
+    phi_rr[1,2] = 0
+    phi_rr[1,3] = 0
+
+    phi_rr[2,1] = 6 * (s_sin - s)
+    phi_rr[2,2] = 1
+    phi_rr[2,3] = 0
+
+    phi_rr[3,1] = 0
+    phi_rr[3,2] = 0
+    phi_rr[3,3] = c
+
+    phi_rv = Matrix{T}(undef, 3, 3)
+    phi_rv[1,1] =  s_sin / n
+    phi_rv[1,2] =  2 * (1 - c) / n
+    phi_rv[1,3] =  0
+
+    phi_rv[2,1] =  2 * (c - 1) / n
+    phi_rv[2,2] =  (4 * s_sin - 3s) / n
+    phi_rv[2,3] =  0
+
+    phi_rv[3,1] =  0
+    phi_rv[3,2] =  0
+    phi_rv[3,3] =  s_sin / n
+
+    phi_vr = Matrix{T}(undef, 3, 3)
+    phi_vr[1,1] =  3n * s_sin
+    phi_vr[1,2] =  0
+    phi_vr[1,3] =  0
+
+    phi_vr[2,1] =  6n * (c - 1)
+    phi_vr[2,2] =  0
+    phi_vr[2,3] =  0
+
+    phi_vr[3,1] =  0
+    phi_vr[3,2] =  0
+    phi_vr[3,3] = -n * s_sin
+
+    phi_vv = Matrix{T}(undef, 3, 3)
+    phi_vv[1,1] =  c
+    phi_vv[1,2] =  2 * s_sin
+    phi_vv[1,3] =  0
+
+    phi_vv[2,1] = -2 * s_sin
+    phi_vv[2,2] =  4c - 3
+    phi_vv[2,3] =  0
+
+    phi_vv[3,1] =  0
+    phi_vv[3,2] =  0
+    phi_vv[3,3] =  c
+
+    A = Matrix{T}(undef, 6, 6)
+    A[1:3,1:3] = phi_rr
+    A[1:3,4:6] = phi_rv
+    A[4:6,1:3] = phi_vr
+    A[4:6,4:6] = phi_vv
+
+    # -----------------------
+    # Discrete B = Gamma(dt)
+    # Gamma_r = ∫_0^dt phi_rv(tau) dtau
+    # Gamma_v = ∫_0^dt phi_vv(tau) dtau
+    # -----------------------
+    k1 = (1 - c) / n2
+    k2 = 2 * dt / n - 2 * s_sin / n2
+    k3 = -2 * dt / n + 2 * s_sin / n2
+    k4 = -1.5 * dt^2 + 4 * (1 - c) / n2
+    kz = k1
+
+    gamma_r = Matrix{T}(undef, 3, 3)
+    gamma_r[1,1] = k1
+    gamma_r[1,2] = k2
+    gamma_r[1,3] = 0
+
+    gamma_r[2,1] = k3
+    gamma_r[2,2] = k4
+    gamma_r[2,3] = 0
+
+    gamma_r[3,1] = 0
+    gamma_r[3,2] = 0
+    gamma_r[3,3] = kz
+
+    gamma_v = Matrix{T}(undef, 3, 3)
+    gamma_v[1,1] =  s_sin / n
+    gamma_v[1,2] =  2 * (1 - c) / n
+    gamma_v[1,3] =  0
+
+    gamma_v[2,1] =  2 * (c - 1) / n
+    gamma_v[2,2] = -3 * dt + 4 * s_sin / n
+    gamma_v[2,3] =  0
+
+    gamma_v[3,1] =  0
+    gamma_v[3,2] =  0
+    gamma_v[3,3] =  s_sin / n
+
+    B = Matrix{T}(undef, 6, 3)
+    B[1:3, :] = gamma_r
+    B[4:6, :] = gamma_v
+
+    return A, B
 end
