@@ -37,7 +37,7 @@ def test_dynamics_jl_include():
 
 def _ensure_dynamics_loaded():
     """Include the Julia file once into Main."""
-    if hasattr(jl, "cw_discrete__rhntw"):
+    if hasattr(jl, "cw_discrete__rhntw") and hasattr(jl, "lbg_cw_discrete_eom__rhntw"):
         return
 
     jl.include(str(DYNAMICS_JL_PATH))
@@ -53,6 +53,12 @@ def cw_discrete_rhntw_py(dt: float, n: float):
     A = np.array(A_jl)
     B = np.array(B_jl)
     return A, B
+
+def lbg_cw_discrete_eom_rhntw_py(dt: float, n: float):
+    """Python wrapper around Julia lbg_cw_discrete_eom__rhntw(dt, n)."""
+    _ensure_dynamics_loaded()
+    A_jl, B_jl = jl.lbg_cw_discrete_eom__rhntw(dt, n)
+    return np.array(A_jl), np.array(B_jl)
 
 def test_cw_discrete_shapes_and_real_values():
     dt = 10.0       # seconds
@@ -165,3 +171,83 @@ def test_z_axis_forced_response_matches_analytic(dt, n, az):
 
     assert np.allclose(z_num, z_analytic, atol=1e-8, rtol=1e-8)
     assert np.allclose(zdot_num, zdot_analytic, atol=1e-8, rtol=1e-8)
+
+def test_lbg_cw_shapes_and_real_values():
+    dt = 10.0
+    n = 0.0011
+
+    A, B = lbg_cw_discrete_eom_rhntw_py(dt, n)
+
+    # A: 12x12, B: 12x6
+    assert A.shape == (12, 12)
+    assert B.shape == (12, 6)
+
+    # Real-valued
+    assert np.isrealobj(A)
+    assert np.isrealobj(B)
+
+@pytest.mark.parametrize(
+    "dt,n",
+    [
+        (1.0, 0.0011),
+        (10.0, 0.0011),
+        (30.0, 0.0011),
+        (5.0, N_KERBIN_100K)
+    ],
+)
+def test_lbg_cw_block_structure_matches_single_satellite(dt, n):
+    A_cw, B_cw = cw_discrete_rhntw_py(dt, n)
+    A, B = lbg_cw_discrete_eom_rhntw_py(dt, n)
+
+    # Top-left 6x6 = A_cw (bandit)
+    assert np.allclose(A[0:6, 0:6], A_cw)
+
+    # Bottom-right 6x6 = A_cw (guard)
+    assert np.allclose(A[6:12, 6:12], A_cw)
+
+    # Off-diagonal blocks ≈ 0
+    assert np.allclose(A[0:6, 6:12], 0.0)
+    assert np.allclose(A[6:12, 0:6], 0.0)
+
+    # B: bandit part (rows 0:6, cols 0:3) = B_cw
+    assert np.allclose(B[0:6, 0:3], B_cw)
+
+    # B: guard part (rows 6:12, cols 3:6) = B_cw
+    assert np.allclose(B[6:12, 3:6], B_cw)
+
+    # The "cross" blocks of B should be zero
+    assert np.allclose(B[0:6, 3:6], 0.0)  # bandit unaffected by guard input
+    assert np.allclose(B[6:12, 0:3], 0.0)  # guard unaffected by bandit input
+
+def test_lbg_cw_bandit_guard_decoupled_dynamics():
+    dt = 10.0
+    n = N_KERBIN_100K
+
+    A_cw, B_cw = cw_discrete_rhntw_py(dt, n)
+    A, B = lbg_cw_discrete_eom_rhntw_py(dt, n)
+
+    # Simple deterministic initial states
+    x_b = np.array([1.0, 2.0, 3.0, 0.1, 0.2, 0.3])   # bandit
+    x_g = np.array([-1.0, -2.0, -3.0, -0.1, -0.2, -0.3])  # guard
+
+    # Stack into full state x ∈ R^12
+    x = np.concatenate([x_b, x_g])
+
+    # Inputs: only guard has control, bandit input = 0
+    u_b = np.zeros(3)
+    u_g = np.array([0.01, -0.02, 0.03])
+    u = np.concatenate([u_b, u_g])  # [a_x_b, a_y_b, a_z_b, a_x_g, a_y_g, a_z_g]
+
+    # One-step propagation
+    x_next = A @ x + B @ u
+    x_b_next = x_next[0:6]
+    x_g_next = x_next[6:12]
+
+    # Expected bandit next-state: purely A_cw * x_b (no effect from u_g)
+    x_b_expected = A_cw @ x_b
+
+    # Expected guard next-state: A_cw * x_g + B_cw * u_g
+    x_g_expected = A_cw @ x_g + B_cw @ u_g
+
+    assert np.allclose(x_b_next, x_b_expected, atol=1e-10, rtol=1e-10)
+    assert np.allclose(x_g_next, x_g_expected, atol=1e-10, rtol=1e-10)

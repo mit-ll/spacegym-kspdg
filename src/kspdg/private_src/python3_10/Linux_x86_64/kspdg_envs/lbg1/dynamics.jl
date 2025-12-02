@@ -9,6 +9,8 @@ functions for definition equations of motion of vehicles in orbit
 
 """
 
+using LinearAlgebra
+
 """
     satellite_eom__rhcbci(t, x_state, u_ctrl, mu)
 
@@ -91,14 +93,27 @@ function lbg_eom1__rhcbci(t, x_state, u_ctrl, mu)
 
 end
 
-using LinearAlgebra
-
 """
-    cw_discrete__rhntw(n; dt)
+    cw_discrete__rhntw(dt, n)
 
 Return discrete-time (A, B) matrices for the 3D Clohessy–Wiltshire (Hill) model
 under zero-order hold (ZOH) on the input over timestep `dt`. Expressed in 
-right-hand NTW (normal-out, velocity-tangent, orthogonal) frame
+right-hand NTW (normal-out, velocity-tangent, orthogonal) frame.
+
+Note that these matrices are based upon the analytic solution to the 
+continuous-time CW differential equations of form xdot = Ax + Bu assuming
+constant input acceleration vector u over the timestep dt. Therefore, 
+they are not Euler approximations of A and B, but rather exact solutions
+
+# Arguments
+- `dt::Float64`: time-step to next state [s]
+- `n::Float64`: orbital rate of reference orbit [rad/s]
+
+# Returns
+- `A::Matrix{T}`: Feedforward terms of linear system
+- `B::Matrix{T}`: feedback control terms of linear system
+
+# Notes
 
 State (NTW / Hill frame, chief on circular orbit):
     x = [x, y, z, xdot, ydot, zdot]
@@ -116,6 +131,7 @@ You provide the mean motion n [rad/s] directly.
 """
 function cw_discrete__rhntw(dt::Real, n::Real)
     @assert dt > 0 "dt must be positive"
+    @assert n > 0 "n must be positive"
 
     T  = typeof(n * dt)     # promote type
     s  = n * dt
@@ -225,6 +241,94 @@ function cw_discrete__rhntw(dt::Real, n::Real)
     B = Matrix{T}(undef, 6, 3)
     B[1:3, :] = gamma_r
     B[4:6, :] = gamma_v
+
+    return A, B
+end
+
+"""
+    lbg_cw_discrete_eom__rhntw(dt::Real, n::Real)
+
+Discrete-time Clohessy–Wiltshire (CW) equations of motion for a
+Lady–Bandit–Guard (LBG) game in a right-handed NTW frame (radial-out,
+velocity-tangential, orthogonal).
+
+The lady satellite is assumed to follow a circular reference orbit with
+mean motion `n` and is **uncontrolled**; CW dynamics are defined for the
+bandit and guard satellites relative to this lady orbit.
+
+A single CW chaser has state:
+    x_single = [x, y, z, xdot, ydot, zdot]
+
+and input:
+    u_single = [a_x, a_y, a_z]
+
+This function stacks **two** such chasers (bandit, guard) into one
+discrete-time LTI system:
+
+State:
+    x = [
+        x_b, y_b, z_b, xdot_b, ydot_b, zdot_b,
+        x_g, y_g, z_g, xdot_g, ydot_g, zdot_g
+    ]  ∈ ℝ¹²
+
+Input:
+    u = [
+        a_x_b, a_y_b, a_z_b,
+        a_x_g, a_y_g, a_z_g
+    ] ∈ ℝ⁶
+
+Dynamics (discrete-time, ZOH):
+    x_{k+1} = A * x_k + B * u_k
+
+where the bandit and guard each follow CW dynamics with the same
+reference mean motion `n`.
+
+Internally this uses `cw_discrete__rhntw(dt, n)` for a single chaser and
+forms a block-diagonal system:
+
+    A = [ A_cw    0
+          0       A_cw ]
+
+    B = [ B_cw    0
+          0       B_cw ]
+
+# Arguments
+- `dt::Real`:
+    Discrete-time step [s]. Must be positive.
+
+- `n::Real`:
+    Mean motion [rad/s] of the circular reference orbit (lady satellite)
+    about which the CW dynamics are defined. Both bandit and guard are
+    modeled relative to this same NTW frame.
+
+# Returns
+- `A::Matrix{T}`:
+    12×12 discrete-time state transition matrix for the stacked
+    bandit + guard system, where `T` is a floating-point type promoted
+    from `dt` and `n`.
+
+- `B::Matrix{T}`:
+    12×6 discrete-time input matrix. Columns 1:3 map bandit NTW
+    accelerations `[a_x_b, a_y_b, a_z_b]` into the bandit state; columns
+    4:6 map guard NTW accelerations `[a_x_g, a_y_g, a_z_g]` into the
+    guard state.
+
+"""
+function lbg_cw_discrete_eom__rhntw(dt::Real, n::Real)
+    # Single-satellite CW discrete dynamics (assumed exact ZOH)
+    A_cw, B_cw = cw_discrete__rhntw(dt, n)
+
+    T = eltype(A_cw)
+
+    # 12x12 block-diagonal A: bandit (top-left), guard (bottom-right)
+    A = zeros(T, 12, 12)
+    A[1:6,   1:6]   = A_cw         # bandit
+    A[7:12,  7:12]  = A_cw         # guard
+
+    # 12x6 B: first 3 inputs -> bandit, last 3 -> guard
+    B = zeros(T, 12, 6)
+    B[1:6,   1:3]   = B_cw         # bandit: u_b = [a_x_b, a_y_b, a_z_b]
+    B[7:12,  4:6]   = B_cw         # guard:  u_g = [a_x_g, a_y_g, a_z_g]
 
     return A, B
 end

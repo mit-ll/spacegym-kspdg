@@ -327,6 +327,7 @@ Use iLQGames to compute equilibrium strategy for bandit and guard in LBG1 differ
 - `mu::Float`: standard gravitational constant of central body [km^3/s^2]
 - `ladyX0::AbstractArray{Float64}`: initial state of lady satellite position [km] and velocity [km/s] in cbci coords (px, py, pz, vx, vy, vz)
 - `banditX0::AbstractArray{Float64}`: initial state of bandit satellite position [km] and velocity [km/s] in cbci coords (px, py, pz, vx, vy, vz)
+- `guardX0::AbstractArray{Float64}`: initial state of guard satellite position [km] and velocity [km/s] in cbci coords (px, py, pz, vx, vy, vz)
 - `solver_max_n_iter::Int`: Iteration is aborted if this number is exceeded
 - `solver_state_regularization::AbstractFloat`: The regularization term for the state cost quadraticization
 - `solver_control_regularization::AbstractFloat`: The regularization term for the control cost quadraticization
