@@ -5,10 +5,12 @@
 # krpc-serverless pytests for orbital euqations of motion written in julia
 
 import numpy as np
+import pytest
 
 from importlib.resources import files
 
 from kspdg.utils.private_src_utils import get_private_src_module_str
+import kspdg.utils.constants as C
 
 # PosixPath to kspdg installation point
 KSPDG_INSTALL_PATH = files('kspdg')
@@ -21,6 +23,9 @@ DYNAMICS_JL_PATH = DYNAMICS_JL_PATH.partition('/')[2]
 
 # Join the solve_lbg1.jl relative path to kspdg absolute path
 DYNAMICS_JL_PATH = KSPDG_INSTALL_PATH / DYNAMICS_JL_PATH / "dynamics.jl"
+
+# mean motion of 100K circular orbit around kerbing
+N_KERBIN_100K = np.round(np.sqrt(C.KERBIN.MU/((C.KERBIN.RADIUS + 1e5)**3)), 4) 
 
 from juliacall import Main as jl
 
@@ -60,11 +65,15 @@ def test_cw_discrete_shapes_and_real_values():
     assert np.isrealobj(A)
     assert np.isrealobj(B)
 
-def test_cw_discrete_small_dt_approx_identity_and_dtB():
+@pytest.mark.parametrize(
+    "dt,n",
+    [
+        (1e-6, 0.0011),         # Earth LEO orbital rate
+        (1e-6, N_KERBIN_100K)   # Kerbin 100K orbital rate
+    ],
+)
+def test_cw_discrete_small_dt_approx_identity_and_dtB(dt, n):
     # For small dt, A ≈ I, B ≈ dt * Bc
-    n = 0.0011  # rad/s in LEO (not Kerbin)
-    dt = 1e-6   # sec
-
     A, B = cw_discrete_rhntw_py(dt, n)
 
     I = np.eye(6)
@@ -78,6 +87,14 @@ def test_cw_discrete_small_dt_approx_identity_and_dtB():
     np.testing.assert_allclose(B_top, 0.0, atol=1e-6)
 
 def _analytic_z_solution(t, n, z0, zdot0):
+    """
+    Unforced analytic solution to z-axis motion
+    
+    :param t: time [s]
+    :param n: mean motion [rad/sec]
+    :param z0: initial z-position of deputy spacecraft [m]
+    :param zdot0: initial z-velociity of deputy spacecraft [m/s]
+    """
     z = z0 * np.cos(n * t) + (zdot0 / n) * np.sin(n * t)
     zdot = -n * z0 * np.sin(n * t) + zdot0 * np.cos(n * t)
     return z, zdot
@@ -108,3 +125,43 @@ def test_cw_z_axis_matches_analytic_sho():
 
         # Step forward
         x = A @ x + B @ u
+
+def _analytic_z_forced(t, n, az):
+    """
+    Analytic solution of motion on z-axis under constant acceleration
+    
+    :param t: time [s]
+    :param n: mean motion [rad/sec]
+    :param az: constant acceleration in z-axis [m/s/s]
+    """
+    z_p = az / n**2
+    z = z_p * (1 - np.cos(n * t))
+    zdot = (az / n) * np.sin(n * t)
+    return z, zdot
+
+@pytest.mark.parametrize(
+    "dt,n,az",
+    [
+        (10.0, 0.0011, 1e-4),
+        (60.0, 0.0011, 1e-4),
+        (30.0, 0.0005, 5e-5),
+        (5.0, N_KERBIN_100K, 1.0)
+    ],
+)
+def test_z_axis_forced_response_matches_analytic(dt, n, az):
+    """Constant a_z input should match analytic z(t), zdot(t) after one step."""
+    A, B = cw_discrete_rhntw_py(dt, n)
+
+    # initial state: only z,ż potentially nonzero; but here both zero
+    x = np.zeros(6)
+    u = np.array([0.0, 0.0, az])
+
+    x_next = A @ x + B @ u
+
+    z_num = x_next[2]
+    zdot_num = x_next[5]
+
+    z_analytic, zdot_analytic = _analytic_z_forced(dt, n, az)
+
+    assert np.allclose(z_num, z_analytic, atol=1e-8, rtol=1e-8)
+    assert np.allclose(zdot_num, zdot_analytic, atol=1e-8, rtol=1e-8)
