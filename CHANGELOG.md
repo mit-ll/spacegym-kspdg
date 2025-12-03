@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - solve_lq_lbg1.jl: new julia module for linear-quadratic LBG game
 - test_jl_dynamics.py: serverless tests for dynamics equations of motion written in julia
+- test_jl_solvers.py: adding tests for solve_lq_lady_bandit_guard julia functions
 
 ## [v0.13.1] - 2025.10.21
 

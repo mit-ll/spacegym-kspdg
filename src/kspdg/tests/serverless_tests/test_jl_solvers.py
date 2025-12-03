@@ -17,30 +17,37 @@ KSPDG_INSTALL_PATH = files('kspdg')
 
 # Path to solve_lbg1.jl relative to kspdg install point, accounting for
 # python version and OS-specific directories
-SOLVE_LBG1_JL_PATH = get_private_src_module_str("kspdg_envs.lbg1")
-SOLVE_LBG1_JL_PATH = SOLVE_LBG1_JL_PATH.replace('.','/')
-SOLVE_LBG1_JL_PATH = SOLVE_LBG1_JL_PATH.partition('/')[2]
+SOLVERS_LBG1_JL_PATH = get_private_src_module_str("kspdg_envs.lbg1")
+SOLVERS_LBG1_JL_PATH = SOLVERS_LBG1_JL_PATH.replace('.','/')
+SOLVERS_LBG1_JL_PATH = SOLVERS_LBG1_JL_PATH.partition('/')[2]
 
-# Join the solve_lbg1.jl relative path to kspdg absolute path
-SOLVE_LBG1_JL_PATH = KSPDG_INSTALL_PATH / SOLVE_LBG1_JL_PATH / "solve_lbg1.jl"
+# Join the solve_lbg1.jl and solve_lq_lbg1.jl relative path to kspdg absolute path
+SOLVE_LBG1_JL_PATH = KSPDG_INSTALL_PATH / SOLVERS_LBG1_JL_PATH / "solve_lbg1.jl"
+SOLVE_LQ_LBG1_JL_PATH = KSPDG_INSTALL_PATH / SOLVERS_LBG1_JL_PATH / "solve_lq_lbg1.jl"
+
+from juliacall import Main as jl
 
 def test_solve_lbg1_jl_import():
     """check import of solve_lbg1.jl does not error"""
-    # ~~ ARRANGE ~~
-    from juliacall import Main as jl
-
-    # ~~ ACT ~~
     jl.include(str(SOLVE_LBG1_JL_PATH))
+    jl.include(str(SOLVE_LQ_LBG1_JL_PATH))
+
+def _ensure_solvers_loaded():
+    """Include the Julia file once into Main."""
+    if hasattr(jl, "solve_lady_bandit_guard_costtype_3") and hasattr(jl, "solve_lq_lady_bandit_guard_costtype_1"):
+        return
+
+    jl.include(str(SOLVE_LBG1_JL_PATH))
+    jl.include(str(SOLVE_LQ_LBG1_JL_PATH))
 
 def test_accel_quad_penalty_1():
     """check acceleration penalty (i.e. soft control constraint) outputs as expected"""
 
     # ~~ ARRANGE ~~
-    from juliacall import Main as jl
+    _ensure_solvers_loaded()
     a = np.ones(3)
 
     # ~~ ACT ~~
-    jl.include(str(SOLVE_LBG1_JL_PATH))
     c_a = jl.accel_quad_penalty(a, 1, 1)
 
     # ~~ ASSERT ~~
@@ -79,9 +86,7 @@ def test_solve_lady_bandit_guard_costtype_3_2(lbg1_i2_init_conds):
     """run solve_lady_bandit_guard_3 (type-3 costs) solver on KSP conditions"""
 
     # ~~ ARRANGE ~~
-    from juliacall import Main as jl
-
-    jl.include(str(SOLVE_LBG1_JL_PATH))
+    _ensure_solvers_loaded()
 
     t_step = 1.0    # [s] length of timestep
     n_steps = 100    # [-] number of timesteps
@@ -141,9 +146,7 @@ def test_solve_lady_bandit_guard_costtype_3_3(lbg1_i2_init_conds):
     """run solve_lady_bandit_guard_3 (type-3 costs) solver on KSP conditions"""
 
     # ~~ ARRANGE ~~
-    from juliacall import Main as jl
-
-    jl.include(str(SOLVE_LBG1_JL_PATH))
+    _ensure_solvers_loaded()
 
     t_step = 1.0    # [s] length of timestep
     n_steps = 100    # [-] number of timesteps
@@ -199,6 +202,29 @@ def test_solve_lady_bandit_guard_costtype_3_3(lbg1_i2_init_conds):
         # running test for unit testing
         assert conv
     
+
+def test_lq_solve_lady_bandit_guard_costtype_1_shapes():
+    """check that lq lbg solver returns strategy of appropriate shape"""
+
+    # ~~ ARRANGE ~~
+    _ensure_solvers_loaded()
+
+    t_step = 1.0    # [s] length of timestep
+    n_steps = 10    # [-] number of timesteps
+    orbital_rate = 0.0032   # [rad/s] mean motion of reference (lady) orbit
+    banditX0 = np.array([0.0, -2000.0, 0.0, 0.0, 0.0, 0.0])     # init state of bandit relative to lady in [m] and [m/s]
+    guardX0 = np.array([0.0, -1000.0, 0.0, 0.0, 0.0, 0.0])      # init state of bandit relative to guard in [m] and [m/s]
+
+    # ~~ ACT ~~
+    P, alpha = jl.solve_lq_lady_bandit_guard_costtype_1(
+        t_step=t_step,
+        n_steps=n_steps,
+        orbital_rate=orbital_rate,
+        banditX0=banditX0,
+        guardX0=guardX0
+    )
+
+    # ~~ ASSERT ~~
 
 if __name__ == "__main__":
 
