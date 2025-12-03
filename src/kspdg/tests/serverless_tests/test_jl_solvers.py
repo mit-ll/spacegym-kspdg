@@ -7,6 +7,10 @@ from importlib.resources import files
 
 from kspdg.utils.private_src_utils import get_private_src_module_str
 
+# suppress warnings from mismatch between numpy and juliacall array copy
+pytestmark = pytest.mark.filterwarnings(
+    "ignore:.*__array__ implementation doesn't accept a copy keyword.*:DeprecationWarning"
+)
 
 #--- Get path to solve_lbg1.jl from kspdg installation point
 # (e.g. may be local to this file if pip installed editably or within a 
@@ -373,7 +377,7 @@ def test_lq_solve_lady_bandit_guard_costtype_1_shapes():
     guardX0 = np.array([0.0, -1000.0, 0.0, 0.0, 0.0, 0.0])      # init state of bandit relative to guard in [m] and [m/s]
 
     # ~~ ACT ~~
-    P, alpha = jl.solve_lq_lady_bandit_guard_costtype_1(
+    strat = jl.solve_lq_lady_bandit_guard_costtype_1(
         t_step=t_step,
         n_steps=n_steps,
         orbital_rate=orbital_rate,
@@ -382,6 +386,9 @@ def test_lq_solve_lady_bandit_guard_costtype_1_shapes():
     )
 
     # ~~ ASSERT ~~
+    for tidx in range(n_steps):
+        assert strat[tidx].P.shape == (6,12)
+        assert strat[tidx].α.shape == (6,)
 
 if __name__ == "__main__":
 

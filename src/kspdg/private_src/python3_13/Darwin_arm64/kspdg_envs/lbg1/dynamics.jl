@@ -9,7 +9,7 @@ functions for definition equations of motion of vehicles in orbit
 
 """
 
-using LinearAlgebra
+using iLQGames: SMatrix
 
 """
     satellite_eom__rhcbci(t, x_state, u_ctrl, mu)
@@ -302,12 +302,12 @@ forms a block-diagonal system:
     modeled relative to this same NTW frame.
 
 # Returns
-- `A::Matrix{T}`:
+- `A::SMatrix{T}`:
     12×12 discrete-time state transition matrix for the stacked
     bandit + guard system, where `T` is a floating-point type promoted
     from `dt` and `n`.
 
-- `B::Matrix{T}`:
+- `B::SMatrix{T}`:
     12×6 discrete-time input matrix. Columns 1:3 map bandit NTW
     accelerations `[a_x_b, a_y_b, a_z_b]` into the bandit state; columns
     4:6 map guard NTW accelerations `[a_x_g, a_y_g, a_z_g]` into the
@@ -330,5 +330,9 @@ function lbg_cw_discrete_eom__rhntw(dt::Real, n::Real)
     B[1:6,   1:3]   = B_cw         # bandit: u_b = [a_x_b, a_y_b, a_z_b]
     B[7:12,  4:6]   = B_cw         # guard:  u_g = [a_x_g, a_y_g, a_z_g]
 
-    return A, B
+    # --- convert to StaticArrays at the end ---
+    As = SMatrix{12,12,T}(A)
+    Bs = SMatrix{12,6,T}(B)
+
+    return As, Bs
 end

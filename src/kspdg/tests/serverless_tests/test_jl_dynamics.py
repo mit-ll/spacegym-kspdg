@@ -12,6 +12,11 @@ from importlib.resources import files
 from kspdg.utils.private_src_utils import get_private_src_module_str
 import kspdg.utils.constants as C
 
+# suppress warnings from mismatch between numpy and juliacall array copy
+pytestmark = pytest.mark.filterwarnings(
+    "ignore:.*__array__ implementation doesn't accept a copy keyword.*:DeprecationWarning"
+)
+
 # PosixPath to kspdg installation point
 KSPDG_INSTALL_PATH = files('kspdg')
 

@@ -259,10 +259,9 @@ xyindex(cs::LBGSystem) = SVector(1, 2)
 """
     solve_lady_bandit_guard_costtype_3(TODO)
 
-Use iLQGames to compute equilibrium strategy for bandit and guard in LBG1 differential game using type-2 cost functions
+Use iLQGames to compute equilibrium strategy for bandit and guard in LBG1 differential game using type-3 cost functions
 
 # Arguments
-- `guardX0::AbstractArray{Float64}`: initial state of guard satellite position [km] and velocity [km/s] in cbci coords (px, py, pz, vx, vy, vz)
 - `bandit_acc_max::AbstractFloat`: bandit's thrust-limited maximum propulsive acceleration of bandit [km/s/s]
 - `bandit_acc_max_penalty_weight::AbstractFloat`: cost weight of bandit's thrust constraint violation [km^2]
 - `guard_acc_max::AbstractFloat`: guard's thrust-limited maximum propulsive acceleration of bandit [km/s/s]
