@@ -34,7 +34,11 @@ def test_solve_lbg1_jl_import():
 
 def _ensure_solvers_loaded():
     """Include the Julia file once into Main."""
-    if hasattr(jl, "solve_lady_bandit_guard_costtype_3") and hasattr(jl, "solve_lq_lady_bandit_guard_costtype_1"):
+    if (
+        hasattr(jl, "solve_lady_bandit_guard_costtype_3") and 
+        hasattr(jl, "solve_lq_lady_bandit_guard_costtype_1") and
+        hasattr(jl, "lbg_quad_costs_1")
+        ):
         return
 
     jl.include(str(SOLVE_LBG1_JL_PATH))
@@ -201,7 +205,160 @@ def test_solve_lady_bandit_guard_costtype_3_3(lbg1_i2_init_conds):
 
         # running test for unit testing
         assert conv
-    
+
+def lbg_quad_costs_1_py(**kwargs):
+    """
+    Python wrapper around Julia lbg_quad_costs_1(...).
+
+    Returns NumPy arrays:
+    Qb, qb, Rb, rb, Qg, qg, Rg, rg
+    """
+    _ensure_solvers_loaded()
+    Qb_jl, qb_jl, Rb_jl, rb_jl, Qg_jl, qg_jl, Rg_jl, rg_jl = jl.lbg_quad_costs_1(
+        **kwargs
+    )
+    Qb = np.array(Qb_jl)
+    qb = np.array(qb_jl)
+    Rb = np.array(Rb_jl)
+    rb = np.array(rb_jl)
+    Qg = np.array(Qg_jl)
+    qg = np.array(qg_jl)
+    Rg = np.array(Rg_jl)
+    rg = np.array(rg_jl)
+    return Qb, qb, Rb, rb, Qg, qg, Rg, rg
+
+def test_lq_lbg_quad_costs_1_shapes_and_zero_linear_terms():
+    Qb, qb, Rb, rb, Qg, qg, Rg, rg = lbg_quad_costs_1_py()
+
+    # Shapes
+    assert Qb.shape == (12, 12)
+    assert Qg.shape == (12, 12)
+    assert Rb.shape == (6, 6)
+    assert Rg.shape == (6, 6)
+    assert qb.shape == (12,)
+    assert qg.shape == (12,)
+    assert rb.shape == (6,)
+    assert rg.shape == (6,)
+
+    # Linear terms are zero (for now by design)
+    assert np.allclose(qb, 0.0)
+    assert np.allclose(qg, 0.0)
+    assert np.allclose(rb, 0.0)
+    assert np.allclose(rg, 0.0)
+
+    # Q and R should be symmetric
+    assert np.allclose(Qb, Qb.T)
+    assert np.allclose(Qg, Qg.T)
+    assert np.allclose(Rb, Rb.T)
+    assert np.allclose(Rg, Rg.T)
+
+def _stage_cost(Q, q, R, r, x, u):
+    return 0.5 * x.T @ Q @ x + q.T @ x + 0.5 * u.T @ R @ u + r.T @ u
+
+def test_lq_lbg_quad_costs_1_bandit_guard_relative_position_effect():
+    # Choose weights:
+    #   bandit: likes being near lady (w_blady>0), dislikes guard nearby (w_bguard<0)
+    #   guard: likes being near bandit (w_gbandit>0), dislikes bandit near lady (w_glady<0)
+    Qb, qb, Rb, rb, Qg, qg, Rg, rg = lbg_quad_costs_1_py(
+        w_b_bl_dist=1.0,
+        w_b_bg_dist=-1.0,
+        w_g_bl_dist=-1.0,
+        w_g_bg_dist=1.0,
+        w_b_ctrl=0.0,
+        w_g_ctrl=0.0,
+    )
+
+    # State with bandit at origin, guard 10 m away along +x:
+    x1 = np.zeros(12)
+    x1[0] = 0.0   # x_b
+    x1[6] = 10.0  # x_g
+
+    # State with bandit at origin, guard 20 m away along +x:
+    x2 = np.zeros(12)
+    x2[0] = 0.0
+    x2[6] = 20.0
+
+    u_zero = np.zeros(6)
+
+    Jb1 = _stage_cost(Qb, qb, Rb, rb, x1, u_zero)
+    Jb2 = _stage_cost(Qb, qb, Rb, rb, x2, u_zero)
+
+    Jg1 = _stage_cost(Qg, qg, Rg, rg, x1, u_zero)
+    Jg2 = _stage_cost(Qg, qg, Rg, rg, x2, u_zero)
+
+    # Bandit dislikes being near guard (w_bguard<0), so distance 20 should have
+    # LOWER cost than distance 10 when minimizing Jb.
+    assert Jb2 < Jb1
+
+    # Guard likes being near bandit (w_gbandit>0), so distance 20 should have
+    # HIGHER cost than distance 10 when minimizing Jg.
+    assert Jg2 > Jg1
+
+def test_lq_lbg_quad_costs_1_known_costs():
+    # Choose weights:
+    #   bandit: likes being near lady (w_blady>0), dislikes guard nearby (w_bguard<0)
+    #   guard: likes being near bandit (w_gbandit>0), dislikes bandit near lady (w_glady<0)
+    Qb, qb, Rb, rb, Qg, qg, Rg, rg = lbg_quad_costs_1_py(
+        w_b_bl_dist=1.0,
+        w_b_bg_dist=-1.0,
+        w_g_bl_dist=-1.0,
+        w_g_bg_dist=1.0,
+        w_b_ctrl=1.0,
+        w_g_ctrl=1.0,
+    )
+
+    # State with bandit and guard at origin, no control:
+    x = np.zeros(12)
+    x[0] = 0.0   # x_b
+    x[6] = 0.0  # x_g
+    u = np.zeros(6)
+    Jb = _stage_cost(Qb, qb, Rb, rb, x, u)
+    Jg = _stage_cost(Qg, qg, Rg, rg, x, u)
+    assert np.isclose(Jb, 0.0)
+    assert np.isclose(Jg, 0.0)
+
+    # State with bandit at origin, guard 10 m away along +x, no control:
+    x = np.zeros(12)
+    x[0] = 0.0   # x_b
+    x[6] = 10.0  # x_g
+    u = np.zeros(6)
+    Jb = _stage_cost(Qb, qb, Rb, rb, x, u)
+    Jg = _stage_cost(Qg, qg, Rg, rg, x, u)
+    assert np.isclose(Jb, -0.5*(10.0**2))
+    assert np.isclose(Jg, 0.5*(10.0**2))
+
+    # State with bandit along +y axis, guard on -y axis, no control:
+    x = np.zeros(12)
+    x[1] = 10.0   # x_b
+    x[7] = -10.0   # x_g
+    u = np.zeros(6)
+    Jb = _stage_cost(Qb, qb, Rb, rb, x, u)
+    Jg = _stage_cost(Qg, qg, Rg, rg, x, u)
+    assert np.isclose(Jb, 0.5*(10**2) - 0.5*(20.0**2))
+    assert np.isclose(Jg, -0.5*(10**2) + 0.5*(20.0**2))
+
+    # bandit and guard at arbitrary positions with arbitrary control
+    # tests that velocity doesn't affect cost
+    x = np.random.rand(12)
+    p_b = x[0:3] = np.array([-0.98912135, -0.36778665,  1.28792526])
+    p_g = x[6:9] = np.array([ 0.19397442,  0.92023090,  0.57710379])
+    dist_bl = np.linalg.norm(p_b)
+    dist_bg = np.linalg.norm(p_b - p_g)
+
+    u = np.random.rand(6)
+    u_b = u[0:3] = np.array([-0.63646365,  0.54195222, -0.31659545])
+    u_g = u[3:6] = np.array([-0.32238912,  0.09716732, -1.52593041])
+    ctrl_b = np.linalg.norm(u_b)
+    ctrl_g = np.linalg.norm(u_g)
+
+    Jb_exp = 0.5*(dist_bl**2 - dist_bg**2 + ctrl_b**2)
+    Jg_exp = 0.5*(dist_bg**2 - dist_bl**2 + ctrl_g**2)
+
+    Jb = _stage_cost(Qb, qb, Rb, rb, x, u)
+    Jg = _stage_cost(Qg, qg, Rg, rg, x, u)
+
+    assert np.isclose(Jb, Jb_exp)
+    assert np.isclose(Jg, Jg_exp)
 
 def test_lq_solve_lady_bandit_guard_costtype_1_shapes():
     """check that lq lbg solver returns strategy of appropriate shape"""
