@@ -88,6 +88,15 @@ if find_spec('juliacall') is not None:
     LBG1_LG5_I1_V1 = getattr(__lg5_envs_module, 'LBG1_LG5_I1_Env')
     LBG1_LG5_I2_V1 = getattr(__lg5_envs_module, 'LBG1_LG5_I2_Env')
 
+    # import obfuscated LBG1-LG6 environments
+    __lg6_envs_path = __get_mod_str("kspdg_envs.lbg1.lg6_envs")
+    try:
+        __lg6_envs_module = importlib.import_module(__lg6_envs_path)
+    except ModuleNotFoundError:
+        print(f"Module {__lg6_envs_path} not found.")
+    LBG1_LG6_I1_V1 = getattr(__lg6_envs_module, 'LBG1_LG6_I1_Env')
+    LBG1_LG6_I2_V1 = getattr(__lg6_envs_module, 'LBG1_LG6_I2_Env')
+
 else:
     LBG1_LG3_I1_V1 = LBG1_LG3_I2_V1 = lambda *args, **kwargs: (
         "Unmet dependency juliacall for using LBG1_LG3 environments.\n" +
@@ -103,6 +112,12 @@ else:
 
     LBG1_LG5_I1_V1 = LBG1_LG5_I2_V1 = lambda *args, **kwargs: (
         "Unmet dependency juliacall for using LBG1_LG5 environments.\n" +
+        "Please install kspdg[adv_bots] or kspdg[full] to use these.\n" +
+        "Refere to README for further instructions."
+    )
+
+    LBG1_LG6_I1_V1 = LBG1_LG6_I2_V1 = lambda *args, **kwargs: (
+        "Unmet dependency juliacall for using LBG1_LG6 environments.\n" +
         "Please install kspdg[adv_bots] or kspdg[full] to use these.\n" +
         "Refere to README for further instructions."
     )

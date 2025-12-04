@@ -373,16 +373,16 @@ def test_lq_solve_lady_bandit_guard_costtype_1_shapes():
     t_step = 1.0    # [s] length of timestep
     n_steps = 10    # [-] number of timesteps
     orbital_rate = 0.0032   # [rad/s] mean motion of reference (lady) orbit
-    banditX0 = np.array([0.0, -2000.0, 0.0, 0.0, 0.0, 0.0])     # init state of bandit relative to lady in [m] and [m/s]
-    guardX0 = np.array([0.0, -1000.0, 0.0, 0.0, 0.0, 0.0])      # init state of bandit relative to guard in [m] and [m/s]
+    # banditX0 = np.array([0.0, -2000.0, 0.0, 0.0, 0.0, 0.0])     # init state of bandit relative to lady in [m] and [m/s]
+    # guardX0 = np.array([0.0, -1000.0, 0.0, 0.0, 0.0, 0.0])      # init state of bandit relative to guard in [m] and [m/s]
 
     # ~~ ACT ~~
     strat = jl.solve_lq_lady_bandit_guard_costtype_1(
         t_step=t_step,
         n_steps=n_steps,
         orbital_rate=orbital_rate,
-        banditX0=banditX0,
-        guardX0=guardX0
+        # banditX0=banditX0,
+        # guardX0=guardX0
     )
 
     # ~~ ASSERT ~~
