@@ -6,7 +6,6 @@
 import pytest
 import numpy as np
 
-import kspdg.utils.constants as C
 import kspdg.utils.utils as U
 
 def test_convert_lhntw_and_rhntw_0():
@@ -128,11 +127,17 @@ def test_raises_on_zero_position():
     with pytest.raises(ValueError):
         U.convert_rhcbci_to_rhntw(np.array([1,2,3]), p_ref, v_ref)
 
+    with pytest.raises(ValueError):
+        U.convert_rhntw_to_rhcbci(np.array([1,2,3]), p_ref, v_ref)
+
 def test_raises_on_zero_velocity():
     p_ref = np.array([7000e3, 0.0, 0.0])
     v_ref = np.array([0.0, 0.0, 0.0])
     with pytest.raises(ValueError):
         U.convert_rhcbci_to_rhntw(np.array([1,2,3]), p_ref, v_ref)
+
+    with pytest.raises(ValueError):
+        U.convert_rhntw_to_rhcbci(np.array([1,2,3]), p_ref, v_ref)
 
 def test_raises_on_colinear_r_and_v():
     # v parallel to r => cross(r,v)=0 => cannot define W
@@ -141,6 +146,48 @@ def test_raises_on_colinear_r_and_v():
     with pytest.raises(ValueError):
         U.convert_rhcbci_to_rhntw(np.array([1,2,3]), p_ref, v_ref)
 
+    with pytest.raises(ValueError):
+        U.convert_rhntw_to_rhcbci(np.array([1,2,3]), p_ref, v_ref)
+
+@pytest.mark.parametrize(
+    "r_vec, p_ref, v_ref",
+    [
+        # 1) Simple circular-ish orbit in xy-plane
+        (
+            [1.2, -3.4, 5.6],
+            [7000e3, 0.0, 0.0],          # position along +x
+            [0.0, 7.5e3, 0.0],           # velocity along +y
+        ),
+        # 2) Inclined orbit, generic target vector
+        (
+            [-1200.0, 3400.0, 5600.0],
+            [6500e3, 1000e3, 500e3],     # off-equatorial
+            [-100.0, 7450.0, 1500.0],    # velocity not orthogonal to position
+        ),
+        # 3) Highly non-circular reference, target with mixed components
+        (
+            [10.0, -20.0, 30.0],
+            [8000e3, -2000e3, 1000e3],
+            [2000.0, 6500.0, -500.0],
+        ),
+        # 4) Another generic case with non-zero z velocity
+        (
+            [-5.0, 2.0, 11.0],
+            [7200e3, 500e3, -300e3],
+            [500.0, 7600.0, 900.0],
+        ),
+    ],
+)
+def test_rhcbci_rhntw_roundtrip(r_vec, p_ref, v_ref):
+    r_vec = np.array(r_vec, dtype=float)
+    p_ref = np.array(p_ref, dtype=float)
+    v_ref = np.array(v_ref, dtype=float)
+
+    r_ntw = U.convert_rhcbci_to_rhntw(r_vec, p_ref, v_ref)
+    r_back = U.convert_rhntw_to_rhcbci(r_ntw, p_ref, v_ref)
+
+    # Round-trip should recover original vector
+    assert np.allclose(r_back, r_vec, atol=1e-9)
 
 if __name__ == "__main__":
     test_convert_lhcbci_and_rhcbci_0()

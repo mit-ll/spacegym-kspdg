@@ -5,7 +5,6 @@
 # Base class for Lady-Bandit-Guard Group 1 environments
 
 import time
-import math
 import gymnasium as gym
 import numpy as np
 import dearpygui.dearpygui as dpg

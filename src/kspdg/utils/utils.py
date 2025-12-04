@@ -9,33 +9,32 @@ from typing import List
 
 from kspdg.utils import constants as CONST
 
-def convert_rhcbci_to_rhntw(r_tar__rhcbci, p_ref_cb__rhcbci, v_ref_cb__rhcbci, eps=1e-9):
-    '''convert vector in right-handed celestial-body-centered-inertial coords 
-        to right-handed NTW coords (Vallado, 3rd Edition, Sec 3.3.3)
+def compute_R_rhntw_rhcbci(p_ref_cb__rhcbci, v_ref_cb__rhcbci, eps):
+    '''compute rotation matrix R from right-handed 
+        celestial-body-centered-ineertial (rhcbci) coords to 
+        right-handed radial-out, velocity-tangent, orthogonal (NTW frame 
+        defined in Vallado, 3rd Edition, Sec 3.3.3)
 
     Note: CBCI coords are roughly equivalent to "ECI" (earth-centered inertial)
     and "IJK" coords in Vallado, 3rd ed, 3.3.2 and BMW 2.2.2; but we 
     don't use the "ECI" terminology because we aren't necessarily working
     in Earth's orbit (i.e. Kerbin with no axial tilt and no defined vernal equinox)
-    
+
     Args:
-        r_tar__rhcbci : List[float]
-            3-vector represented in right-handed CBCI coords to be converted to rhntw
-            Note that this is treated as an arbitrary vector for which only the frame is converted,
-            we do not assume it to be some absolute position that must be made relative to the 
-            rhntw origin
         p_ref_cb__rhcbci : List[float]
             position (wrt central body) within reference orbit expressed in rhcbci (rhntw origin) 
         v_ref_cb__rhcbci : List[float]
             velocity (wrt central body) within reference orbit expressed in rhcbci (rhntw tangent direction) 
+        eps : float
+            tolerance of vector magnitude and alignment to identify degenerate cases
 
     Returns:
-        r_tar__rhntw : List[float]
-            3-vector represented in right-handed NTW frame
+        R_rhntw_rhcbci : ndarray[float]
+            3x3 matrix that rotates a column vector expressed in rhcbci into rhntw frame, when 
+            right-multiplied; i.e. a__rhntw = R_rhntw_rhcbci @ a__rhcbci 
     '''
 
     # abbreviate and convert to numpy for brevity and simplicity
-    r_tar = np.asarray(r_tar__rhcbci, dtype=float)
     p_ref = np.asarray(p_ref_cb__rhcbci, dtype=float)
     v_ref = np.asarray(v_ref_cb__rhcbci, dtype=float)
 
@@ -60,11 +59,78 @@ def convert_rhcbci_to_rhntw(r_tar__rhcbci, p_ref_cb__rhcbci, v_ref_cb__rhcbci, e
     n_hat = np.cross(t_hat, w_hat)
 
     # Rotation matrix rows are the basis vectors (N,T,W) in inertial coords
-    R_ntw_rhcbci = np.vstack((n_hat, t_hat, w_hat))  # 3x3
+    R_rhntw_rhcbci = np.vstack((n_hat, t_hat, w_hat))  # 3x3
+
+    return R_rhntw_rhcbci
+
+def convert_rhcbci_to_rhntw(r_tar__rhcbci, p_ref_cb__rhcbci, v_ref_cb__rhcbci, eps=1e-9):
+    '''convert vector in right-handed celestial-body-centered-inertial coords 
+        to right-handed NTW coords (Vallado, 3rd Edition, Sec 3.3.3)
+
+    Note: CBCI coords are roughly equivalent to "ECI" (earth-centered inertial)
+    and "IJK" coords in Vallado, 3rd ed, 3.3.2 and BMW 2.2.2; but we 
+    don't use the "ECI" terminology because we aren't necessarily working
+    in Earth's orbit (i.e. Kerbin with no axial tilt and no defined vernal equinox)
+    
+    Args:
+        r_tar__rhcbci : List[float]
+            3-vector represented in right-handed CBCI coords to be converted to rhntw
+            Note that this is treated as an arbitrary vector for which only the frame is converted,
+            we do not assume it to be some absolute position that must be made relative to the 
+            rhntw origin
+        p_ref_cb__rhcbci : List[float]
+            position (wrt central body) within reference orbit expressed in rhcbci (rhntw origin) 
+        v_ref_cb__rhcbci : List[float]
+            velocity (wrt central body) within reference orbit expressed in rhcbci (rhntw tangent direction) 
+        eps : float
+            tolerance of vector magnitude and alignment to identify degenerate cases
+
+    Returns:
+        r_tar__rhntw : List[float]
+            3-vector represented in right-handed NTW frame
+    '''
+
+    # Compute rotation matrix
+    R_rhntw_rhcbci = compute_R_rhntw_rhcbci(
+        p_ref_cb__rhcbci=p_ref_cb__rhcbci, 
+        v_ref_cb__rhcbci=v_ref_cb__rhcbci,
+        eps=eps)
 
     # Components in NTW: project target vector onto (n̂, t̂, ŵ)
-    r_tar__rhntw = R_ntw_rhcbci @ r_tar
+    r_tar__rhntw = R_rhntw_rhcbci @ r_tar__rhcbci
     return r_tar__rhntw
+
+def convert_rhntw_to_rhcbci(r_tar__rhntw, p_ref_cb__rhcbci, v_ref_cb__rhcbci, eps=1e-9):
+    '''convert vector in right-handed NTW coords to right-handed celestial-body-centered-inertial 
+        coords (inverse of convert_rhcbci_to_rhntw)
+
+    Args:
+        r_tar__rhntw : List[float]
+            3-vector represented in right-handed NTW coords to be converted to rhcbci.
+            This is treated as an arbitrary vector in the NTW frame; we do not assume it
+            is a relative position that must be shifted by the frame origin.
+        p_ref_cb__rhcbci : List[float]
+            position (wrt central body) within reference orbit expressed in rhcbci 
+            (defines the NTW frame together with v_ref_cb__rhcbci)
+        v_ref_cb__rhcbci : List[float]
+            velocity (wrt central body) within reference orbit expressed in rhcbci 
+            (defines the tangential direction of the NTW frame)
+
+    Returns:
+        r_tar__rhcbci : numpy.ndarray
+            3-vector represented in right-handed CBCI frame
+    '''
+
+    # Compute rotation matrix
+    R_rhntw_rhcbci = compute_R_rhntw_rhcbci(
+        p_ref_cb__rhcbci=p_ref_cb__rhcbci, 
+        v_ref_cb__rhcbci=v_ref_cb__rhcbci,
+        eps=eps)
+
+    # Inverse mapping: r_rhcbci = R^T * r_ntw
+    r_tar__rhcbci = R_rhntw_rhcbci.T @ r_tar__rhntw
+    return r_tar__rhcbci
+
 
 def convert_lhcbci_to_rhcbci(v__lhcbci: List[float]) -> List[float]:
     '''convert vector in left-handed celestial-body-centered-inertial coords 
