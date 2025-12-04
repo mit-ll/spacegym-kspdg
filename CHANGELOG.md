@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - test_jl_dynamics.py: serverless tests for dynamics equations of motion written in julia
 - test_jl_solvers.py: adding tests for solve_lq_lady_bandit_guard julia functions
 - utils.py: added convert_rhntw_to_rhcbci, the inverse of convert_rhcbci_to_rhntw, and a common function between the two: compute_R_rhntw_rhcbci to compute the rotation matrix they both use
+- private_src/: LBG1_LG6 environments and lbg1_private_utils
 
 ## [v0.13.1] - 2025.10.21
 

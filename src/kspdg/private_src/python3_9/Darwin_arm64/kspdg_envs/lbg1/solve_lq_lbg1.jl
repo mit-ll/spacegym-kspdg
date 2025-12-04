@@ -24,9 +24,10 @@ using FromFile: @from
 @from "dynamics.jl" import lbg_cw_discrete_eom__rhntw
 
 """
-    lbg_quad_costs_1(; w_blady=1.0, w_bguard=1.0,
-                                w_gbandit=1.0, w_glady=1.0,
-                                w_u_b=1.0, w_u_g=1.0)
+    lbg_quad_costs_1(; 
+        w_b_bl_dist=1.0, w_b_bg_dist=-1.0,
+        w_g_bl_dist=-1.0, w_g_bg_dist=1.0,
+        w_b_ctrl=1.0, w_g_ctrl=1.0)
 
 Construct time-invariant quadratic cost matrices for the bandit and
 guard players in the Lady–Bandit–Guard (LBG) game under CW dynamics in
@@ -37,24 +38,43 @@ Each player i has a stage objective of the form
     J_i(x,u) = 1/2 * x' * Q_i * x + q_i' * x
                + 1/2 * u' * R_i * u + r_i' * u
 
-with x ∈ ℝ¹², u ∈ ℝ⁶ defined as
+with x ∈ ℝ¹² defined as the position and velocity
+of the bandit and guard wrt to the reference orbit (lady)
+expressed in right-handed NTW frame
 
-    x = [x_b, y_b, z_b, xdot_b, ydot_b, zdot_b,
-         x_g, y_g, z_g, xdot_g, ydot_g, zdot_g]
+    x   = [ pos_b_l__rhntw, vel_b_l__rhntw, 
+            pos_g_l__rhntw, vel_g_l__rhntw]
 
-    u = [a_x_b, a_y_b, a_z_b, a_x_g, a_y_g, a_z_g]
+        (which expanded with simplified notation, looks like)
+
+        = [ px_b, py_b, pz_b, vx_b, vy_b, vz_b,
+            px_g, py_g, pz_g, vx_g, vy_g, vz_g]
+
+And u ∈ ℝ⁶ defined as the accelerations of the 
+bandit and guard wrt to the reference orbit (lady)
+expressed in right-handed NTW frame. Note that this is a 
+non-inertial acceleration that I'm using under the assumption
+of short time horizons and close proximity to the origin
+(not sure if there are other unexpected consquences of 
+naively using non-inertial frame)
+
+    u   = [ acc_b_l__rhntw, acc_g_l__rhntw]
+    
+        (which expanded with simplified notation, looks like)
+
+        = [ ax_b, ay_b, az_b, ax_g, ay_g, az_g]
 
 The structure encoded here is:
 
 - Bandit:
-    - “Proximity to lady” (origin) via x_b, y_b, z_b.
-    - “Proximity / separation to guard” via (x_b - x_g, y_b - y_g, z_b - z_g).
-    - Quadratic penalty on its own control effort (a_x_b, a_y_b, a_z_b).
+    - “Proximity to lady” (origin) via px_b, py_b, pz_b.
+    - “Proximity / separation to guard” via (px_b - px_g, py_b - py_g, pz_b - pz_g).
+    - Quadratic penalty on its own control effort (ax_b, ay_b, az_b).
 
 - Guard:
-    - “Proximity to bandit” via (x_b - x_g, y_b - y_g, z_b - z_g).
-    - Dependence on bandit’s proximity to the lady via x_b, y_b, z_b.
-    - Quadratic penalty on its own control effort (a_x_g, a_y_g, a_z_g).
+    - “Proximity to bandit” via (px_b - px_g, py_b - py_g, pz_b - pz_g).
+    - Dependence on bandit’s proximity to the lady via px_b, py_b, pz_b.
+    - Quadratic penalty on its own control effort (ax_g, ay_g, az_g).
 
 Note: The signs of the weights determine whether each term acts as a
 “reward” or a “penalty” depending on whether you maximize or minimize
@@ -116,12 +136,13 @@ J_i. For example, with J_i minimized:
     6-element linear control-weight vector for the guard (zero here).
 
 """
-function lbg_quad_costs_1(; w_b_bl_dist::Real = 1.0,
-                                     w_b_bg_dist::Real = -1.0,
-                                     w_g_bl_dist::Real = -1.0,
-                                     w_g_bg_dist::Real = 1.0,
-                                     w_b_ctrl::Real = 1.0,
-                                     w_g_ctrl::Real = 1.0)
+function lbg_quad_costs_1(; 
+    w_b_bl_dist::Real = 1.0,
+    w_b_bg_dist::Real = -1.0,
+    w_g_bl_dist::Real = -1.0,
+    w_g_bg_dist::Real = 1.0,
+    w_b_ctrl::Real = 1.0,
+    w_g_ctrl::Real = 1.0)
 
     # --- selection matrices for positions ---
     S_pb = zeros(3, 12)
@@ -222,32 +243,47 @@ target/reference orbit (assumes lady is in a circular orbit)
 - `t_step::AbstractFloat`: time step length [s]
 - `n_steps::AbstractArray`: time horizon over which game is solved [s]
 - `orbital_rate::Float`: mean motion of reference orbit (i.e. lady satellite) [rad/sec]
-- `banditX0::AbstractArray{Float64}`: initial state of bandit satellite 
-    position [m] and velocity [m/s] in NTW coords relative 
-    to lady's reference orbit (px, py, pz, vx, vy, vz)
-- `guardX0::AbstractArray{Float64}`: initial state of guard satellite 
-    position [m] and velocity [m/s] in NTW coords relative 
-    to lady's reference orbit (px, py, pz, vx, vy, vz)
 
 # Returns
-- `P::Matrix`: of shape (nt,nu,nx) 
-    feedback Nash equilibrium linear term
-    P[t] is a size (nu,nx) matrix describing the linear term of the joint affine policy
+- `strat::AffineStrategy`:
+    feedback Nash equilibrium with terms P (proportional feedback) 
+    and α (bias, feedforward) at each time stage t in n_steps.
+
+    P[t] is a matrix of size (nu,nx) and α[t] is a vector of size (nu,)
     at discrete time t such that
     u[t] = -P_t @ x[t] - a_t
-- `alpha::Matrix`: of shape (nt,nu) 
-    feedback Nash equilibrium bias term
-    alpha[t] is a size (nu,) vector describing the bias term of the joint affine policy 
-    at discrete time t such that
-    u[t] = -P_t @ x[t] - a_t
+
+    with x ∈ ℝ¹² defined as the position and velocity
+    of the bandit and guard wrt to the reference orbit (lady)
+    expressed in right-handed NTW frame
+
+    x   = [ pos_b_l__rhntw, vel_b_l__rhntw, 
+            pos_g_l__rhntw, vel_g_l__rhntw]
+
+        (which expanded with simplified notation, looks like)
+
+        = [ px_b, py_b, pz_b, vx_b, vy_b, vz_b,
+            px_g, py_g, pz_g, vx_g, vy_g, vz_g]
+
+    And u ∈ ℝ⁶ defined as the accelerations of the 
+    bandit and guard wrt to the reference orbit (lady)
+    expressed in right-handed NTW frame. Note that this is a 
+    non-inertial acceleration that I'm using under the assumption
+    of short time horizons and close proximity to the origin
+    (not sure if there are other unexpected consquences of 
+    naively using non-inertial frame)
+
+    u   = [ acc_b_l__rhntw, acc_g_l__rhntw]
+    
+        (which expanded with simplified notation, looks like)
+
+        = [ ax_b, ay_b, az_b, ax_g, ay_g, az_g]
 
 """
 function solve_lq_lady_bandit_guard(costs;
     t_step::AbstractFloat,
     n_steps::Int,
-    orbital_rate::AbstractFloat,
-    banditX0::AbstractArray{Float64},
-    guardX0::AbstractArray{Float64})
+    orbital_rate::AbstractFloat)
 
     # --- setup the game dynamics as linear time-invariant system ---
     A, B = lbg_cw_discrete_eom__rhntw(t_step, orbital_rate)
