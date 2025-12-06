@@ -3,5 +3,5 @@
 // SPDX-License-Identifier: MIT
 {
     "version": "0.5.0",
-    "commit": "0d5e569dbb7d2845f0c7ebb6d0e7cd45df944803"
+    "commit": "0d5e569dbb7d2845f0c7ebb6d0e7cd45df944803-uncommitted-changes"
 }
