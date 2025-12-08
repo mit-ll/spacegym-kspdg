@@ -381,6 +381,8 @@ def test_lq_solve_lady_bandit_guard_costtype_1_shapes():
         t_step=t_step,
         n_steps=n_steps,
         orbital_rate=orbital_rate,
+        w_b_ctrl=1.0,
+        w_g_ctrl=1.0,
         # banditX0=banditX0,
         # guardX0=guardX0
     )

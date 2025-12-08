@@ -209,16 +209,23 @@ end
 wrapper function for solve_lq_lady_bandit_guard that defines the costtype-1
 
 # Arguments
+w_b_ctrl::Real = 1.0,
+w_g_ctrl::Real = 1.0
 - `kwargs::Dict`: see solve_lady_bandit_guard for full argument list
 
 # Returns
 - see solve_lq_lady_bandit_guard return list
 """
 function solve_lq_lady_bandit_guard_costtype_1(;
+    w_b_ctrl,
+    w_g_ctrl,
     kwargs...)
 
     # --- define per-player quadratic costs ---
-    Qb, qb, Rb, rb, Qg, qg, Rg, rg = lbg_quad_costs_1()
+    Qb, qb, Rb, rb, Qg, qg, Rg, rg = lbg_quad_costs_1(
+        w_b_ctrl = w_b_ctrl,
+        w_g_ctrl = w_g_ctrl
+    )
     pcb = QuadraticPlayerCost(qb, Qb, rb, Rb)
     pcg = QuadraticPlayerCost(qg, Qg, rg, Rg)
 
