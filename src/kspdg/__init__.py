@@ -5,7 +5,7 @@
 # Single-sourcing package version
 # https://packaging.python.org/guides/single-sourcing-package-version/
 
-__version__ = "0.14.0-b"
+__version__ = "0.14.0-c"
 
 # these imports make the individual environments accessible at the top-level
 # of the library and assign an environment version number
