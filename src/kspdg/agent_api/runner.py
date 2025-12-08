@@ -198,11 +198,18 @@ class AgentEnvRunner():
         )
         self._telem_proc.start()
 
-    def _stop_telem_plotter(self, timeout=2.0):
+    def _stop_telem_plotter(self, timeout=20.0):
         if self._telem_stop_evt is not None:
             self._telem_stop_evt.set()
         if self._telem_proc is not None:
+            self.logger.info(f"\n\n~~~WAITING ON TELEMETRY VIEWER~~~\nClose telemetry window to continue (auto-close in {timeout} seconds)\n")
             self._telem_proc.join(timeout=timeout)
+        if self._telem_proc.is_alive():
+            # user didn’t close telem viewer, must now forcefully close 
+            # (without telem process running it's finally block)
+            self.logger.info("Forcefully closing telemetry window/process...")
+            self._telem_proc.terminate()
+            self._telem_proc.join()
         self._telem_proc = None
         self._telem_q = None
         self._telem_stop_evt = None

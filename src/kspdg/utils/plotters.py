@@ -60,25 +60,33 @@ def run_dpg_telem_plotter(
         target_dt = 1.0 / max(1, fps)
         last_draw = 0.0
 
-        while dpg.is_dearpygui_running() and not stop_evt.is_set():
-            # Drain queue; keep newest only
-            newest_data = None
-            while True:
-                try: newest_data = data_q.get_nowait()
-                except queue.Empty: break
-
+        # Keep rendering telem window frames until user manually closes window
+        while dpg.is_dearpygui_running():
             now = time.perf_counter()
             do_draw = (now - last_draw) >= target_dt
-            if do_draw: last_draw = now
+            if do_draw:
+                last_draw = now
+
+            newest_data = None
+
+            # Only consume data while we're not "stopped"
+            if not stop_evt.is_set():
+                # Drain queue; keep newest only
+                while True:
+                    try:
+                        newest_data = data_q.get_nowait()
+                    except queue.Empty:
+                        break
 
             if newest_data is not None:
                 t, obs = newest_data
                 env_cls.dpg_telem_update(state, t, obs, do_draw=do_draw)
             elif do_draw:
-                # Optional: allow the env to redraw even without new data (moving axes, etc.)
+                # Optional: redraw even without new data (static view)
                 env_cls.dpg_telem_update(state, None, None, do_draw=True)
 
             dpg.render_dearpygui_frame()
+
     except KeyboardInterrupt:
         pass
     finally:
