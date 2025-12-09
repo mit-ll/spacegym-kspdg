@@ -31,3 +31,11 @@ def sb1_i5_tests():
     """Run tests in sb1_i5 mission"""
     test_path = os.path.join(KSPDG_INSTALL_PATH, "tests/ksp_ingame_tests/test_sb1_i5.py")
     pytest.main([test_path])
+
+def aiaa_competition_tests():
+    """Run small subset of tests for AIAA competition events"""
+    lbg1_test_path = os.path.join(KSPDG_INSTALL_PATH, "tests/ksp_ingame_tests/test_lbg1_i2.py")
+    pytest.main([
+        lbg1_test_path+"::test_physics_range_extender_1",
+        lbg1_test_path+"::test_smoketest_lg6"
+        ])
