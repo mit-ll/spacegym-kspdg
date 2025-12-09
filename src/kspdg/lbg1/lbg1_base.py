@@ -186,6 +186,8 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
         self.episode_timeout = episode_timeout
         self.lady_capture_dist = lady_capture_dist
         self.bandit_capture_dist = bandit_capture_dist
+        self.is_lady_captured = False
+        self.is_bandit_captured = False
 
         # establish load file for environment resets
         self.loadfile = loadfile
@@ -452,12 +454,14 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
             d_vesL_vesB = self.get_lb_relative_distance()
             is_lady_captured = d_vesL_vesB < self.lady_capture_dist
             if is_lady_captured:
+                self.is_lady_captured = True
                 self.logger.info("\n~~~SUCCESS! LADY CAPTURED BY BANDIT~~~\n")
 
             # check termination condition: bandit-guard proximity
             d_vesB_vesG = self.get_bg_relative_distance()
             is_bandit_captured = d_vesB_vesG < self.bandit_capture_dist
             if is_bandit_captured:
+                self.is_bandit_captured = True
                 self.logger.info("\n~~~FAILURE! BANDIT CAPTURED BY GUARD~~~\n")
 
             # check for episode timeout
@@ -465,7 +469,7 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
             if is_timeout:
                 self.logger.info("\n~~~EPISODE TIMEOUT~~~\n")
 
-            if is_lady_captured or is_bandit_captured or is_timeout:
+            if self.is_lady_captured or self.is_bandit_captured or is_timeout:
                 self.logger.info("Terminating episode...\n")
                 self.is_episode_done = True
                 self.stop_bot_thread = True
