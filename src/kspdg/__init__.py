@@ -97,6 +97,15 @@ if find_spec('juliacall') is not None:
     LBG1_LG6_I1_V1 = getattr(__lg6_envs_module, 'LBG1_LG6_I1_Env')
     LBG1_LG6_I2_V1 = getattr(__lg6_envs_module, 'LBG1_LG6_I2_Env')
 
+    # import obfuscated LBG1-LG7 environments
+    __lg7_envs_path = __get_mod_str("kspdg_envs.lbg1.lg7_envs")
+    try:
+        __lg7_envs_module = importlib.import_module(__lg7_envs_path)
+    except ModuleNotFoundError:
+        print(f"Module {__lg7_envs_path} not found.")
+    LBG1_LG7_I1_V1 = getattr(__lg7_envs_module, 'LBG1_LG7_I1_Env')
+    LBG1_LG7_I2_V1 = getattr(__lg7_envs_module, 'LBG1_LG7_I2_Env')
+
 else:
     LBG1_LG3_I1_V1 = LBG1_LG3_I2_V1 = lambda *args, **kwargs: (
         "Unmet dependency juliacall for using LBG1_LG3 environments.\n" +

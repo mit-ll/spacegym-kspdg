@@ -231,6 +231,27 @@ def lbg_quad_costs_1_py(**kwargs):
     rg = np.array(rg_jl)
     return Qb, qb, Rb, rb, Qg, qg, Rg, rg
 
+def lbg_quad_costs_2_py(**kwargs):
+    """
+    Python wrapper around Julia lbg_quad_costs_2(...).
+
+    Returns NumPy arrays:
+    Qb, qb, Rb, rb, Qg, qg, Rg, rg
+    """
+    _ensure_solvers_loaded()
+    Qb_jl, qb_jl, Rb_jl, rb_jl, Qg_jl, qg_jl, Rg_jl, rg_jl = jl.lbg_quad_costs_2(
+        **kwargs
+    )
+    Qb = np.array(Qb_jl)
+    qb = np.array(qb_jl)
+    Rb = np.array(Rb_jl)
+    rb = np.array(rb_jl)
+    Qg = np.array(Qg_jl)
+    qg = np.array(qg_jl)
+    Rg = np.array(Rg_jl)
+    rg = np.array(rg_jl)
+    return Qb, qb, Rb, rb, Qg, qg, Rg, rg
+
 def test_lq_lbg_quad_costs_1_shapes_and_zero_linear_terms():
     Qb, qb, Rb, rb, Qg, qg, Rg, rg = lbg_quad_costs_1_py()
 
@@ -363,6 +384,23 @@ def test_lq_lbg_quad_costs_1_known_costs():
 
     assert np.isclose(Jb, Jb_exp)
     assert np.isclose(Jg, Jg_exp)
+
+def test_lq_lbg_quad_costs_1_and_2_equality():
+    """check that costs types 1 and 2 are equal when alpha_g_bl=1.0 for cost type 2"""
+    Qb1, qb1, Rb1, rb1, Qg1, qg1, Rg1, rg1 = lbg_quad_costs_1_py()
+    Qb2, qb2, Rb2, rb2, Qg2, qg2, Rg2, rg2 = lbg_quad_costs_2_py(alpha_g_bl=1.0)
+
+    # Linear terms 
+    assert np.allclose(qb1, qb2)
+    assert np.allclose(qg1, qg2)
+    assert np.allclose(rb1, rb2)
+    assert np.allclose(rg1, rg2)
+
+    # Quadratic terms
+    assert np.allclose(Qb1, Qb2)
+    assert np.allclose(Qg1, Qg2)
+    assert np.allclose(Rb1, Rb2)
+    assert np.allclose(Rg1, Rg2)
 
 def test_lq_solve_lady_bandit_guard_costtype_1_shapes():
     """check that lq lbg solver returns strategy of appropriate shape"""

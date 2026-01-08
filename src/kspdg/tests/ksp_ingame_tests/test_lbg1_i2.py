@@ -21,7 +21,8 @@ from kspdg import (
     LBG1_LG3_I2_V1, 
     LBG1_LG4_I2_V1, 
     LBG1_LG5_I2_V1,
-    LBG1_LG6_I2_V1
+    LBG1_LG6_I2_V1,
+    LBG1_LG7_I2_V1,
 )
 
 @pytest.fixture
@@ -80,6 +81,14 @@ def lbg1_lg6_i2_env():
     yield env
     env.close()
 
+@pytest.fixture
+def lbg1_lg7_i2_env():
+    """setup and teardown of the LBG1_LG7_I2_Env object connected to kRPC server"""
+    env = LBG1_LG7_I2_V1()
+    env.reset()
+    yield env
+    env.close()
+
 def test_smoketest_lg0(lbg1_lg0_i2_env):
     """Ensure no errors are thrown from starting LG0 environment"""
     pass
@@ -106,6 +115,10 @@ def test_smoketest_lg5(lbg1_lg5_i2_env):
 
 def test_smoketest_lg6(lbg1_lg6_i2_env):
     """Ensure no errors are thrown from starting LG6 environment"""
+    pass
+
+def test_smoketest_lg7(lbg1_lg7_i2_env):
+    """Ensure no errors are thrown from starting LG7 environment"""
     pass
 
 def test_observation_0(lbg1_lg0_i2_env):
