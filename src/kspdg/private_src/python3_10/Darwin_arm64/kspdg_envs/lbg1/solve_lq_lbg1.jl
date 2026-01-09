@@ -33,6 +33,41 @@ Construct time-invariant quadratic cost matrices for the bandit and
 guard players in the Lady–Bandit–Guard (LBG) game under CW dynamics in
 a right-handed NTW frame.
 
+Special case of costtype 2 where guard is simply targeting the bandit itselt,
+rather than a point between the bandit and lady
+
+"""
+function lbg_quad_costs_1(; 
+    w_b_bl_dist::Real = 1.0,
+    w_b_bg_dist::Real = -1.0,
+    w_g_bl_dist::Real = -1.0,
+    w_g_bg_dist::Real = 1.0,
+    w_b_ctrl::Real = 1.0,
+    w_g_ctrl::Real = 1.0)
+
+    Qb, qb, Rb, rb, Qg, qg, Rg, rg = lbg_quad_costs_2(;
+        alpha_g_bl = 1.0,
+        w_b_bl_dist = w_b_bl_dist,
+        w_b_bg_dist = w_b_bg_dist,
+        w_g_bl_dist = w_g_bl_dist,
+        w_g_bg_dist = w_g_bg_dist,
+        w_b_ctrl = w_b_ctrl,
+        w_g_ctrl = w_g_ctrl
+    )
+end
+
+"""
+    lbg_quad_costs_2(; 
+        w_b_bl_dist=1.0, w_b_bg_dist=-1.0,
+        w_g_bl_dist=-1.0, w_g_bg_dist=1.0,
+        w_b_ctrl=1.0, w_g_ctrl=1.0)
+
+Construct time-invariant quadratic cost matrices for the bandit and
+guard players in the Lady–Bandit–Guard (LBG) game under CW dynamics in
+a right-handed NTW frame. Cost-type 2 has guard trying to position itself
+between the bandit and the lady at a fixed ratio, instead of just 
+raw proximity to bandit
+
 Each player i has a stage objective of the form
 
     J_i(x,u) = 1/2 * x' * Q_i * x + q_i' * x
@@ -64,15 +99,17 @@ naively using non-inertial frame)
 
         = [ ax_b, ay_b, az_b, ax_g, ay_g, az_g]
 
-The structure encoded here is:
+The cost structure encoded here has components as follows
 
 - Bandit:
     - “Proximity to lady” (origin) via px_b, py_b, pz_b.
-    - “Proximity / separation to guard” via (px_b - px_g, py_b - py_g, pz_b - pz_g).
+    - - “Proximity-colinearity to guard” via (px_g - a*px_b, py_g - a*py_b, pz_g - a*pz_b). where 'a' is a 
+    scale factor that computes the target point along the bandit-lady line for which the guard is aiming for
     - Quadratic penalty on its own control effort (ax_b, ay_b, az_b).
 
 - Guard:
-    - “Proximity to bandit” via (px_b - px_g, py_b - py_g, pz_b - pz_g).
+    - “Proximity-colinearity to bandit” via (px_g - a*px_b, py_g - a*py_b, pz_g - a*pz_b). where 'a' is a 
+    scale factor that computes the target point along the bandit-lady line for which the guard is aiming for
     - Dependence on bandit’s proximity to the lady via px_b, py_b, pz_b.
     - Quadratic penalty on its own control effort (ax_g, ay_g, az_g).
 
@@ -86,6 +123,12 @@ J_i. For example, with J_i minimized:
   the guard, etc.
 
 # Arguments
+- `alpha_g_bl::Real=0.9`:
+    Scale factor [0.0, 1.0] that is used to compute the point along on the bandit-lady line
+    for which the guard is aiming to put itself colinear between the other spacecraft
+    alpha_g_bl=1.0 has guard try to minimize distance to bandit
+    alpha_g_bl=0.0 has guard try to minimize distance to lady
+
 - `w_b_bl_dist::Real=1.0`:
     Weight on bandit’s distance to the lady (origin) in the bandit’s Q.
 
@@ -136,7 +179,8 @@ J_i. For example, with J_i minimized:
     6-element linear control-weight vector for the guard (zero here).
 
 """
-function lbg_quad_costs_1(; 
+function lbg_quad_costs_2(; 
+    alpha_g_bl::Real = 0.9,
     w_b_bl_dist::Real = 1.0,
     w_b_bg_dist::Real = -1.0,
     w_g_bl_dist::Real = -1.0,
@@ -155,10 +199,12 @@ function lbg_quad_costs_1(;
     S_pg[2,8] = 1.0
     S_pg[3,9] = 1.0
 
-    S_rel = S_pb - S_pg
+    # matrix that computes position of guard relative 
+    # to target point along bandit-lady-line
+    S_gb = S_pg - alpha_g_bl * S_pb
 
     Q_pos_bandit = S_pb' * S_pb      # ||p_b||^2
-    Q_rel        = S_rel' * S_rel    # ||p_b - p_g||^2
+    Q_rel        = S_gb' * S_gb    # ||p_b - p_g||^2
 
     # --- Bandit state weighting ---
     Q_bandit = w_b_bl_dist  * Q_pos_bandit +
@@ -223,6 +269,42 @@ function solve_lq_lady_bandit_guard_costtype_1(;
 
     # --- define per-player quadratic costs ---
     Qb, qb, Rb, rb, Qg, qg, Rg, rg = lbg_quad_costs_1(
+        w_b_ctrl = w_b_ctrl,
+        w_g_ctrl = w_g_ctrl
+    )
+    pcb = QuadraticPlayerCost(qb, Qb, rb, Rb)
+    pcg = QuadraticPlayerCost(qg, Qg, rg, Rg)
+
+    # time-invariant costs repeated for nt stages
+    costs = [ [pcb, pcg] for _ in 1:kwargs[:n_steps] ]
+
+    # --- call generalized solver with keyword type forwarding
+    return solve_lq_lady_bandit_guard(costs; kwargs...)
+
+end
+
+"""
+    solve_lady_bandit_guard_costtype_1(TODO)
+
+wrapper function for solve_lq_lady_bandit_guard that defines the costtype-2
+
+# Arguments
+w_b_ctrl::Real = 1.0,
+w_g_ctrl::Real = 1.0
+- `kwargs::Dict`: see solve_lady_bandit_guard for full argument list
+
+# Returns
+- see solve_lq_lady_bandit_guard return list
+"""
+function solve_lq_lady_bandit_guard_costtype_2(;
+    alpha_g_bl,
+    w_b_ctrl,
+    w_g_ctrl,
+    kwargs...)
+
+    # --- define per-player quadratic costs ---
+    Qb, qb, Rb, rb, Qg, qg, Rg, rg = lbg_quad_costs_2(
+        alpha_g_bl = alpha_g_bl,
         w_b_ctrl = w_b_ctrl,
         w_g_ctrl = w_g_ctrl
     )
