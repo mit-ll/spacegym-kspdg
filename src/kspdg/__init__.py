@@ -5,7 +5,7 @@
 # Single-sourcing package version
 # https://packaging.python.org/guides/single-sourcing-package-version/
 
-__version__ = "0.14.2"
+__version__ = "0.15.0"
 
 # these imports make the individual environments accessible at the top-level
 # of the library and assign an environment version number
@@ -127,6 +127,12 @@ else:
 
     LBG1_LG6_I1_V1 = LBG1_LG6_I2_V1 = lambda *args, **kwargs: (
         "Unmet dependency juliacall for using LBG1_LG6 environments.\n" +
+        "Please install kspdg[adv_bots] or kspdg[full] to use these.\n" +
+        "Refere to README for further instructions."
+    )
+
+    LBG1_LG7_I1_V1 = LBG1_LG7_I2_V1 = lambda *args, **kwargs: (
+        "Unmet dependency juliacall for using LBG1_LG7 environments.\n" +
         "Please install kspdg[adv_bots] or kspdg[full] to use these.\n" +
         "Refere to README for further instructions."
     )
